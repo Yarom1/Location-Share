@@ -14,7 +14,7 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file("../../release-key.jks")
+            storeFile file(System.getenv("GITHUB_WORKSPACE") + "/release-key.jks")
             storePassword System.getenv("STORE_PASSWORD")
             keyAlias System.getenv("KEY_ALIAS")
             keyPassword System.getenv("KEY_PASSWORD")
