@@ -2,11 +2,9 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
 }
-
 android {
     compileSdk 34
     namespace "com.locationshare"
-
     defaultConfig {
         applicationId "com.locationshare"
         minSdk 24
@@ -14,32 +12,27 @@ android {
         versionCode 1
         versionName "1.0"
     }
-
+    signingConfigs {
+        release {
+            storeFile file("../../release-key.jks")
+            storePassword System.getenv("STORE_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
         }
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
-    sourceSets {
-        main {
-            assets {
-                srcDirs = ['src/main/assets']
-            }
-        }
-    }
+    kotlinOptions { jvmTarget = '1.8' }
+    sourceSets { main { assets { srcDirs = ['src/main/assets'] } } }
 }
-
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core-ktx:1.12.0'

@@ -54,55 +54,11 @@ jobs:
           unzip -q /tmp/gradle.zip -d /opt
           echo "/opt/gradle-8.3/bin" >> $GITHUB_PATH
 
-      - name: Write signing config
+      - name: Build Release APK
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          cat > app/build.gradle << GRADLE
-plugins {
-    id 'com.android.application'
-    id 'kotlin-android'
-}
-android {
-    compileSdk 34
-    namespace "com.locationshare"
-    defaultConfig {
-        applicationId "com.locationshare"
-        minSdk 24
-        targetSdk 34
-        versionCode 1
-        versionName "1.0"
-    }
-    signingConfigs {
-        release {
-            storeFile file("../../release-key.jks")
-            storePassword "${STORE_PASSWORD}"
-            keyAlias "${KEY_ALIAS}"
-            keyPassword "${KEY_PASSWORD}"
-        }
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            signingConfig signingConfigs.release
-        }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions { jvmTarget = '1.8' }
-    sourceSets { main { assets { srcDirs = ['src/main/assets'] } } }
-}
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.core:core-ktx:1.12.0'
-}
-GRADLE
-
-      - name: Build Release APK
         run: gradle assembleRelease
 
       - name: Upload APK
