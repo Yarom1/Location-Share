@@ -128,7 +128,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 </head>
 <body>
 <div class="toast-wrap" id="toastWrap"></div>
-<div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
 
 <div class="modal" id="adminModal">
   <div class="modal-box">
@@ -637,7 +636,7 @@ function setActiveNav(id){document.querySelectorAll('.nav-item').forEach(n=>n.cl
 function openPanel(name){
   closeAllPanels();
   document.getElementById(name+'Panel')?.classList.add('open');
-  document.getElementById('overlay').classList.add('show');
+  
   if(name==='chat'){document.getElementById('chatDot').classList.remove('show');switchChatTab(activeChatTab);}
   const navMap={users:'navUsers',chat:'navChat',history:'navHistory',settings:'navSettings',admin:null};
   if(navMap[name])setActiveNav(navMap[name]);
@@ -645,13 +644,13 @@ function openPanel(name){
 
 function closePanel(name){
   document.getElementById(name+'Panel')?.classList.remove('open');
-  document.getElementById('overlay').classList.remove('show');
+  
 }
 
 function closeAllPanels(){
   ['users','chat','history','settings','admin'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
   document.getElementById('layersPanel').classList.remove('open');
-  document.getElementById('overlay').classList.remove('show');
+  
 }
 
 function showToast(msg,type=''){
