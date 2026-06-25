@@ -111,7 +111,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{border-color:var(--accent);color:var(--accent)}
 .toast.error{border-color:var(--danger);color:var(--danger)}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:350;display:none;backdrop-filter:blur(2px)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:350;display:none;}
 .overlay.show{display:block}
 .locate-btn{position:fixed;bottom:72px;left:14px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .modal{position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;padding:24px}
@@ -343,6 +343,13 @@ function startApp(){
   updateMyUI();
   if(isAdmin){document.getElementById('adminBtn').style.display='flex';}
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
+  setInterval(()=>{
+    if(!document.hidden&&myUID)
+      setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
+  },30000);
+  window.addEventListener('beforeunload',()=>{
+    setDoc(doc(db,'users',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
+  });
   document.addEventListener('visibilitychange',()=>{
     setDoc(doc(db,'users',myUID),{online:!document.hidden,lastSeen:serverTimestamp()},{merge:true});
   });
@@ -463,14 +470,14 @@ function listenUsers(){
     ul.innerHTML='';al.innerHTML='';hs.innerHTML='';
     snap.forEach(d=>{
       const u=d.data();total++;
-      if(u.online)online++;
-      if(u.lat&&u.lng)updateMarker(d.id,u);
+      const now=Date.now();const lastSeen=u.lastSeen?u.lastSeen.toMillis():0;const isOnline=u.online&&(now-lastSeen<120000);if(isOnline)online++;
+      if(u.lat&&u.lng)updateMarker(d.id,{...u,online:isOnline});
 
       // users list
       const li=document.createElement('div');li.className='user-item';
-      li.innerHTML=`<div class="user-avatar">${u.avatar||'👤'}<div class="user-online-dot" style="background:${u.online?'#00d4aa':'#555'}"></div></div>
+      li.innerHTML=`<div class="user-avatar">${u.avatar||'👤'}<div class="user-online-dot" style="background:${isOnline?'#00d4aa':'#555'}"></div></div>
         <div class="user-info"><div class="user-name">${escHtml(u.name||'אנונימי')}${d.id===myUID?' <span style="font-size:11px;color:var(--text2)">(אני)</span>':''}</div>
-        <div class="user-time">${u.online?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
+        <div class="user-time">${isOnline?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
         <div class="user-actions">
           ${d.id!==myUID?`<div class="user-act-btn" onclick="openDM('${d.id}','${escHtml(u.name||'')}','${u.avatar||'👤'}')">💌</div>`:''}
           ${d.id!==myUID?`<div class="user-act-btn" onclick="flyToUser('${d.id}')">📍</div>`:''}
@@ -488,10 +495,10 @@ function listenUsers(){
       const ad=document.createElement('div');ad.className='admin-user-item';
       ad.innerHTML=`<span style="font-size:20px">${u.avatar||'👤'}</span>
         <div style="flex:1"><div style="font-size:13px;font-weight:600">${escHtml(u.name||'אנונימי')}</div>
-        <div style="font-size:11px;color:var(--text2)">${u.online?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
+        <div style="font-size:11px;color:var(--text2)">${isOnline?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
         <div style="display:flex;gap:5px">
-          ${d.id!==myUID&&u.online?`<button class="kick-btn" onclick="kickUser('${d.id}')">נתק</button>`:''}
-          ${d.id!==myUID&&!u.online?`<button class="connect-btn" onclick="reconnectUser('${d.id}')">חבר</button>`:''}
+          ${d.id!==myUID&&isOnline?`<button class="kick-btn" onclick="kickUser('${d.id}')">נתק</button>`:''}
+          ${d.id!==myUID&&!isOnline?`<button class="connect-btn" onclick="reconnectUser('${d.id}')">חבר</button>`:''}
         </div>`;
       al.appendChild(ad);
     });
