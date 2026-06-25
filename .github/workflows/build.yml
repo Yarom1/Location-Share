@@ -19,6 +19,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release-key.jks
+
       - name: Copy web assets
         run: |
           mkdir -p app/src/main/assets
@@ -48,6 +52,50 @@ jobs:
           wget -q https://services.gradle.org/distributions/gradle-8.3-bin.zip -O /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /opt
           echo "/opt/gradle-8.3/bin" >> $GITHUB_PATH
+
+      - name: Update signing config
+        run: |
+          cat > app/build.gradle << 'GRADLE'
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+android {
+    compileSdk 34
+    namespace "com.locationshare"
+    defaultConfig {
+        applicationId "com.locationshare"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+    signingConfigs {
+        release {
+            storeFile file("../../release-key.jks")
+            storePassword "${{ secrets.STORE_PASSWORD }}"
+            keyAlias "${{ secrets.KEY_ALIAS }}"
+            keyPassword "${{ secrets.KEY_PASSWORD }}"
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions { jvmTarget = '1.8' }
+    sourceSets { main { assets { srcDirs = ['src/main/assets'] } } }
+}
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core-ktx:1.12.0'
+}
+GRADLE
 
       - name: Build Release APK
         run: gradle assembleRelease
