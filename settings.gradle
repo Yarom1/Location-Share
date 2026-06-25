@@ -1,0 +1,2 @@
+rootProject.name = "LocationShare"
+include ':app'

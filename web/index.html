@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Location Share</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1117;--surface:#161b22;--surface2:#1c2433;--accent:#00d4aa;--accent2:#0099ff;--danger:#ff4757;--text:#e6edf3;--text2:#7d8590;--border:#30363d;--radius:12px;--admin:#f0a500}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Heebo',sans-serif}
+body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direction:rtl}
+.screen{display:none;position:fixed;inset:0;z-index:10}
+.screen.active{display:flex}
+#splash{background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.logo-ring{width:80px;height:80px;border-radius:50%;border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite}
+.logo-ring svg{width:40px;height:40px;fill:var(--accent)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,170,.4)}50%{box-shadow:0 0 0 16px rgba(0,212,170,0)}}
+#splash h1{font-size:28px;font-weight:700;letter-spacing:1px}
+#splash p{color:var(--text2);font-size:14px}
+#profile-setup{background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:24px}
+#profile-setup h2{font-size:22px;font-weight:700}
+#profile-setup p{color:var(--text2);font-size:14px;text-align:center}
+.avatar-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;width:100%;max-width:340px}
+.avatar-opt{width:56px;height:56px;border-radius:50%;border:3px solid transparent;cursor:pointer;font-size:26px;display:flex;align-items:center;justify-content:center;background:var(--surface2);transition:.2s}
+.avatar-opt.selected{border-color:var(--accent);transform:scale(1.1)}
+.input-wrap{width:100%;max-width:340px;display:flex;flex-direction:column;gap:8px}
+.input-wrap label{font-size:13px;color:var(--text2)}
+.input-wrap input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text);font-size:16px;outline:none;width:100%;transition:.2s}
+.input-wrap input:focus{border-color:var(--accent)}
+.btn{background:var(--accent);color:#000;border:none;border-radius:var(--radius);padding:14px 32px;font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:340px;transition:.2s}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);font-weight:500}
+.btn.danger{background:var(--danger);color:#fff}
+#main{flex-direction:column;background:var(--bg)}
+#map{flex:1;width:100%;z-index:1}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(13,17,23,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.my-avatar{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer}
+.topbar-title{font-size:15px;font-weight:700}
+.online-badge{font-size:11px;color:var(--accent);background:rgba(0,212,170,.1);padding:3px 8px;border-radius:20px;border:1px solid rgba(0,212,170,.3)}
+.topbar-actions{display:flex;gap:8px}
+.icon-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:.2s;position:relative}
+.icon-btn:hover{border-color:var(--accent)}
+.notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--danger);border-radius:50%;display:none}
+.notif-dot.show{display:block}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;background:rgba(13,17,23,.95);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:8px 0}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 0;font-size:11px;color:var(--text2);transition:.2s}
+.nav-item.active{color:var(--accent)}
+.nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.layers-panel{position:fixed;top:65px;left:12px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:none;flex-direction:column;gap:8px;min-width:180px}
+.layers-panel.open{display:flex}
+.layer-item{display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px;transition:.2s}
+.layer-item:hover{background:var(--surface2)}
+.layer-item input{accent-color:var(--accent);width:16px;height:16px}
+.layer-item label{font-size:13px;cursor:pointer}
+.side-panel{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--surface);border-top:1px solid var(--border);border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);max-height:80dvh;display:flex;flex-direction:column}
+.side-panel.open{transform:translateY(0)}
+.panel-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;flex-shrink:0}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-header h3{font-size:17px;font-weight:700}
+.panel-close{background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px}
+.panel-body{overflow-y:auto;flex:1;padding:16px}
+.user-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;border:1px solid transparent;transition:.2s}
+.user-item:hover{border-color:var(--accent)}
+.user-avatar{width:44px;height:44px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative}
+.user-online-dot{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--surface2)}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:14px;font-weight:600}
+.user-time{font-size:12px;color:var(--text2)}
+.user-actions{display:flex;gap:6px}
+.user-act-btn{background:var(--bg);border:1px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:.2s}
+.chat-tabs{display:flex;gap:8px;padding:0 0 12px;flex-shrink:0}
+.chat-tab{flex:1;padding:8px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);font-size:13px;font-weight:500;cursor:pointer;text-align:center;transition:.2s}
+.chat-tab.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
+.msg{max-width:78%;display:flex;flex-direction:column;gap:3px}
+.msg.mine{align-self:flex-end;align-items:flex-end}
+.msg.theirs{align-self:flex-start;align-items:flex-start}
+.msg-bubble{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4}
+.msg.mine .msg-bubble{background:var(--accent);color:#000;border-bottom-right-radius:4px}
+.msg.theirs .msg-bubble{background:var(--surface2);border-bottom-left-radius:4px}
+.msg-meta{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.chat-input-row{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border);flex-shrink:0}
+.chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;color:var(--text);font-size:14px;outline:none;resize:none}
+.chat-input:focus{border-color:var(--accent)}
+.send-btn{background:var(--accent);border:none;border-radius:var(--radius);width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;flex-shrink:0}
+.hist-point{display:flex;gap:12px;padding:10px 0;align-items:flex-start}
+.hist-dot-col{display:flex;flex-direction:column;align-items:center}
+.hist-dot{width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);flex-shrink:0;margin-top:3px}
+.hist-line{width:2px;flex:1;background:var(--border);min-height:20px}
+.hist-info{flex:1}
+.hist-time{font-size:12px;color:var(--text2)}
+.hist-coords{font-size:13px;font-weight:500}
+.hist-show-map{font-size:12px;color:var(--accent);cursor:pointer;margin-top:2px}
+.hist-user-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:13px;transition:.2s}
+.hist-user-chip.selected{border-color:var(--accent);color:var(--accent)}
+.admin-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.admin-stat{background:var(--surface2);border-radius:var(--radius);padding:16px;text-align:center;border:1px solid var(--border)}
+.admin-stat-num{font-size:28px;font-weight:700;color:var(--accent)}
+.admin-stat-label{font-size:12px;color:var(--text2);margin-top:4px}
+.admin-user-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:10px;margin-bottom:6px}
+.kick-btn{background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.3);color:var(--danger);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer}
+.custom-marker{display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.marker-avatar{width:40px;height:40px;border-radius:50%;background:var(--surface);border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.marker-name{background:rgba(13,17,23,.85);color:var(--text);font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:3px;white-space:nowrap}
+.toast-wrap{position:fixed;top:75px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 18px;font-size:13px;white-space:nowrap;opacity:0;transform:translateY(-8px);transition:.3s;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-color:var(--accent);color:var(--accent)}
+.toast.error{border-color:var(--danger);color:var(--danger)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:250;display:none;backdrop-filter:blur(2px)}
+.overlay.show{display:block}
+.locate-btn{position:fixed;bottom:80px;left:16px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="toast-wrap" id="toastWrap"></div>
+<div class="overlay" id="overlay" onclick="closeAllPanels()"></div>
+
+<div class="screen active" id="splash">
+  <div class="logo-ring"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
+  <h1>Location Share</h1>
+  <p>טוען...</p>
+</div>
+
+<div class="screen" id="profile-setup">
+  <h2>ברוך הבא! 👋</h2>
+  <p>בחר דמות ושם תצוגה</p>
+  <div class="avatar-grid" id="avatarGrid"></div>
+  <div class="input-wrap"><label>שם תצוגה</label><input type="text" id="nameInput" placeholder="הכנס שם..." maxlength="20"></div>
+  <button class="btn" id="saveProfileBtn" onclick="saveProfile()" disabled>התחל</button>
+</div>
+
+<div class="screen" id="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="my-avatar" id="myAvatarBtn" onclick="openPanel('users')"></div>
+      <div><div class="topbar-title">Location Share</div><div class="online-badge" id="onlineBadge">● 0 מחוברים</div></div>
+    </div>
+    <div class="topbar-actions">
+      <div class="icon-btn" onclick="toggleLayers()">🗺️</div>
+      <div class="icon-btn" onclick="openPanel('chat')">💬<span class="notif-dot" id="chatDot"></span></div>
+      <div class="icon-btn" id="adminBtn" onclick="openPanel('admin')" style="display:none">⚙️<span style="position:absolute;top:-4px;right:-4px;background:var(--admin);color:#000;font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px">ADMIN</span></div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+  <div class="locate-btn" onclick="locateMe()">📍</div>
+
+  <div class="layers-panel" id="layersPanel">
+    <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:4px">שכבות מפה</div>
+    <div class="layer-item"><input type="radio" name="layer" id="layerStreet" checked onchange="setLayer('street')"><label for="layerStreet">🗺️ רחובות</label></div>
+    <div class="layer-item"><input type="radio" name="layer" id="layerSat" onchange="setLayer('satellite')"><label for="layerSat">🛰️ לוויין</label></div>
+    <div class="layer-item"><input type="radio" name="layer" id="layerTopo" onchange="setLayer('topo')"><label for="layerTopo">🏔️ טופוגרפי</label></div>
+    <hr style="border-color:var(--border);margin:4px 0">
+    <div class="layer-item"><input type="checkbox" id="layerTraffic" onchange="toggleTraffic(this)"><label for="layerTraffic">🚦 תנועה</label></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="showMapView()">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>מפה
+    </div>
+    <div class="nav-item" onclick="openPanel('users')">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>משתמשים
+    </div>
+    <div class="nav-item" onclick="openPanel('chat')">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>צ'אט
+    </div>
+    <div class="nav-item" onclick="openPanel('history')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>היסטוריה
+    </div>
+  </div>
+
+  <div class="side-panel" id="usersPanel">
+    <div class="panel-handle"></div>
+    <div class="panel-header"><h3>👥 משתמשים מחוברים</h3><div class="panel-close" onclick="closePanel('users')">✕</div></div>
+    <div class="panel-body" id="usersList"></div>
+  </div>
+
+  <div class="side-panel" id="chatPanel">
+    <div class="panel-handle"></div>
+    <div class="panel-header"><h3>💬 צ'אט</h3><div class="panel-close" onclick="closePanel('chat')">✕</div></div>
+    <div class="panel-body" style="display:flex;flex-direction:column;padding:12px 16px 0">
+      <div class="chat-tabs">
+        <div class="chat-tab active" id="tabGroup" onclick="switchChatTab('group')">🌐 כולם</div>
+        <div class="chat-tab" id="tabDM" onclick="switchChatTab('dm')">💌 פרטי</div>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput" rows="1" placeholder="כתוב הודעה..." onkeydown="handleChatKey(event)"></textarea>
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-panel" id="historyPanel">
+    <div class="panel-handle"></div>
+    <div class="panel-header"><h3>🕐 היסטוריית מיקומים</h3><div class="panel-close" onclick="closePanel('history')">✕</div></div>
+    <div class="panel-body">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:12px" id="historyUserSelect"></div>
+      <div id="historyTrail"></div>
+    </div>
+  </div>
+
+  <div class="side-panel" id="adminPanel">
+    <div class="panel-handle"></div>
+    <div class="panel-header"><h3>⚙️ ניהול</h3><div class="panel-close" onclick="closePanel('admin')">✕</div></div>
+    <div class="panel-body">
+      <div class="admin-stat-grid">
+        <div class="admin-stat"><div class="admin-stat-num" id="adminOnlineCount">0</div><div class="admin-stat-label">מחוברים עכשיו</div></div>
+        <div class="admin-stat"><div class="admin-stat-num" id="adminTotalCount">0</div><div class="admin-stat-label">סה"כ נרשמו</div></div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px">משתמשים</div>
+      <div id="adminUserList"></div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn secondary" onclick="broadcastMessage()">📢 שלח הודעה לכולם</button>
+        <button class="btn danger" onclick="clearHistory()">🗑️ נקה היסטוריה</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, addDoc, serverTimestamp, deleteDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC2-T-_UCN_D-wcU4eiATbOJxvHojjyrxY",
+  authDomain: "locationshare-38792.firebaseapp.com",
+  projectId: "locationshare-38792",
+  storageBucket: "locationshare-38792.firebasestorage.app",
+  messagingSenderId: "1018646639206",
+  appId: "1:1018646639206:web:809574a0f35a0c911733a7"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const AVATARS = ['😀','😎','🦊','🐺','🦁','🐯','🦝','🐸','🤖','👾','🦄','🐉','🧙','🧛','👻','🎃','🚀','⚡','🔥','💎'];
+let currentUser=null,myUID=null,isAdmin=false;
+let map,markers={},tileLayer,historyLayer=null;
+let activeChatTab='group',activeDMUser=null;
+let unsubUsers,unsubChat,unsubDM;
+let ADMIN_UID='';
+
+window.saveProfile=saveProfile;window.openPanel=openPanel;window.closePanel=closePanel;
+window.closeAllPanels=closeAllPanels;window.toggleLayers=toggleLayers;window.setLayer=setLayer;
+window.toggleTraffic=toggleTraffic;window.locateMe=locateMe;window.showMapView=showMapView;
+window.switchChatTab=switchChatTab;window.handleChatKey=handleChatKey;window.sendMessage=sendMessage;
+window.broadcastMessage=broadcastMessage;window.clearHistory=clearHistory;
+window.openDM=openDM;window.flyToUser=flyToUser;window.showUserHistory=showUserHistory;window.kickUser=kickUser;
+
+function buildAvatarGrid(){
+  const grid=document.getElementById('avatarGrid');
+  grid.innerHTML='';
+  AVATARS.forEach((a,i)=>{
+    const d=document.createElement('div');
+    d.className='avatar-opt';d.textContent=a;d.dataset.idx=i;
+    d.onclick=()=>{document.querySelectorAll('.avatar-opt').forEach(x=>x.classList.remove('selected'));d.classList.add('selected');checkProfileReady()};
+    grid.appendChild(d);
+  });
+}
+function checkProfileReady(){
+  const name=document.getElementById('nameInput').value.trim();
+  const sel=document.querySelector('.avatar-opt.selected');
+  document.getElementById('saveProfileBtn').disabled=!(name&&sel);
+}
+document.getElementById('nameInput').addEventListener('input',checkProfileReady);
+buildAvatarGrid();
+
+onAuthStateChanged(auth,async user=>{
+  if(user){
+    myUID=user.uid;
+    const adminDoc=await getDoc(doc(db,'config','admin'));
+    if(adminDoc.exists()) ADMIN_UID=adminDoc.data().uid||'';
+    isAdmin=(myUID===ADMIN_UID);
+    const userDoc=await getDoc(doc(db,'users',myUID));
+    if(userDoc.exists()&&userDoc.data().name){currentUser=userDoc.data();startApp();}
+    else showScreen('profile-setup');
+  } else {signInAnonymously(auth);}
+});
+signInAnonymously(auth).catch(console.error);
+
+async function saveProfile(){
+  const name=document.getElementById('nameInput').value.trim();
+  const sel=document.querySelector('.avatar-opt.selected');
+  if(!name||!sel)return;
+  const avatar=AVATARS[sel.dataset.idx];
+  currentUser={name,avatar,uid:myUID,online:true};
+  await setDoc(doc(db,'users',myUID),{...currentUser,createdAt:serverTimestamp()});
+  // First user becomes admin
+  const adminDoc=await getDoc(doc(db,'config','admin'));
+  if(!adminDoc.exists()){await setDoc(doc(db,'config','admin'),{uid:myUID});ADMIN_UID=myUID;isAdmin=true;}
+  startApp();
+}
+
+function startApp(){
+  showScreen('main');
+  initMap();
+  startLocationTracking();
+  listenUsers();
+  listenGroupChat();
+  updateMyUI();
+  if(isAdmin)document.getElementById('adminBtn').style.display='flex';
+  setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
+  window.addEventListener('beforeunload',()=>setDoc(doc(db,'users',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true}));
+}
+
+function updateMyUI(){if(currentUser)document.getElementById('myAvatarBtn').textContent=currentUser.avatar;}
+
+function initMap(){
+  map=L.map('map',{zoomControl:false,attributionControl:false}).setView([31.5,34.8],8);
+  setLayer('street');
+}
+
+function setLayer(type){
+  if(tileLayer)map.removeLayer(tileLayer);
+  const layers={
+    street:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    satellite:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    topo:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
+  };
+  tileLayer=L.tileLayer(layers[type],{maxZoom:19}).addTo(map);
+  document.getElementById('layersPanel').classList.remove('open');
+}
+
+function toggleTraffic(cb){showToast(cb.checked?'🚦 שכבת תנועה הופעלה':'שכבת תנועה הוסרה');}
+function toggleLayers(){document.getElementById('layersPanel').classList.toggle('open');}
+function showMapView(){closeAllPanels();map.invalidateSize();}
+function locateMe(){
+  if(!navigator.geolocation)return showToast('GPS לא נתמך','error');
+  navigator.geolocation.getCurrentPosition(p=>{map.flyTo([p.coords.latitude,p.coords.longitude],16);showToast('📍 מרכז במיקומך');});
+}
+function flyToUser(uid){const m=markers[uid];if(m){map.flyTo(m.getLatLng(),16);closeAllPanels();}}
+
+function createMarkerHTML(u){return `<div class="custom-marker"><div class="marker-avatar">${u.avatar}</div><div class="marker-name">${u.name}</div></div>`;}
+
+function updateMarker(uid,data){
+  if(!data.lat||!data.lng)return;
+  const icon=L.divIcon({className:'',html:createMarkerHTML(data),iconSize:[60,60],iconAnchor:[30,48]});
+  if(markers[uid]){markers[uid].setLatLng([data.lat,data.lng]).setIcon(icon);}
+  else{markers[uid]=L.marker([data.lat,data.lng],{icon}).addTo(map).on('click',()=>{if(uid!==myUID)showUserPopup(uid,data);});}
+}
+
+function showUserPopup(uid,data){
+  L.popup({closeButton:false}).setLatLng(markers[uid].getLatLng()).setContent(`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:150px;color:var(--text)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:24px">${data.avatar}</span><strong>${data.name}</strong></div>
+      <div style="display:flex;gap:6px">
+        <button onclick="openDM('${uid}','${data.name}','${data.avatar}')" style="flex:1;background:var(--accent);color:#000;border:none;border-radius:8px;padding:6px;font-size:12px;cursor:pointer">💌 הודעה</button>
+        <button onclick="showUserHistory('${uid}')" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px;font-size:12px;cursor:pointer">🕐 היסטוריה</button>
+      </div>
+    </div>`).openOn(map);
+}
+
+function startLocationTracking(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.watchPosition(async pos=>{
+    const{latitude:lat,longitude:lng}=pos.coords;
+    await setDoc(doc(db,'users',myUID),{lat,lng,lastSeen:serverTimestamp()},{merge:true});
+    await addDoc(collection(db,'history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
+    updateMarker(myUID,{...currentUser,lat,lng});
+  },null,{enableHighAccuracy:true,maximumAge:5000,timeout:10000});
+}
+
+function listenUsers(){
+  unsubUsers=onSnapshot(collection(db,'users'),snap=>{
+    let onlineCount=0,totalUsers=0;
+    const usersList=document.getElementById('usersList');
+    const adminList=document.getElementById('adminUserList');
+    const histSel=document.getElementById('historyUserSelect');
+    usersList.innerHTML='';adminList.innerHTML='';histSel.innerHTML='';
+    snap.forEach(d=>{
+      const u=d.data();totalUsers++;
+      if(u.online)onlineCount++;
+      if(u.lat&&u.lng)updateMarker(d.id,u);
+      const li=document.createElement('div');li.className='user-item';
+      li.innerHTML=`<div class="user-avatar">${u.avatar||'👤'}<div class="user-online-dot" style="background:${u.online?'var(--accent)':'var(--text2)'}"></div></div>
+        <div class="user-info"><div class="user-name">${u.name||'אנונימי'}${d.id===myUID?' (אני)':''}</div><div class="user-time">${u.online?'מחובר':'לא מחובר'}</div></div>
+        <div class="user-actions">
+          ${d.id!==myUID?`<div class="user-act-btn" onclick="openDM('${d.id}','${u.name}','${u.avatar||'👤'}')">💌</div>`:''}
+          ${d.id!==myUID?`<div class="user-act-btn" onclick="flyToUser('${d.id}')">📍</div>`:''}
+          <div class="user-act-btn" onclick="showUserHistory('${d.id}')">🕐</div>
+        </div>`;
+      usersList.appendChild(li);
+      const chip=document.createElement('div');chip.className='hist-user-chip';
+      chip.innerHTML=`${u.avatar||'👤'} ${u.name||'אנונימי'}`;
+      chip.onclick=()=>showUserHistory(d.id,u);histSel.appendChild(chip);
+      if(isAdmin){
+        const al=document.createElement('div');al.className='admin-user-item';
+        al.innerHTML=`<span style="font-size:20px">${u.avatar||'👤'}</span>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${u.name}</div><div style="font-size:11px;color:var(--text2)">${u.online?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
+          ${d.id!==myUID?`<button class="kick-btn" onclick="kickUser('${d.id}')">הסר</button>`:''}`;
+        adminList.appendChild(al);
+      }
+    });
+    document.getElementById('onlineBadge').textContent=`● ${onlineCount} מחוברים`;
+    document.getElementById('adminOnlineCount').textContent=onlineCount;
+    document.getElementById('adminTotalCount').textContent=totalUsers;
+  });
+}
+
+function listenGroupChat(){
+  if(unsubChat)unsubChat();
+  const q=query(collection(db,'groupChat'),orderBy('ts','asc'),limit(100));
+  unsubChat=onSnapshot(q,snap=>{
+    if(activeChatTab!=='group')return;
+    const msgs=document.getElementById('chatMessages');msgs.innerHTML='';
+    snap.forEach(d=>appendMessage(d.data()));
+    msgs.scrollTop=msgs.scrollHeight;
+    if(!document.getElementById('chatPanel').classList.contains('open'))document.getElementById('chatDot').classList.add('show');
+  });
+}
+
+function appendMessage(data){
+  const msgs=document.getElementById('chatMessages');
+  const mine=data.uid===myUID;
+  const d=document.createElement('div');d.className=`msg ${mine?'mine':'theirs'}`;
+  const time=data.ts?new Date(data.ts.toMillis()).toLocaleTimeString('he',{hour:'2-digit',minute:'2-digit'}):'';
+  d.innerHTML=`${!mine?`<div class="msg-meta">${data.avatar||''} ${data.name||''}</div>`:''}
+    <div class="msg-bubble">${escapeHtml(data.text)}</div>
+    <div class="msg-meta">${time}</div>`;
+  msgs.appendChild(d);
+}
+
+function switchChatTab(tab){
+  activeChatTab=tab;
+  document.getElementById('tabGroup').classList.toggle('active',tab==='group');
+  document.getElementById('tabDM').classList.toggle('active',tab==='dm');
+  const msgs=document.getElementById('chatMessages');msgs.innerHTML='';
+  if(tab==='group')listenGroupChat();
+  else if(activeDMUser)listenDM(activeDMUser.uid);
+  else msgs.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px;font-size:13px">בחר משתמש לשיחה פרטית</div>';
+}
+
+function openDM(uid,name,avatar){
+  activeDMUser={uid,name,avatar};
+  document.getElementById('tabDM').textContent=`💌 ${name}`;
+  openPanel('chat');switchChatTab('dm');
+}
+
+function listenDM(uid){
+  if(unsubDM)unsubDM();
+  const dmId=[myUID,uid].sort().join('_');
+  const q=query(collection(db,'dms',dmId,'messages'),orderBy('ts','asc'),limit(100));
+  unsubDM=onSnapshot(q,snap=>{
+    const msgs=document.getElementById('chatMessages');msgs.innerHTML='';
+    snap.forEach(d=>appendMessage(d.data()));msgs.scrollTop=msgs.scrollHeight;
+  });
+}
+
+async function sendMessage(){
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();if(!text||!currentUser)return;
+  input.value='';
+  const msgData={uid:myUID,name:currentUser.name,avatar:currentUser.avatar,text,ts:serverTimestamp()};
+  if(activeChatTab==='group')await addDoc(collection(db,'groupChat'),msgData);
+  else if(activeDMUser){
+    const dmId=[myUID,activeDMUser.uid].sort().join('_');
+    await addDoc(collection(db,'dms',dmId,'messages'),msgData);
+  }
+}
+
+function handleChatKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+
+async function showUserHistory(uid,userData){
+  openPanel('history');
+  const trail=document.getElementById('historyTrail');
+  trail.innerHTML='<div style="color:var(--text2);font-size:13px">טוען...</div>';
+  document.querySelectorAll('.hist-user-chip').forEach(c=>c.classList.remove('selected'));
+  const q=query(collection(db,'history'),where('uid','==',uid),orderBy('ts','desc'),limit(20));
+  const snap=await getDocs(q);trail.innerHTML='';
+  if(snap.empty){trail.innerHTML='<div style="color:var(--text2);font-size:13px">אין היסטוריה עדיין</div>';return;}
+  const points=[];
+  snap.forEach(d=>{const h=d.data();if(h.lat&&h.lng)points.push([h.lat,h.lng]);});
+  if(historyLayer)map.removeLayer(historyLayer);
+  historyLayer=L.polyline(points,{color:'#00d4aa',weight:3,opacity:.7,dashArray:'6,4'}).addTo(map);
+  if(points.length)map.fitBounds(historyLayer.getBounds(),{padding:[40,40]});
+  snap.forEach((d,i)=>{
+    const h=d.data();
+    const time=h.ts?new Date(h.ts.toMillis()).toLocaleString('he'):'';
+    const el=document.createElement('div');el.className='hist-point';
+    el.innerHTML=`<div class="hist-dot-col"><div class="hist-dot" style="background:${i===0?'var(--accent)':'var(--border)'}"></div>${i<snap.size-1?'<div class="hist-line"></div>':''}</div>
+      <div class="hist-info"><div class="hist-time">${time}</div><div class="hist-coords">📍 ${h.lat?.toFixed(5)}, ${h.lng?.toFixed(5)}</div>
+      <div class="hist-show-map" onclick="map.flyTo([${h.lat},${h.lng}],16);closeAllPanels()">הצג על המפה →</div></div>`;
+    trail.appendChild(el);
+  });
+}
+
+async function kickUser(uid){
+  if(!confirm('להסיר משתמש?'))return;
+  await updateDoc(doc(db,'users',uid),{online:false,kicked:true});
+  showToast('משתמש הוסר','success');
+}
+
+async function broadcastMessage(){
+  const msg=prompt('הודעה לכולם:');if(!msg)return;
+  await addDoc(collection(db,'groupChat'),{uid:'admin',name:'📢 מנהל',avatar:'⚙️',text:msg,ts:serverTimestamp()});
+  showToast('הודעה נשלחה ✓','success');
+}
+
+async function clearHistory(){
+  if(!confirm('למחוק את כל ההיסטוריה?'))return;
+  const snap=await getDocs(collection(db,'history'));
+  await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'history',d.id))));
+  showToast('ההיסטוריה נוקתה ✓','success');
+}
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function openPanel(name){
+  closeAllPanels();
+  document.getElementById(name+'Panel')?.classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+  if(name==='chat'){document.getElementById('chatDot').classList.remove('show');switchChatTab(activeChatTab);}
+}
+function closePanel(name){document.getElementById(name+'Panel')?.classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+function closeAllPanels(){
+  ['users','chat','history','admin'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
+  document.getElementById('layersPanel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+function showToast(msg,type=''){
+  const wrap=document.getElementById('toastWrap');
+  const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;
+  wrap.appendChild(t);requestAnimationFrame(()=>requestAnimationFrame(()=>t.classList.add('show')));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3000);
+}
+window.showToast=showToast;
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body>
+</html>
