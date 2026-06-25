@@ -64,7 +64,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .panel-body{overflow-y:auto;flex:1;padding:14px;-webkit-overflow-scrolling:touch}
 .user-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius);margin-bottom:8px;border:1px solid var(--border);transition:.2s}
 .user-avatar{width:42px;height:42px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;position:relative}
-.user-online-dot{position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;border:2px solid var(--surface2)}
+.user-online-dot{position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;border:2px solid var(--surface2);transition:background .5s}
 .user-info{flex:1;min-width:0}
 .user-name{font-size:14px;font-weight:600}
 .user-time{font-size:12px;color:var(--text2)}
@@ -122,7 +122,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .modal-actions{display:flex;gap:8px}
 .leaflet-popup-content-wrapper{background:var(--popup-bg)!important;border:1px solid var(--border)!important;border-radius:12px!important;box-shadow:0 4px 16px rgba(0,0,0,.4)!important;color:var(--text)!important}
 .leaflet-popup-tip{background:var(--popup-bg)!important}
-::-webkit-scrollbar{width:4px}
+.offline-chip{opacity:.6}::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
 </head>
@@ -204,7 +204,12 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   <div class="side-panel" id="usersPanel">
     <div class="panel-handle"></div>
     <div class="panel-header"><h3>👥 משתמשים מחוברים</h3><div class="panel-close" onclick="closePanel('users')">✕</div></div>
-    <div class="panel-body" id="usersList"></div>
+    <div style="padding:10px 14px 0;flex-shrink:0;display:flex;gap:6px">
+    <button class="chat-tab active" id="filterAll" onclick="setFilter('all')">הכל</button>
+    <button class="chat-tab" id="filterOnline" onclick="setFilter('online')">מחוברים</button>
+    <button class="chat-tab" id="filterOffline" onclick="setFilter('offline')">לא מחוברים</button>
+  </div>
+  <div class="panel-body" id="usersList"></div>
   </div>
 
   <!-- CHAT PANEL -->
@@ -418,8 +423,12 @@ function setLayer(t){
 
 function toggleLayers(){document.getElementById('layersPanel').classList.toggle('open');}
 function showMapView(){closeAllPanels();setTimeout(()=>map&&map.invalidateSize(),350);setActiveNav('navMap');}
-function locateMe(){
-  navigator.geolocation?.getCurrentPosition(p=>{map.flyTo([p.coords.latitude,p.coords.longitude],16);showToast('📍 מרכז במיקומך');},()=>showToast('לא ניתן לקבל מיקום','error'));
+let locating=false;function locateMe(){
+  if(locating)return;locating=true;
+  navigator.geolocation?.getCurrentPosition(p=>{
+    map.flyTo([p.coords.latitude,p.coords.longitude],16);
+    locating=false;
+  },()=>{showToast('לא ניתן לקבל מיקום','error');locating=false;});
 }
 function flyToUser(uid){const m=markers[uid];if(m){map.flyTo(m.getLatLng(),16);closeAllPanels();}}
 
@@ -470,10 +479,15 @@ function listenUsers(){
     snap.forEach(d=>{
       const u=d.data();total++;
       const now=Date.now();const lastSeen=u.lastSeen?u.lastSeen.toMillis():0;const isOnline=u.online&&(now-lastSeen<120000);if(isOnline)online++;
-      if(u.lat&&u.lng)updateMarker(d.id,{...u,online:isOnline});
+      if(isOnline&&u.lat&&u.lng){
+        updateMarker(d.id,{...u,online:isOnline});
+      } else if(!isOnline&&markers[d.id]){
+        map.removeLayer(markers[d.id]);
+        delete markers[d.id];
+      }
 
       // users list
-      const li=document.createElement('div');li.className='user-item';
+      const li=document.createElement('div');li.className='user-item';li.dataset.online=isOnline;
       li.innerHTML=`<div class="user-avatar">${u.avatar||'👤'}<div class="user-online-dot" style="background:${isOnline?'#00d4aa':'#555'}"></div></div>
         <div class="user-info"><div class="user-name">${escHtml(u.name||'אנונימי')}${d.id===myUID?' <span style="font-size:11px;color:var(--text2)">(אני)</span>':''}</div>
         <div class="user-time">${isOnline?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
@@ -485,7 +499,7 @@ function listenUsers(){
       ul.appendChild(li);
 
       // history chips
-      const chip=document.createElement('div');chip.className='hist-chip';
+      const chip=document.createElement('div');chip.className='hist-chip'+(isOnline?'':' offline-chip');
       chip.innerHTML=`${u.avatar||'👤'} ${escHtml(u.name||'אנונימי')}`;
       chip.onclick=()=>{document.querySelectorAll('.hist-chip').forEach(c=>c.classList.remove('selected'));chip.classList.add('selected');showUserHistory(d.id);};
       hs.appendChild(chip);
@@ -662,6 +676,19 @@ function showToast(msg,type=''){
 window.showToast=showToast;
 
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+let currentFilter='all';
+function setFilter(f){
+  currentFilter=f;
+  ['all','online','offline'].forEach(x=>document.getElementById('filter'+x.charAt(0).toUpperCase()+x.slice(1))?.classList.toggle('active',x===f));
+  const items=document.querySelectorAll('#usersList .user-item');
+  items.forEach(item=>{
+    const online=item.dataset.online==='true';
+    if(f==='all')item.style.display='';
+    else if(f==='online')item.style.display=online?'':'none';
+    else item.style.display=!online?'':'none';
+  });
+}
 </script>
 </body>
 </html>
