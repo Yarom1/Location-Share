@@ -55,7 +55,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .layer-item:hover{background:var(--surface2)}
 .layer-item input{accent-color:var(--accent);width:16px;height:16px}
 .layer-item label{font-size:13px;cursor:pointer;color:var(--text)}
-.side-panel{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--surface);border-top:1px solid var(--border);border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:82dvh;display:flex;flex-direction:column;box-shadow:0 -4px 20px rgba(0,0,0,.3)}
+.side-panel{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--surface);border-top:1px solid var(--border);border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:82dvh;display:flex;flex-direction:column;box-shadow:0 -4px 20px rgba(0,0,0,.3)}
 .side-panel.open{transform:translateY(0)}
 .panel-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 0;flex-shrink:0}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
@@ -114,7 +114,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:350;display:none;}
 .overlay.show{display:block}
 .locate-btn{position:fixed;bottom:72px;left:14px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
-.modal{position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;padding:24px}
+.modal{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;padding:24px}
 .modal.open{display:flex}
 .modal-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:320px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 32px rgba(0,0,0,.7)}
 .modal-box h3{font-size:18px;font-weight:700}
