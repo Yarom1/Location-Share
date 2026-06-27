@@ -283,6 +283,7 @@ import{getFirestore,doc,setDoc,getDoc,updateDoc,onSnapshot,collection,query,orde
 const firebaseConfig={apiKey:"AIzaSyC2-T-_UCN_D-wcU4eiATbOJxvHojjyrxY",authDomain:"locationshare-38792.firebaseapp.com",projectId:"locationshare-38792",storageBucket:"locationshare-38792.firebasestorage.app",messagingSenderId:"1018646639206",appId:"1:1018646639226:web:809574a0f35a0c911733a7"};
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
+auth.setPersistence && auth.setPersistence({type:"LOCAL"}).catch(()=>{});
 const db=getFirestore(app);
 
 const AVATARS=['😀','😎','🦊','🐺','🦁','🐯','🦝','🐸','🤖','👾','🦄','🐉','🧙','🧛','👻','🎃','🚀','⚡','🔥','💎'];

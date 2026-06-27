@@ -22,6 +22,13 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
 
+        // שמור cookies בין sessions
+        CookieManager.getInstance().apply {
+            setAcceptCookie(true)
+            setAcceptThirdPartyCookies(webView, true)
+            flush()
+        }
+
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
@@ -30,7 +37,6 @@ class MainActivity : AppCompatActivity() {
             allowContentAccess = true
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             cacheMode = WebSettings.LOAD_DEFAULT
-            mediaPlaybackRequiresUserGesture = false
             javaScriptCanOpenWindowsAutomatically = true
             setSupportZoom(true)
             builtInZoomControls = false
@@ -38,29 +44,21 @@ class MainActivity : AppCompatActivity() {
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onGeolocationPermissionsShowPrompt(
-                origin: String,
-                callback: GeolocationPermissions.Callback
-            ) {
-                callback.invoke(origin, true, false)
-            }
+                origin: String, callback: GeolocationPermissions.Callback
+            ) { callback.invoke(origin, true, true) }
+
             override fun onPermissionRequest(request: PermissionRequest) {
                 request.grant(request.resources)
             }
+
             override fun onConsoleMessage(msg: ConsoleMessage): Boolean {
-                android.util.Log.d("WebView", "${msg.message()} -- ${msg.sourceId()}:${msg.lineNumber()}")
+                android.util.Log.d("WebView", "${msg.message()} [${msg.sourceId()}:${msg.lineNumber()}]")
                 return true
             }
         }
 
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                return false
-            }
-        }
-
-        CookieManager.getInstance().apply {
-            setAcceptCookie(true)
-            setAcceptThirdPartyCookies(webView, true)
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?) = false
         }
 
         requestLocationPermissions()
@@ -83,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == LOCATION_PERMISSION_CODE) {
             loadApp()
             if (grantResults.any { it != PackageManager.PERMISSION_GRANTED })
-                Toast.makeText(this, "נדרשת הרשאת מיקום לפעולה מלאה", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "נדרשת הרשאת מיקום", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -92,8 +90,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (webView.canGoBack()) webView.goBack()
-        else super.onBackPressed()
+        if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
     }
 
     override fun onResume() { super.onResume(); webView.onResume() }
