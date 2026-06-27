@@ -458,11 +458,18 @@ function setLayer(t){
 function toggleLayers(){document.getElementById('layersPanel').classList.toggle('open');}
 function showMapView(){closeAllPanels();setTimeout(()=>map&&map.invalidateSize(),350);setActiveNav('navMap');}
 let locating=false;function locateMe(){
+  if(lastLat&&lastLng){map.flyTo([lastLat,lastLng],17);return;}
   if(locating)return;locating=true;
+  document.getElementById('locateBtn').textContent='⏳';
   navigator.geolocation?.getCurrentPosition(p=>{
-    map.flyTo([p.coords.latitude,p.coords.longitude],16);
+    map.flyTo([p.coords.latitude,p.coords.longitude],17);
     locating=false;
-  },()=>{showToast('לא ניתן לקבל מיקום','error');locating=false;});
+    document.getElementById('locateBtn').textContent='📍';
+  },()=>{
+    showToast('לא ניתן לקבל מיקום','error');
+    locating=false;
+    document.getElementById('locateBtn').textContent='📍';
+  },{timeout:5000,maximumAge:30000,enableHighAccuracy:false});
 }
 function flyToUser(uid){const m=markers[uid];if(m){map.flyTo(m.getLatLng(),16);closeAllPanels();}}
 
