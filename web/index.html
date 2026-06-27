@@ -129,6 +129,33 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 <body>
 <div class="toast-wrap" id="toastWrap"></div>
 
+<div class="modal" id="editProfileModal">
+  <div class="modal-box">
+    <h3>✏️ עריכת פרופיל</h3>
+    <div style="display:flex;justify-content:center;margin-bottom:8px">
+      <div id="editAvatarPreview" style="font-size:48px;cursor:pointer" onclick="document.getElementById('editAvatarGrid').style.display=document.getElementById('editAvatarGrid').style.display==='none'?'grid':'none'">😀</div>
+    </div>
+    <div id="editAvatarGrid" style="display:none;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px"></div>
+    <div class="input-wrap">
+      <label>שם תצוגה</label>
+      <input type="text" id="editNameInput" placeholder="שם..." maxlength="20">
+    </div>
+    <div style="margin-top:8px">
+      <label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">תמונת פרופיל</label>
+      <input type="file" id="profileImageInput" accept="image/*" capture="user" style="display:none" onchange="handleProfileImage(event)">
+      <button class="btn secondary" style="margin-bottom:8px" onclick="document.getElementById('profileImageInput').click()">📷 צלם/בחר תמונה</button>
+      <div id="profileImagePreview" style="display:none;text-align:center;margin-bottom:8px">
+        <img id="profileImg" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid var(--accent)">
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">תמונה נבחרה ✓</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="saveEditProfile()">שמור</button>
+      <button class="btn secondary" onclick="closeModal('editProfileModal')">ביטול</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="adminModal">
   <div class="modal-box">
     <h3>🔐 כניסת מנהל</h3>
@@ -248,6 +275,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
         <div class="user-avatar" id="settingsAvatar">👤</div>
         <div class="user-info"><div class="user-name" id="settingsName">-</div><div class="user-time" id="settingsUID" style="font-size:10px;word-break:break-all"></div></div>
       </div>
+      <button class="btn secondary" onclick="openEditProfile()">✏️ עריכת פרופיל</button>
       <button class="btn secondary" onclick="toggleDarkMode()">🌙 החלף מצב תצוגה</button>
       <button class="btn secondary" onclick="openModal('adminModal')" id="adminLoginBtn">🔐 כניסת מנהל</button>
       <button class="btn danger" id="adminLogoutBtn" onclick="logoutAdmin()" style="display:none">🚪 יציאה ממנהל</button>
@@ -428,6 +456,73 @@ async function saveNewPassword(){
 }
 window.saveNewPassword=saveNewPassword;
 
+const AVATARS_LIST=['😀','😎','🦊','🐺','🦁','🐯','🦝','🐸','🤖','👾','🦄','🐉','🧙','🧛','👻','🎃','🚀','⚡','🔥','💎'];
+let selectedEditAvatar=null;
+let profileImageData=null;
+
+function openEditProfile(){
+  closePanel('settings');
+  document.getElementById('editNameInput').value=currentUser.name||'';
+  selectedEditAvatar=currentUser.avatar||'😀';
+  document.getElementById('editAvatarPreview').textContent=selectedEditAvatar;
+  profileImageData=currentUser.photoURL||null;
+  if(profileImageData){
+    document.getElementById('profileImg').src=profileImageData;
+    document.getElementById('profileImagePreview').style.display='block';
+  }else{
+    document.getElementById('profileImagePreview').style.display='none';
+  }
+  // בנה grid אווטרים
+  const grid=document.getElementById('editAvatarGrid');
+  grid.innerHTML='';
+  AVATARS_LIST.forEach(a=>{
+    const d=document.createElement('div');
+    d.style.cssText='font-size:24px;text-align:center;padding:6px;border-radius:8px;cursor:pointer;border:2px solid transparent';
+    d.textContent=a;
+    if(a===selectedEditAvatar)d.style.borderColor='var(--accent)';
+    d.onclick=()=>{
+      selectedEditAvatar=a;
+      document.getElementById('editAvatarPreview').textContent=a;
+      grid.querySelectorAll('div').forEach(x=>x.style.borderColor='transparent');
+      d.style.borderColor='var(--accent)';
+    };
+    grid.appendChild(d);
+  });
+  openModal('editProfileModal');
+}
+
+function handleProfileImage(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    profileImageData=ev.target.result;
+    document.getElementById('profileImg').src=profileImageData;
+    document.getElementById('profileImagePreview').style.display='block';
+    // אם יש תמונה - הסתר אווטר
+    document.getElementById('editAvatarPreview').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveEditProfile(){
+  const name=document.getElementById('editNameInput').value.trim();
+  if(!name){showToast('הכנס שם','error');return;}
+  const updates={name,avatar:selectedEditAvatar,lastSeen:serverTimestamp()};
+  if(profileImageData&&profileImageData.startsWith('data:')){
+    updates.photoURL=profileImageData;
+    updates.avatar='📷';
+  }
+  currentUser={...currentUser,...updates};
+  await setDoc(doc(db,'users',myUID),updates,{merge:true});
+  updateMyUI();
+  closeModal('editProfileModal');
+  showToast('פרופיל עודכן ✓','success');
+}
+window.openEditProfile=openEditProfile;
+window.saveEditProfile=saveEditProfile;
+window.handleProfileImage=handleProfileImage;
+
 function logoutAdmin(){
   isAdmin=false;
   localStorage.removeItem('isAdmin_'+myUID);
@@ -473,7 +568,12 @@ let locating=false;let lastLat=0,lastLng=0;function locateMe(){
 }
 function flyToUser(uid){const m=markers[uid];if(m){map.flyTo(m.getLatLng(),16);closeAllPanels();}}
 
-function createMarkerHTML(u){return`<div class="custom-marker"><div class="marker-avatar">${u.avatar||'👤'}</div><div class="marker-name">${u.name||''}</div></div>`;}
+function createMarkerHTML(u){
+  const inner=u.photoURL
+    ?`<img src="${u.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`
+    :(u.avatar||'👤');
+  return`<div class="custom-marker"><div class="marker-avatar">${inner}</div><div class="marker-name">${u.name||''}</div></div>`;
+}
 
 const markerCache={};
 function updateMarker(uid,data){
