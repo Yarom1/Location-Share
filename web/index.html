@@ -302,7 +302,7 @@ window.handleChatKey=handleChatKey;window.sendMessage=sendMessage;window.broadca
 window.clearHistory=clearHistory;window.openDM=openDM;window.flyToUser=flyToUser;
 window.showUserHistory=showUserHistory;window.kickUser=kickUser;window.reconnectUser=reconnectUser;
 window.toggleDarkMode=toggleDarkMode;window.openModal=openModal;window.closeModal=closeModal;
-window.checkAdminPass=checkAdminPass;window.logoutAdmin=logoutAdmin;window.deleteInactiveUsers=deleteInactiveUsers;window.clearHistory=clearHistory;window.setFilter=setFilter;
+window.checkAdminPass=checkAdminPass;window.logoutAdmin=logoutAdmin;window.changeAdminPassword=changeAdminPassword;window.deleteInactiveUsers=deleteInactiveUsers;window.clearHistory=clearHistory;window.setFilter=setFilter;
 
 function buildAvatarGrid(){
   const g=document.getElementById('avatarGrid');g.innerHTML='';
@@ -415,12 +415,18 @@ function checkAdminPass(){
 }
 
 async function changeAdminPassword(){
-  const newPass=prompt('סיסמה חדשה:');
+  openModal('changePassModal');
+}
+async function saveNewPassword(){
+  const newPass=document.getElementById('newPassInput').value.trim();
   if(!newPass||newPass.length<4){showToast('סיסמה קצרה מדי','error');return;}
   await setDoc(doc(db,'config','admin'),{password:newPass},{merge:true});
   ADMIN_PASSWORD=newPass;
+  document.getElementById('newPassInput').value='';
+  closeModal('changePassModal');
   showToast('סיסמה עודכנה ✓','success');
 }
+window.saveNewPassword=saveNewPassword;
 
 function logoutAdmin(){
   isAdmin=false;
@@ -742,5 +748,15 @@ function setFilter(f){
   });
 }
 </script>
+<div class="modal" id="changePassModal">
+  <div class="modal-box">
+    <h3>🔑 שינוי סיסמת מנהל</h3>
+    <div class="input-wrap"><label>סיסמה חדשה</label><input type="password" id="newPassInput" placeholder="לפחות 4 תווים..."></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="saveNewPassword()">שמור</button>
+      <button class="btn secondary" onclick="closeModal('changePassModal')">ביטול</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
