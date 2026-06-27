@@ -269,6 +269,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
       <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
         <button class="btn secondary" onclick="broadcastMessage()">📢 הודעה לכולם</button>
         <button class="btn danger" onclick="clearHistory()">🗑️ נקה היסטוריה</button>
+        <button class="btn danger" onclick="deleteInactiveUsers()">👤 מחק משתמשים לא פעילים</button>
       </div>
     </div>
   </div>
@@ -300,7 +301,7 @@ window.handleChatKey=handleChatKey;window.sendMessage=sendMessage;window.broadca
 window.clearHistory=clearHistory;window.openDM=openDM;window.flyToUser=flyToUser;
 window.showUserHistory=showUserHistory;window.kickUser=kickUser;window.reconnectUser=reconnectUser;
 window.toggleDarkMode=toggleDarkMode;window.openModal=openModal;window.closeModal=closeModal;
-window.checkAdminPass=checkAdminPass;window.logoutAdmin=logoutAdmin;
+window.checkAdminPass=checkAdminPass;window.logoutAdmin=logoutAdmin;window.deleteInactiveUsers=deleteInactiveUsers;window.clearHistory=clearHistory;window.setFilter=setFilter;
 
 function buildAvatarGrid(){
   const g=document.getElementById('avatarGrid');g.innerHTML='';
