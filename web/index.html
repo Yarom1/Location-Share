@@ -638,6 +638,7 @@ async function deleteInactiveUsers(){
   const snap=await getDocs(collection(db,'users'));
   const batch=writeBatch(db);
   let count=0;
+  const now=Date.now();
   snap.forEach(d=>{
     const u=d.data();
     const ls=u.lastSeen?u.lastSeen.toMillis():0;
