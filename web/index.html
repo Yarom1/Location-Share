@@ -470,12 +470,16 @@ function showUserPopup(uid,data){
 
 function startLocationTracking(){
   if(!navigator.geolocation)return;
+  let lastLat=0,lastLng=0;
   navigator.geolocation.watchPosition(async pos=>{
     const{latitude:lat,longitude:lng}=pos.coords;
+    const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
+    if(dist<0.00005)return; // פחות מ-5 מטר - אל תעדכן
+    lastLat=lat;lastLng=lng;
     await setDoc(doc(db,'users',myUID),{lat,lng,lastSeen:serverTimestamp()},{merge:true});
     await addDoc(collection(db,'history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
     if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
-  },null,{enableHighAccuracy:true,maximumAge:5000,timeout:15000});
+  },null,{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
 }
 
 function listenUsers(){
