@@ -276,7 +276,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getAuth,signInAnonymously,onAuthStateChanged,browserLocalPersistence,setPersistence}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getAuth,signInAnonymously,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import{getFirestore,doc,setDoc,getDoc,updateDoc,onSnapshot,collection,query,orderBy,limit,addDoc,serverTimestamp,deleteDoc,getDocs,where}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // Persistence is handled by Firebase Auth automatically in WebView
