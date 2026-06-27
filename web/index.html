@@ -521,7 +521,9 @@ async function saveEditProfile(){
   const updates={name,avatar:selectedEditAvatar,lastSeen:serverTimestamp()};
   if(profileImageData&&profileImageData.startsWith('data:')){
     updates.photoURL=profileImageData;
-    updates.avatar='📷';
+  } else {
+    // אם בחר אווטר - מחק תמונה
+    updates.photoURL=null;
   }
   currentUser={...currentUser,...updates};
   await setDoc(doc(db,'users',myUID),updates,{merge:true});
