@@ -439,12 +439,17 @@ function flyToUser(uid){const m=markers[uid];if(m){map.flyTo(m.getLatLng(),16);c
 
 function createMarkerHTML(u){return`<div class="custom-marker"><div class="marker-avatar">${u.avatar||'👤'}</div><div class="marker-name">${u.name||''}</div></div>`;}
 
+const markerCache={};
 function updateMarker(uid,data){
   if(!data.lat||!data.lng)return;
+  const key=uid+data.lat.toFixed(5)+data.lng.toFixed(5);
   const icon=L.divIcon({className:'',html:createMarkerHTML(data),iconSize:[60,56],iconAnchor:[30,48]});
-  if(markers[uid])markers[uid].setLatLng([data.lat,data.lng]).setIcon(icon);
-  else{
+  if(markers[uid]){
+    if(markerCache[uid]!==key){markers[uid].setLatLng([data.lat,data.lng]);markerCache[uid]=key;}
+    markers[uid].setIcon(icon);
+  }else{
     markers[uid]=L.marker([data.lat,data.lng],{icon}).addTo(map);
+    markerCache[uid]=key;
     if(uid!==myUID)markers[uid].on('click',()=>showUserPopup(uid,data));
   }
 }
