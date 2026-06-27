@@ -251,6 +251,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
       <button class="btn secondary" onclick="toggleDarkMode()">🌙 החלף מצב תצוגה</button>
       <button class="btn secondary" onclick="openModal('adminModal')" id="adminLoginBtn">🔐 כניסת מנהל</button>
       <button class="btn danger" id="adminLogoutBtn" onclick="logoutAdmin()" style="display:none">🚪 יציאה ממנהל</button>
+      <button class="btn secondary" id="changePassBtn" onclick="changeAdminPassword()" style="display:none">🔑 שנה סיסמת מנהל</button>
       <div style="font-size:12px;color:var(--text2);text-align:center;margin-top:8px">Location Share v1.0</div>
     </div>
   </div>
@@ -287,7 +288,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 const AVATARS=['😀','😎','🦊','🐺','🦁','🐯','🦝','🐸','🤖','👾','🦄','🐉','🧙','🧛','👻','🎃','🚀','⚡','🔥','💎'];
-const ADMIN_PASSWORD='admin1234';
+let ADMIN_PASSWORD='';
 let currentUser=null,myUID=null,isAdmin=false;
 let map,markers={},tileLayer,historyLayer=null;
 let activeChatTab='group',activeDMUser=null;
@@ -327,8 +328,8 @@ onAuthStateChanged(auth,async user=>{
     myUID=user.uid;
     isAdmin=localStorage.getItem('isAdmin_'+myUID)==='true';
     const ud=await getDoc(doc(db,'users',myUID));
-    if(ud.exists()&&ud.data().name){currentUser={...ud.data(),uid:myUID};startApp();}
-    else showScreen('profile-setup');
+    if(ud.exists()&&ud.data().name){currentUser={...ud.data(),uid:myUID};await loadAdminPassword();startApp();}
+    else{await loadAdminPassword();showScreen('profile-setup');}
   }else{signInAnonymously(auth);}
 });
 signInAnonymously(auth).catch(e=>{document.getElementById('splashMsg').textContent='שגיאה: '+e.code;});
@@ -341,6 +342,17 @@ async function saveProfile(){
   currentUser={name,avatar,uid:myUID,online:true};
   await setDoc(doc(db,'users',myUID),{name,avatar,online:true,createdAt:serverTimestamp()});
   startApp();
+}
+
+async function loadAdminPassword(){
+  try{
+    const d=await getDoc(doc(db,'config','admin'));
+    if(d.exists()&&d.data().password)ADMIN_PASSWORD=d.data().password;
+    else{
+      await setDoc(doc(db,'config','admin'),{password:'admin1234'});
+      ADMIN_PASSWORD='admin1234';
+    }
+  }catch(e){ADMIN_PASSWORD='admin1234';}
 }
 
 function startApp(){
@@ -373,6 +385,7 @@ function updateMyUI(){
   if(isAdmin){
     document.getElementById('adminLoginBtn').style.display='none';
     document.getElementById('adminLogoutBtn').style.display='block';
+    document.getElementById('changePassBtn').style.display='block';
     document.getElementById('adminBtn').style.display='flex';
   }
 }
@@ -400,12 +413,21 @@ function checkAdminPass(){
   document.getElementById('adminPassInput').value='';
 }
 
+async function changeAdminPassword(){
+  const newPass=prompt('סיסמה חדשה:');
+  if(!newPass||newPass.length<4){showToast('סיסמה קצרה מדי','error');return;}
+  await setDoc(doc(db,'config','admin'),{password:newPass},{merge:true});
+  ADMIN_PASSWORD=newPass;
+  showToast('סיסמה עודכנה ✓','success');
+}
+
 function logoutAdmin(){
   isAdmin=false;
   localStorage.removeItem('isAdmin_'+myUID);
   document.getElementById('adminBtn').style.display='none';
   document.getElementById('adminLoginBtn').style.display='block';
   document.getElementById('adminLogoutBtn').style.display='none';
+  document.getElementById('changePassBtn').style.display='none';
   closePanel('admin');
   showToast('יצאת ממצב מנהל');
 }
