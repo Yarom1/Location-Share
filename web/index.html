@@ -482,7 +482,10 @@ function openEditProfile(){
     if(a===selectedEditAvatar)d.style.borderColor='var(--accent)';
     d.onclick=()=>{
       selectedEditAvatar=a;
+      profileImageData=null;
       document.getElementById('editAvatarPreview').textContent=a;
+      document.getElementById('editAvatarPreview').style.display='block';
+      document.getElementById('profileImagePreview').style.display='none';
       grid.querySelectorAll('div').forEach(x=>x.style.borderColor='transparent');
       d.style.borderColor='var(--accent)';
     };
