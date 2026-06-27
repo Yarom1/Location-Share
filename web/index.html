@@ -633,6 +633,19 @@ async function reconnectUser(uid){
   showToast('משתמש חובר מחדש','success');
 }
 
+async function deleteInactiveUsers(){
+  const snap=await getDocs(collection(db,'users'));
+  const batch=writeBatch(db);
+  let count=0;
+  snap.forEach(d=>{
+    const u=d.data();
+    const ls=u.lastSeen?u.lastSeen.toMillis():0;
+    if(inactive&&d.id!==myUID){batch.delete(d.ref);count++;}
+  });
+  await batch.commit();
+  showToast(count+' משתמשים נמחקו','success');
+}
+
 async function broadcastMessage(){
   const msg=prompt('הודעה לכולם:');if(!msg)return;
   await addDoc(collection(db,'groupChat'),{uid:'admin',name:'📢 מנהל',avatar:'⚙️',text:msg,ts:serverTimestamp()});
