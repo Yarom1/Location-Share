@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.webkit.*
@@ -11,12 +12,17 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private val LOCATION_PERMISSION_CODE = 1001
     private val BACKGROUND_LOCATION_CODE = 1002
+    private val FILE_CHOOSER_CODE = 1003
+    private var filePathCallback: ValueCallback<Array<Uri>>? = null
+    private var cameraUri: Uri? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +59,40 @@ class MainActivity : AppCompatActivity() {
                 request.grant(request.resources)
             }
 
+            override fun onShowFileChooser(
+                webView: WebView?,
+                filePath: ValueCallback<Array<Uri>>?,
+                fileChooserParams: FileChooserParams?
+            ): Boolean {
+                filePathCallback?.onReceiveValue(null)
+                filePathCallback = filePath
+
+                // יצור קובץ זמני למצלמה
+                val photoFile = File(cacheDir, "profile_photo_${System.currentTimeMillis()}.jpg")
+                cameraUri = FileProvider.getUriForFile(
+                    this@MainActivity,
+                    "com.locationshare.fileprovider",
+                    photoFile
+                )
+
+                // Intent למצלמה
+                val cameraIntent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE).apply {
+                    putExtra(android.provider.MediaStore.EXTRA_OUTPUT, cameraUri)
+                }
+
+                // Intent לגלריה
+                val galleryIntent = Intent(Intent.ACTION_PICK).apply {
+                    type = "image/*"
+                }
+
+                // chooser
+                val chooser = Intent.createChooser(galleryIntent, "בחר תמונה")
+                chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cameraIntent))
+
+                startActivityForResult(chooser, FILE_CHOOSER_CODE)
+                return true
+            }
+
             override fun onConsoleMessage(msg: ConsoleMessage): Boolean {
                 android.util.Log.d("WebView", "${msg.message()} [${msg.sourceId()}:${msg.lineNumber()}]")
                 return true
@@ -63,7 +103,6 @@ class MainActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?) = false
         }
 
-        // Pass location from service to WebView
         LocationService.onLocationUpdate = { lat, lng ->
             runOnUiThread {
                 webView.evaluateJavascript(
@@ -75,10 +114,29 @@ class MainActivity : AppCompatActivity() {
         requestLocationPermissions()
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == FILE_CHOOSER_CODE) {
+            if (resultCode == RESULT_OK) {
+                val results = when {
+                    data?.data != null -> arrayOf(data.data!!)
+                    cameraUri != null -> arrayOf(cameraUri!!)
+                    else -> null
+                }
+                filePathCallback?.onReceiveValue(results)
+            } else {
+                filePathCallback?.onReceiveValue(null)
+            }
+            filePathCallback = null
+            cameraUri = null
+        }
+    }
+
     private fun requestLocationPermissions() {
         val permissions = mutableListOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.CAMERA
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.POST_NOTIFICATIONS)
