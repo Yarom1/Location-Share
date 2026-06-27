@@ -499,6 +499,16 @@ function showUserPopup(uid,data){
 
 function startLocationTracking(){
   if(!navigator.geolocation)return;
+  // קבל מיקום מה-Android Service כשהאפליקציה ברקע
+  window.onBackgroundLocation=async function(lat,lng){
+    if(!myUID||!currentUser)return;
+    const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
+    if(dist<0.00005)return;
+    lastLat=lat;lastLng=lng;
+    await setDoc(doc(db,'users',myUID),{lat,lng,lastSeen:serverTimestamp()},{merge:true});
+    await addDoc(collection(db,'history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
+  };
+
   let lastLat=0,lastLng=0;
   navigator.geolocation.watchPosition(async pos=>{
     const{latitude:lat,longitude:lng}=pos.coords;

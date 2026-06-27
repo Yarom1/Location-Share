@@ -2,7 +2,9 @@ package com.locationshare
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.webkit.*
 import android.widget.Toast
@@ -14,6 +16,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private val LOCATION_PERMISSION_CODE = 1001
+    private val BACKGROUND_LOCATION_CODE = 1002
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +25,6 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
 
-        // שמור cookies בין sessions
         CookieManager.getInstance().apply {
             setAcceptCookie(true)
             setAcceptThirdPartyCookies(webView, true)
@@ -61,28 +63,62 @@ class MainActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?) = false
         }
 
+        // Pass location from service to WebView
+        LocationService.onLocationUpdate = { lat, lng ->
+            runOnUiThread {
+                webView.evaluateJavascript(
+                    "if(window.onBackgroundLocation)window.onBackgroundLocation($lat,$lng);", null
+                )
+            }
+        }
+
         requestLocationPermissions()
     }
 
     private fun requestLocationPermissions() {
-        val permissions = arrayOf(
+        val permissions = mutableListOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
         val notGranted = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-        if (notGranted.isEmpty()) loadApp()
+        if (notGranted.isEmpty()) requestBackgroundLocation()
         else ActivityCompat.requestPermissions(this, notGranted.toTypedArray(), LOCATION_PERMISSION_CODE)
+    }
+
+    private fun requestBackgroundLocation() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                    arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
+                    BACKGROUND_LOCATION_CODE)
+                return
+            }
+        }
+        startLocationServiceAndLoad()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_CODE) {
-            loadApp()
-            if (grantResults.any { it != PackageManager.PERMISSION_GRANTED })
-                Toast.makeText(this, "נדרשת הרשאת מיקום", Toast.LENGTH_LONG).show()
+        when (requestCode) {
+            LOCATION_PERMISSION_CODE -> requestBackgroundLocation()
+            BACKGROUND_LOCATION_CODE -> startLocationServiceAndLoad()
         }
+    }
+
+    private fun startLocationServiceAndLoad() {
+        val serviceIntent = Intent(this, LocationService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
+        loadApp()
     }
 
     private fun loadApp() {
