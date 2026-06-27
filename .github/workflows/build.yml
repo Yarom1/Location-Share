@@ -19,6 +19,22 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            /opt/gradle-8.3
+          key: gradle-8.3-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-8.3-
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/lib/android/sdk/build-tools
+          key: android-build-tools-33
+
       - name: Decode keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -50,8 +66,10 @@ jobs:
 
       - name: Install Gradle 8.3
         run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.3-bin.zip -O /tmp/gradle.zip
-          unzip -q /tmp/gradle.zip -d /opt
+          if [ ! -f /opt/gradle-8.3/bin/gradle ]; then
+            wget -q https://services.gradle.org/distributions/gradle-8.3-bin.zip -O /tmp/gradle.zip
+            unzip -q /tmp/gradle.zip -d /opt
+          fi
           echo "/opt/gradle-8.3/bin" >> $GITHUB_PATH
 
       - name: Build Release APK
