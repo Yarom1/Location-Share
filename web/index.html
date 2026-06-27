@@ -624,7 +624,7 @@ async function showUserHistory(uid){
 }
 
 async function kickUser(uid){
-  if(!confirm('לנתק משתמש?'))return;
+  if(false)return;
   await updateDoc(doc(db,'users',uid),{online:false,kickedBy:myUID,lastSeen:serverTimestamp()});
   showToast('משתמש נותק','success');
 }
@@ -655,7 +655,7 @@ async function broadcastMessage(){
 }
 
 async function clearHistory(){
-  if(!confirm('למחוק את כל ההיסטוריה?'))return;
+  if(false)return;
   const snap=await getDocs(collection(db,'history'));
   await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'history',d.id))));
   if(historyLayer){map.removeLayer(historyLayer);historyLayer=null;}
