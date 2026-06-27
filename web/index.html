@@ -317,9 +317,13 @@ function checkReady(){
 document.getElementById('nameInput').addEventListener('input',checkReady);
 buildAvatarGrid();
 
+// Try to restore previous anonymous session
+const savedUID = localStorage.getItem("savedUID");
+
 onAuthStateChanged(auth,async user=>{
   if(user){
     myUID=user.uid;
+    localStorage.setItem("savedUID", myUID);
     isAdmin=localStorage.getItem('isAdmin_'+myUID)==='true';
     const ud=await getDoc(doc(db,'users',myUID));
     if(ud.exists()&&ud.data().name){currentUser={...ud.data(),uid:myUID};startApp();}
