@@ -642,7 +642,7 @@ async function deleteInactiveUsers(){
   snap.forEach(d=>{
     const u=d.data();
     const ls=u.lastSeen?u.lastSeen.toMillis():0;
-    const inactive=!u.online||(now-ls>120000);
+    const inactive=!u.online||(now-ls>300000);
     if(inactive&&d.id!==myUID){batch.delete(d.ref);count++;}
   });
   await batch.commit();
