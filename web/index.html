@@ -13,7 +13,7 @@ body.light{--bg:#f0f4f8;--surface:#ffffff;--surface2:#e8edf2;--accent:#00a884;--
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Heebo',sans-serif}
 body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direction:rtl;transition:background .3s,color .3s}
 .screen{display:none;position:fixed;inset:0;z-index:100}
-.screen.active{display:flex}.hide-on-splash{display:none}
+.screen.active{display:flex}
 #splash{background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:16px}
 .logo-ring{width:80px;height:80px;border-radius:50%;border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite}
 .logo-ring svg{width:40px;height:40px;fill:var(--accent)}
@@ -127,7 +127,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 </style>
 </head>
 <body>
-  <div id="mapMenuWrap" class="hide-on-splash" style="position:fixed;left:14px;bottom:80px;z-index:150;display:flex;flex-direction:column;align-items:center;gap:10px">
+  <div id="mapMenuWrap" style="position:fixed;left:14px;bottom:80px;z-index:150;display:flex;flex-direction:column;align-items:center;gap:10px">
     <div onclick="toggleMapMenu()" style="width:50px;height:50px;border-radius:50%;background:rgba(0,212,170,0.85);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🛠️</div>
     <div id="mapMenuItems" style="display:none;flex-direction:column;gap:10px;align-items:center">
       <div onclick="locateMe()" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">📍</div>
@@ -359,6 +359,7 @@ function checkReady(){
 }
 document.getElementById('nameInput').addEventListener('input',checkReady);
 buildAvatarGrid();
+document.getElementById("mapMenuWrap").style.display="none";
 
 // Try to restore previous anonymous session
 const savedUID = localStorage.getItem("savedUID");
