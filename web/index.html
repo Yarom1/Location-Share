@@ -979,8 +979,10 @@ map.on("click",e=>{
 
 function toggleMapMenu(){
   const items=document.getElementById('mapMenuItems');
+  if(!items){showToast('שגיאה','error');return;}
   const open=items.style.display==='flex';
   items.style.display=open?'none':'flex';
+  items.style.flexDirection='column';
 }
 
 window.toggleMapMenu=toggleMapMenu;
