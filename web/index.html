@@ -838,7 +838,11 @@ function setActiveNav(id){document.querySelectorAll('.nav-item').forEach(n=>n.cl
 
 function openPanel(name){
   closeAllPanels();
-  document.getElementById(name+'Panel')?.classList.add('open');
+  const panelEl=document.getElementById(name+'Panel');
+  if(panelEl){
+    panelEl.classList.add('open');
+    addSwipeToClose(panelEl,name);
+  }
   
   if(name==='chat'){document.getElementById('chatDot').classList.remove('show');setTimeout(()=>switchChatTab(activeChatTab),100);}
   const navMap={users:'navUsers',chat:'navChat',history:'navHistory',settings:'navSettings',admin:null};
