@@ -575,6 +575,13 @@ function initMap(){
   map=L.map('map',{zoomControl:false,attributionControl:true}).setView([31.5,34.8],8);
   L.control.zoom({position:'bottomleft'}).addTo(map);
   setLayer('street');
+  map.on('click',e=>{
+    if(measureMode)return;
+    const p=document.getElementById('coordsPanel');
+    p.textContent='📍 '+e.latlng.lat.toFixed(6)+', '+e.latlng.lng.toFixed(6);
+    p.style.display='block';
+    setTimeout(()=>p.style.display='none',3000);
+  });
 }
 
 function setLayer(t){
@@ -976,13 +983,7 @@ function toggleFullscreen(){
   }
 }
 
-map.on("click",e=>{
-  if(measureMode)return;
-  const p=document.getElementById("coordsPanel");
-  p.textContent="📍 "+e.latlng.lat.toFixed(6)+", "+e.latlng.lng.toFixed(6);
-  p.style.display="block";
-  setTimeout(()=>p.style.display="none",3000);
-});
+
 
 function toggleMapMenu(){
   const items=document.getElementById('mapMenuItems');
