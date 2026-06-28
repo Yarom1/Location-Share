@@ -6,6 +6,7 @@
 <title>Location Share</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0d1117;--surface:#161b22;--surface2:#1c2433;--accent:#00d4aa;--danger:#ff4757;--text:#e6edf3;--text2:#7d8590;--border:#30363d;--radius:12px;--admin:#f0a500;--popup-bg:#161b22}
@@ -572,7 +573,7 @@ function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 function initMap(){
-  map=L.map('map',{zoomControl:false,attributionControl:true}).setView([31.5,34.8],8);
+  map=L.map('map',{zoomControl:false,attributionControl:true,rotate:true,bearing:0}).setView([31.5,34.8],8);
   L.control.zoom({position:'bottomleft'}).addTo(map);
   setLayer('street');
   map.on('click',e=>{
