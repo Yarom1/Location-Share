@@ -209,7 +209,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div class="layer-item"><input type="radio" name="layer" id="lt" onchange="setLayer('topo')"><label for="lt">🏔️ טופוגרפי</label></div>
   </div>
 
-  <div class="bottom-nav">
+  <div id="mapTools" style="position:fixed;left:14px;bottom:72px;z-index:200;display:flex;flex-direction:column;gap:8px"><div class="map-tool-btn" id="locateBtn" onclick="locateMe()">📍</div><div class="map-tool-btn" id="trackBtn" onclick="toggleTracking()">🎯</div><div class="map-tool-btn" id="compassBtn" onclick="toggleCompass()">🧭</div><div class="map-tool-btn" id="measureBtn" onclick="toggleMeasure()">📏</div><div class="map-tool-btn" id="fullscreenBtn" onclick="toggleFullscreen()">⛶</div><div class="map-tool-btn" onclick="resetNorth()">⬆️</div></div><div id="coordsPanel" style="position:fixed;bottom:130px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:12px;display:none;color:var(--text)"></div><div id="measurePanel" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:8px 16px;font-size:13px;display:none;color:var(--accent);text-align:center">📏 לחץ על המפה<br><span id="measureResult"></span><button onclick="clearMeasure()" style="background:none;border:none;color:var(--danger);cursor:pointer">✕</button></div>  <div class="bottom-nav">
     <div class="nav-item active" id="navMap" onclick="showMapView()">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>מפה
     </div>
@@ -876,6 +876,101 @@ function showToast(msg,type=''){
   setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3000);
 }
 window.showToast=showToast;
+
+let trackingMode=false,compassMode=false,measureMode=false;
+let measurePoints=[],measureLayers=[];
+
+function toggleTracking(){
+  trackingMode=!trackingMode;
+  document.getElementById("trackBtn").classList.toggle("active",trackingMode);
+  if(trackingMode&&lastLat&&lastLng)map.flyTo([lastLat,lastLng],17);
+  showToast(trackingMode?"מצב מעקב פעיל":"מצב מעקב כבוי");
+}
+
+function toggleCompass(){
+  compassMode=!compassMode;
+  document.getElementById("compassBtn").classList.toggle("active",compassMode);
+  if(compassMode){
+    window.addEventListener("deviceorientation",handleOrientation);
+    showToast("מצפן פעיל 🧭");
+  }else{
+    window.removeEventListener("deviceorientation",handleOrientation);
+    document.getElementById("compassBtn").style.transform="rotate(0deg)";
+    showToast("מצפן כבוי");
+  }
+}
+
+let lastHeading=0;
+function handleOrientation(e){
+  const h=e.webkitCompassHeading||e.alpha||0;
+  if(Math.abs(h-lastHeading)>3){
+    lastHeading=h;
+    document.getElementById("compassBtn").style.transform="rotate("+(-h)+"deg)";
+  }
+}
+
+function resetNorth(){
+  showToast("מוצג לצפון ⬆️");
+}
+
+function toggleMeasure(){
+  measureMode=!measureMode;
+  document.getElementById("measureBtn").classList.toggle("active",measureMode);
+  document.getElementById("measurePanel").style.display=measureMode?"block":"none";
+  if(measureMode)map.on("click",onMeasureClick);
+  else clearMeasure();
+}
+
+function onMeasureClick(e){
+  if(!measureMode)return;
+  measurePoints.push(e.latlng);
+  const m=L.circleMarker(e.latlng,{radius:5,color:"#00d4aa",fillColor:"#00d4aa",fillOpacity:1}).addTo(map);
+  measureLayers.push(m);
+  if(measurePoints.length>1){
+    const line=L.polyline(measurePoints,{color:"#00d4aa",weight:2,dashArray:"4,4"}).addTo(map);
+    measureLayers.push(line);
+    let total=0;
+    for(let i=1;i<measurePoints.length;i++)total+=measurePoints[i-1].distanceTo(measurePoints[i]);
+    const dist=total>=1000?((total/1000).toFixed(2)+" ק\"מ"):(Math.round(total)+" מ'");
+    document.getElementById("measureResult").textContent="מרחק: "+dist;
+  }
+}
+
+function clearMeasure(){
+  measurePoints=[];
+  measureLayers.forEach(l=>map.removeLayer(l));
+  measureLayers=[];
+  document.getElementById("measureResult").textContent="";
+  map.off("click",onMeasureClick);
+  measureMode=false;
+  document.getElementById("measureBtn").classList.remove("active");
+  document.getElementById("measurePanel").style.display="none";
+}
+
+function toggleFullscreen(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().catch(()=>{});
+    document.getElementById("fullscreenBtn").textContent="⊡";
+  }else{
+    document.exitFullscreen();
+    document.getElementById("fullscreenBtn").textContent="⛶";
+  }
+}
+
+map.on("click",e=>{
+  if(measureMode)return;
+  const p=document.getElementById("coordsPanel");
+  p.textContent="📍 "+e.latlng.lat.toFixed(6)+", "+e.latlng.lng.toFixed(6);
+  p.style.display="block";
+  setTimeout(()=>p.style.display="none",3000);
+});
+
+window.toggleTracking=toggleTracking;
+window.toggleCompass=toggleCompass;
+window.resetNorth=resetNorth;
+window.toggleMeasure=toggleMeasure;
+window.toggleFullscreen=toggleFullscreen;
+window.clearMeasure=clearMeasure;
 
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
