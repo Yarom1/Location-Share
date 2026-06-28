@@ -981,10 +981,7 @@ function toggleMapMenu(){
   const open=items.style.display==='flex';
   items.style.display=open?'none':'flex';
 }
-function _old_toggleMapMenu(){
-  const menu=document.getElementById('mapToolsMenu');
-  menu.classList.toggle('open');
-}
+
 window.toggleMapMenu=toggleMapMenu;
 window.toggleTracking=toggleTracking;
 window.toggleCompass=toggleCompass;
