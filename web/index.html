@@ -637,20 +637,22 @@ function createMarkerHTML(u){
 const markerCache={};
 function updateMarker(uid,data){
   if(!data.lat||!data.lng)return;
-  const key=uid+data.lat.toFixed(5)+data.lng.toFixed(5);
-  if(markerCache[uid]===key)return;
-  markerCache[uid]=key;
-  const el=document.createElement('div');
-  el.innerHTML=createMarkerHTML(data);
+  const key=data.lat.toFixed(5)+data.lng.toFixed(5);
   if(markers[uid]){
     markers[uid].setLngLat([data.lng,data.lat]);
-    markers[uid].getElement().innerHTML=createMarkerHTML(data);
-  }else{
-    markers[uid]=new maplibregl.Marker({element:el,anchor:'bottom'})
-      .setLngLat([data.lng,data.lat])
-      .addTo(map);
-    if(uid!==myUID)el.addEventListener('click',()=>showUserPopup(uid,data));
+    if(markerCache[uid]!==data.name+data.avatar){
+      markerCache[uid]=data.name+data.avatar;
+      markers[uid].getElement().innerHTML=createMarkerHTML(data);
+    }
+    return;
   }
+  markerCache[uid]=data.name+data.avatar;
+  const el=document.createElement('div');
+  el.innerHTML=createMarkerHTML(data);
+  markers[uid]=new maplibregl.Marker({element:el,anchor:'bottom'})
+    .setLngLat([data.lng,data.lat])
+    .addTo(map);
+  if(uid!==myUID)el.addEventListener('click',()=>showUserPopup(uid,data));
 }
 
 function showUserPopup(uid,data){
@@ -930,10 +932,10 @@ let measurePoints=[],measureLayers=[];
 
 function toggleTracking(){
   trackingMode=!trackingMode;
-  const btn=document.getElementById("trackBtn");
-  if(btn)btn.style.borderColor=trackingMode?"#00d4aa":"rgba(255,255,255,0.2)";
+  const btn=document.getElementById('trackBtn');
+  if(btn)btn.style.border=trackingMode?'2px solid #00d4aa':'1px solid rgba(255,255,255,0.2)';
   if(trackingMode&&lastLat&&lastLng)map.flyTo({center:[lastLng,lastLat],zoom:17});
-  showToast(trackingMode?"🎯 מצב מעקב פעיל":"מצב מעקב כבוי");
+  showToast(trackingMode?'🎯 מצב מעקב פעיל':'מצב מעקב כבוי');
 }
 
 function toggleCompass(){
