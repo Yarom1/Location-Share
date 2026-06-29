@@ -625,7 +625,7 @@ let locating=false;let lastLat=0,lastLng=0;function locateMe(){
     document.getElementById('locateBtn').textContent='📍';
   },{timeout:5000,maximumAge:30000,enableHighAccuracy:false});
 }
-function flyToUser(uid){const m=markers[uid];if(m){map.flyTo(m.getLatLng(),16);closeAllPanels();}}
+function flyToUser(uid){if(markers[uid]){const ll=markers[uid].getLngLat();map.flyTo({center:[ll.lng,ll.lat],zoom:17});closeAllPanels();}else showToast('משתמש לא על המפה');}
 
 function createMarkerHTML(u){
   const inner=u.photoURL
@@ -648,9 +648,10 @@ function updateMarker(uid,data){
   markerCache[uid]=data.name+data.avatar;
   const el=document.createElement('div');
   el.innerHTML=createMarkerHTML(data);
-  markers[uid]=new maplibregl.Marker({element:el,anchor:'bottom'})
+  const marker=new maplibregl.Marker({element:el,anchor:'bottom'})
     .setLngLat([data.lng,data.lat])
     .addTo(map);
+  markers[uid]=marker;
   if(uid!==myUID)el.addEventListener('click',()=>showUserPopup(uid,data));
 }
 
