@@ -593,16 +593,17 @@ function initMap(){
 
 function setLayer(t){
   const styles={
-    street:'https://tiles.openfreemap.org/styles/liberty',
-    satellite:'https://tiles.openfreemap.org/styles/bright',
-    topo:'https://tiles.openfreemap.org/styles/liberty',
-    dark:'https://tiles.openfreemap.org/styles/dark'
+    liberty:'https://tiles.openfreemap.org/styles/liberty',
+    bright:'https://tiles.openfreemap.org/styles/bright',
+    dark:'https://tiles.openfreemap.org/styles/dark',
+    positron:'https://tiles.openfreemap.org/styles/positron',
+    satellite:'https://api.maptiler.com/maps/satellite/style.json?key=get_your_own_key',
+    fiord:'https://tiles.openfreemap.org/styles/fiord-color'
   };
-  if(map.isStyleLoaded()){
-    map.setStyle(styles[t]||styles.street);
-  }else{
-    map.on('load',()=>map.setStyle(styles[t]||styles.street));
-  }
+  const url=styles[t]||styles.liberty;
+  const apply=()=>map.setStyle(url);
+  if(map.isStyleLoaded())apply();
+  else map.on('load',apply);
   document.getElementById('layersPanel').classList.remove('open');
 }
 
@@ -927,9 +928,10 @@ let measurePoints=[],measureLayers=[];
 
 function toggleTracking(){
   trackingMode=!trackingMode;
-  document.getElementById("trackBtn").classList.toggle("active",trackingMode);
+  const btn=document.getElementById("trackBtn");
+  if(btn)btn.style.borderColor=trackingMode?"#00d4aa":"rgba(255,255,255,0.2)";
   if(trackingMode&&lastLat&&lastLng)map.flyTo({center:[lastLng,lastLat],zoom:17});
-  showToast(trackingMode?"מצב מעקב פעיל":"מצב מעקב כבוי");
+  showToast(trackingMode?"🎯 מצב מעקב פעיל":"מצב מעקב כבוי");
 }
 
 function toggleCompass(){
