@@ -689,6 +689,7 @@ function startLocationTracking(){
     await setDoc(doc(db,'users',myUID),{lat,lng,lastSeen:serverTimestamp()},{merge:true});
     await addDoc(collection(db,'history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
     if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
+    if(trackingMode)map.easeTo({center:[lng,lat],duration:500});
   },null,{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
 }
 
