@@ -215,9 +215,11 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 
   <div class="layers-panel" id="layersPanel">
     <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:2px">שכבות מפה</div>
-    <div class="layer-item"><input type="radio" name="layer" id="ls" checked onchange="setLayer('street')"><label for="ls">🗺️ רחובות</label></div>
-    <div class="layer-item"><input type="radio" name="layer" id="lsat" onchange="setLayer('satellite')"><label for="lsat">🛰️ לוויין</label></div>
-    <div class="layer-item"><input type="radio" name="layer" id="lt" onchange="setLayer('topo')"><label for="lt">🏔️ טופוגרפי</label></div>
+    <div class="layer-item"><input type="radio" name="layer" id="l1" checked onchange="setLayer('liberty')"><label for="l1">🗺️ Liberty (ברירת מחדל)</label></div>
+    <div class="layer-item"><input type="radio" name="layer" id="l2" onchange="setLayer('bright')"><label for="l2">☀️ Bright (יום)</label></div>
+    <div class="layer-item"><input type="radio" name="layer" id="l3" onchange="setLayer('dark')"><label for="l3">🌑 Dark (לילה)</label></div>
+    <div class="layer-item"><input type="radio" name="layer" id="l4" onchange="setLayer('positron')"><label for="l4">⬜ Positron (נקי)</label></div>
+    <div class="layer-item"><input type="radio" name="layer" id="l5" onchange="setLayer('fiord')"><label for="l5">🌊 Fiord (כחול)</label></div>
   </div>
 
   <div id="coordsPanel" style="position:fixed;bottom:130px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:12px;display:none;color:var(--text)"></div><div id="measurePanel" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:8px 16px;font-size:13px;display:none;color:var(--accent);text-align:center">📏 לחץ על המפה<br><span id="measureResult"></span><button onclick="clearMeasure()" style="background:none;border:none;color:var(--danger);cursor:pointer">✕</button></div>  
