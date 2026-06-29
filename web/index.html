@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Location Share</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.1.2/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-rotate@0.2.8/dist/leaflet-rotate.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -36,7 +36,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .btn.secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);font-weight:500}
 .btn.danger{background:var(--danger);color:#fff}
 #main{flex-direction:column;background:var(--bg)}
-#map{position:fixed;inset:0;z-index:1}
+#map{position:fixed;inset:0;z-index:1}.maplibregl-map{font-family:inherit}
 .topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .topbar-left{display:flex;align-items:center;gap:10px}
 .my-avatar{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0}
@@ -595,7 +595,7 @@ function setLayer(t){
 function toggleLayers(){document.getElementById('layersPanel').classList.toggle('open');}
 function showMapView(){closeAllPanels();setTimeout(()=>map&&map.invalidateSize(),350);setActiveNav('navMap');}
 let locating=false;let lastLat=0,lastLng=0;function locateMe(){
-  if(lastLat&&lastLng){map.flyTo([lastLat,lastLng],17);return;}
+  if(lastLat&&lastLng){map.flyTo({center:[lastLng,lastLat],zoom:17});return;}
   if(locating)return;locating=true;
   document.getElementById('locateBtn').textContent='⏳';
   navigator.geolocation?.getCurrentPosition(p=>{
@@ -621,14 +621,18 @@ const markerCache={};
 function updateMarker(uid,data){
   if(!data.lat||!data.lng)return;
   const key=uid+data.lat.toFixed(5)+data.lng.toFixed(5);
-  const icon=L.divIcon({className:'',html:createMarkerHTML(data),iconSize:[60,56],iconAnchor:[30,48]});
+  if(markerCache[uid]===key)return;
+  markerCache[uid]=key;
+  const el=document.createElement('div');
+  el.innerHTML=createMarkerHTML(data);
   if(markers[uid]){
-    if(markerCache[uid]!==key){markers[uid].setLatLng([data.lat,data.lng]);markerCache[uid]=key;}
-    markers[uid].setIcon(icon);
+    markers[uid].setLngLat([data.lng,data.lat]);
+    markers[uid].getElement().innerHTML=createMarkerHTML(data);
   }else{
-    markers[uid]=L.marker([data.lat,data.lng],{icon}).addTo(map);
-    markerCache[uid]=key;
-    if(uid!==myUID)markers[uid].on('click',()=>showUserPopup(uid,data));
+    markers[uid]=new maplibregl.Marker({element:el,anchor:'bottom'})
+      .setLngLat([data.lng,data.lat])
+      .addTo(map);
+    if(uid!==myUID)el.addEventListener('click',()=>showUserPopup(uid,data));
   }
 }
 
@@ -643,7 +647,7 @@ function showUserPopup(uid,data){
         <button onclick="openDM('${uid}','${escHtml(data.name)}','${data.avatar||'👤'}')" style="flex:1;background:#00d4aa;color:#000;border:none;border-radius:8px;padding:7px 4px;font-size:12px;cursor:pointer;font-family:inherit">💌 הודעה</button>
         <button onclick="showUserHistory('${uid}')" style="flex:1;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 4px;font-size:12px;cursor:pointer;font-family:inherit">🕐 היסטוריה</button>
       </div>
-    </div>`).openOn(map);
+    </div>`).addTo(map);
 }
 
 function startLocationTracking(){
@@ -813,7 +817,7 @@ async function showUserHistory(uid){
       el.innerHTML=`<div class="hist-dot-col"><div class="hist-dot" style="background:${i===0?'#00d4aa':'#30363d'}"></div>${i<snap.size-1?'<div class="hist-line"></div>':''}</div>
         <div class="hist-info"><div class="hist-time">${time}</div>
         <div class="hist-coords">📍 ${h.lat?.toFixed(5)}, ${h.lng?.toFixed(5)}</div>
-        <span class="hist-show-map" onclick="map.flyTo([${h.lat},${h.lng}],17);closeAllPanels()">הצג על המפה →</span></div>`;
+        <span class="hist-show-map" onclick="map.flyTo({center:[${h.lng},${h.lat}],zoom:17});closeAllPanels()">הצג על המפה →</span></div>`;
       trail.appendChild(el);i++;
     });
   }catch(e){trail.innerHTML='<div style="color:var(--danger);font-size:13px">שגיאה בטעינה</div>';console.error(e);}
@@ -910,7 +914,7 @@ let measurePoints=[],measureLayers=[];
 function toggleTracking(){
   trackingMode=!trackingMode;
   document.getElementById("trackBtn").classList.toggle("active",trackingMode);
-  if(trackingMode&&lastLat&&lastLng)map.flyTo([lastLat,lastLng],17);
+  if(trackingMode&&lastLat&&lastLng)map.flyTo({center:[lastLng,lastLat],zoom:17});
   showToast(trackingMode?"מצב מעקב פעיל":"מצב מעקב כבוי");
 }
 
@@ -950,14 +954,19 @@ function toggleMeasure(){
 
 function onMeasureClick(e){
   if(!measureMode)return;
-  measurePoints.push(e.latlng);
-  const m=L.circleMarker(e.latlng,{radius:5,color:"#00d4aa",fillColor:"#00d4aa",fillOpacity:1}).addTo(map);
+  measurePoints.push(e.lngLat);
+  const el=document.createElement('div');
+  el.style.cssText='width:10px;height:10px;border-radius:50%;background:#00d4aa;border:2px solid white';
+  const m=new maplibregl.Marker({element:el}).setLngLat([e.lngLat.lng,e.lngLat.lat]).addTo(map);
   measureLayers.push(m);
   if(measurePoints.length>1){
-    const line=L.polyline(measurePoints,{color:"#00d4aa",weight:2,dashArray:"4,4"}).addTo(map);
-    measureLayers.push(line);
     let total=0;
-    for(let i=1;i<measurePoints.length;i++)total+=measurePoints[i-1].distanceTo(measurePoints[i]);
+    for(let i=1;i<measurePoints.length;i++){
+      const p1=measurePoints[i-1],p2=measurePoints[i];
+      const R=6371000,dLat=(p2.lat-p1.lat)*Math.PI/180,dLng=(p2.lng-p1.lng)*Math.PI/180;
+      const a=Math.sin(dLat/2)**2+Math.cos(p1.lat*Math.PI/180)*Math.cos(p2.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+      total+=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+    }
     const dist=total>=1000?((total/1000).toFixed(2)+" ק\"מ"):(Math.round(total)+" מ'");
     document.getElementById("measureResult").textContent="מרחק: "+dist;
   }
@@ -965,7 +974,7 @@ function onMeasureClick(e){
 
 function clearMeasure(){
   measurePoints=[];
-  measureLayers.forEach(l=>map.removeLayer(l));
+  measureLayers.forEach(l=>{if(l.remove)l.remove();});
   measureLayers=[];
   document.getElementById("measureResult").textContent="";
   map.off("click",onMeasureClick);
