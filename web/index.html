@@ -952,14 +952,18 @@ function toggleCompass(){
 
 let lastHeading=0;
 function handleOrientation(e){
-  const h=e.webkitCompassHeading||e.alpha||0;
+  const h=((e.webkitCompassHeading||e.alpha||0)+360)%360;
   if(Math.abs(h-lastHeading)>3){
     lastHeading=h;
+    map.easeTo({bearing:h,duration:300});
     document.getElementById("compassBtn").style.transform="rotate("+(-h)+"deg)";
   }
 }
 
 function resetNorth(){
+  lastHeading=0;
+  map.easeTo({bearing:0,duration:300});
+  document.getElementById("compassBtn").style.transform="rotate(0deg)";
   showToast("מוצג לצפון ⬆️");
 }
 
