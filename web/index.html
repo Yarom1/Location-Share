@@ -637,7 +637,6 @@ function createMarkerHTML(u){
 const markerCache={};
 function updateMarker(uid,data){
   if(!data.lat||!data.lng)return;
-  const key=data.lat.toFixed(5)+data.lng.toFixed(5);
   if(markers[uid]){
     markers[uid].setLngLat([data.lng,data.lat]);
     if(markerCache[uid]!==data.name+data.avatar){
@@ -976,9 +975,16 @@ function onMeasureClick(e){
   if(!measureMode)return;
   measurePoints.push(e.lngLat);
   const el=document.createElement('div');
-  el.style.cssText='width:10px;height:10px;border-radius:50%;background:#00d4aa;border:2px solid white';
+  el.style.cssText='width:12px;height:12px;border-radius:50%;background:#00d4aa;border:2px solid white;cursor:pointer';
   const m=new maplibregl.Marker({element:el}).setLngLat([e.lngLat.lng,e.lngLat.lat]).addTo(map);
   measureLayers.push(m);
+  // עדכן קו
+  if(map.getSource('measure-line')){
+    map.getSource('measure-line').setData({type:'Feature',geometry:{type:'LineString',coordinates:measurePoints.map(p=>[p.lng,p.lat])}});
+  }else if(measurePoints.length>1){
+    map.addSource('measure-line',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:measurePoints.map(p=>[p.lng,p.lat])}}});
+    map.addLayer({id:'measure-line-layer',type:'line',source:'measure-line',paint:{'line-color':'#00d4aa','line-width':2,'line-dasharray':[2,1]}});
+  }
   if(measurePoints.length>1){
     let total=0;
     for(let i=1;i<measurePoints.length;i++){
@@ -996,6 +1002,10 @@ function clearMeasure(){
   measurePoints=[];
   measureLayers.forEach(l=>{if(l.remove)l.remove();});
   measureLayers=[];
+  try{
+    if(map.getLayer('measure-line-layer'))map.removeLayer('measure-line-layer');
+    if(map.getSource('measure-line'))map.removeSource('measure-line');
+  }catch(e){}
   document.getElementById("measureResult").textContent="";
   map.off("click",onMeasureClick);
   measureMode=false;
