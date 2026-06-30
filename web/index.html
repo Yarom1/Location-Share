@@ -295,6 +295,13 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div class="layer-item"><input type="checkbox" id="poiRail" onchange="togglePOI('rail')"><label for="poiRail">🚆 תשתיות רכבת</label></div>
     <div class="layer-item"><input type="checkbox" id="poiFood" onchange="togglePOI('food')"><label for="poiFood">🍽️ מסעדות/בתי קפה</label></div>
     <div class="layer-item"><input type="checkbox" id="poiParking" onchange="togglePOI('parking')"><label for="poiParking">🅿️ חניות</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiEv" onchange="togglePOI('ev')"><label for="poiEv">🔌 טעינה לרכב חשמלי</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiPharmacy" onchange="togglePOI('pharmacy')"><label for="poiPharmacy">💊 בתי מרקחת</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiHospital" onchange="togglePOI('hospital')"><label for="poiHospital">🏥 בתי חולים/מרפאות</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiBank" onchange="togglePOI('bank')"><label for="poiBank">🏧 בנקים/כספומטים</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiHotel" onchange="togglePOI('hotel')"><label for="poiHotel">🏨 מלונות</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiSchool" onchange="togglePOI('school')"><label for="poiSchool">🏫 בתי ספר</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiPark" onchange="togglePOI('park')"><label for="poiPark">🌳 גנים ציבוריים</label></div>
   </div>
 
   <!-- USERS PANEL -->
@@ -717,7 +724,14 @@ const poiConfig={
   transit:{tag:'highway=bus_stop',color:'#2196f3',icon:'🚌'},
   rail:{tag:'railway=station',color:'#9c27b0',icon:'🚆'},
   food:{tag:'amenity=restaurant|amenity=cafe',color:'#f44336',icon:'🍽️'},
-  parking:{tag:'amenity=parking',color:'#4caf50',icon:'🅿️'}
+  parking:{tag:'amenity=parking',color:'#4caf50',icon:'🅿️'},
+  ev:{tag:'amenity=charging_station',color:'#00bcd4',icon:'🔌'},
+  pharmacy:{tag:'amenity=pharmacy',color:'#8bc34a',icon:'💊'},
+  hospital:{tag:'amenity=hospital|amenity=clinic',color:'#e91e63',icon:'🏥'},
+  bank:{tag:'amenity=bank|amenity=atm',color:'#3f51b5',icon:'🏧'},
+  hotel:{tag:'tourism=hotel',color:'#795548',icon:'🏨'},
+  school:{tag:'amenity=school',color:'#607d8b',icon:'🏫'},
+  park:{tag:'leisure=park',color:'#4caf50',icon:'🌳'}
 };
 
 function togglePOILayers(){
