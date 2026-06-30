@@ -581,6 +581,15 @@ function initMap(){
     zoom:7,
     attributionControl:false
   });
+  // תקן כיווניות טקסט עברית/ערבית
+  if(maplibregl.setRTLTextPlugin){
+    try{
+      maplibregl.setRTLTextPlugin(
+        'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.js',
+        true
+      );
+    }catch(e){}
+  }
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
   map.on('load',()=>{
     map.on('click',e=>{
