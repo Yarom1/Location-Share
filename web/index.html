@@ -172,6 +172,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <h3>✏️ עריכת נקודה</h3>
     <div class="input-wrap"><label>שם הנקודה</label><input type="text" id="editPointNameInput" maxlength="30"></div>
     <div class="input-wrap"><label>תיאור (אופציונלי)</label><input type="text" id="editPointDescInput" maxlength="60"></div>
+    <button class="btn secondary" style="margin-bottom:8px" onclick="closeModal('editPointModal');startEditLocation()">📍 ערוך מיקום</button>
     <div class="modal-actions">
       <button class="btn" onclick="saveEditedPoint()">שמור</button>
       <button class="btn secondary" onclick="closeModal('editPointModal')">ביטול</button>
@@ -1340,6 +1341,7 @@ async function deletePoint(id){
 }
 
 let navTargetPoint=null;
+let centerPinEditMode=null;
 
 let editPointId=null;
 
@@ -1365,6 +1367,47 @@ async function saveEditedPoint(){
 
 window.openEditPointModal=openEditPointModal;
 window.saveEditedPoint=saveEditedPoint;
+
+function startEditLocation(){
+  if(!editPointId)return;
+  const p=savedPoints[editPointId];
+  if(!p)return;
+  centerPinEditMode=editPointId;
+  map.flyTo({center:[p.lng,p.lat],zoom:17});
+  document.getElementById('centerPinFixed').style.display='block';
+  centerPinActive=true;
+  addPointCoords={lat:p.lat,lng:p.lng};
+  map.on('move',onCenterPinMove);
+  closePanel('points');
+  showMapView();
+  // הצג widget קטן עם כפתור שמור
+  const sheet=document.getElementById('addPointSheet');
+  document.getElementById('pointNameInput').style.display='none';
+  document.getElementById('pointDescInput').style.display='none';
+  document.getElementById('pointCoordsDisplay').textContent='הזז את המפה לעריכת מיקום הנקודה';
+  sheet.style.display='flex';
+  // שנה זמנית את כפתור השמירה
+  const saveBtn=sheet.querySelector('button.btn');
+  saveBtn.textContent='שמור מיקום';
+  saveBtn.onclick=saveEditedLocation;
+}
+
+async function saveEditedLocation(){
+  if(!centerPinEditMode||!addPointCoords)return;
+  await updateDoc(doc(db,'savedPoints',centerPinEditMode),{lat:addPointCoords.lat,lng:addPointCoords.lng});
+  closeAddPointSheet();
+  stopCenterPinRefine();
+  document.getElementById('pointNameInput').style.display='';
+  document.getElementById('pointDescInput').style.display='';
+  const saveBtn=document.getElementById('addPointSheet').querySelector('button.btn');
+  saveBtn.textContent='שמור';
+  saveBtn.onclick=savePoint;
+  centerPinEditMode=null;
+  showToast('מיקום עודכן ✓','success');
+}
+
+window.startEditLocation=startEditLocation;
+window.saveEditedLocation=saveEditedLocation;
 
 function navigateToPoint(id){
   const p=savedPoints[id];
