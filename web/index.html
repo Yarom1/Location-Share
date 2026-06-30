@@ -1342,7 +1342,8 @@ function launchNav(app){
   if(app==='waze')url='https://waze.com/ul?ll='+lat+','+lng+'&navigate=yes';
   else if(app==='google')url='https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng+'&travelmode=driving';
   else if(app==='geo')url='geo:'+lat+','+lng+'?q='+lat+','+lng;
-  window.open(url,'_blank');
+  // ניווט ישיר ב-window.location כדי שה-Android WebViewClient יתפוס ויפתח אפליקציה חיצונית
+  window.location.href=url;
   closeModal('navAppModal');
   navTargetPoint=null;
 }

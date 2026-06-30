@@ -100,7 +100,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?) = false
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val url = request?.url?.toString() ?: return false
+                // העבר לינקי ניווט (geo:, waze:, https://waze.com, https://maps.google.com) לאפליקציה חיצונית
+                val isNavLink = url.startsWith("geo:") ||
+                        url.startsWith("waze:") ||
+                        url.contains("waze.com") ||
+                        url.contains("maps.google.com") ||
+                        url.contains("google.com/maps")
+                if (isNavLink) {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        Toast.makeText(this@MainActivity, "לא נמצאה אפליקציה מתאימה", Toast.LENGTH_SHORT).show()
+                    }
+                    return true
+                }
+                return false
+            }
         }
 
         LocationService.onLocationUpdate = { lat, lng ->
