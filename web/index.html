@@ -218,6 +218,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div onclick="toggleMapMenu()" style="width:50px;height:50px;border-radius:50%;background:rgba(0,212,170,0.85);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🛠️</div>
     <div id="mapMenuItems" style="display:none;flex-direction:column;gap:10px;align-items:center">
       <div onclick="openSearchModal()" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🔍</div>
+      <div onclick="openPanel('points')" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">📌</div>
       <div onclick="locateMe()" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">📍</div>
       <div onclick="toggleTracking()" id="trackBtn" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🎯</div>
       <div onclick="toggleCompass()" id="compassBtn" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🧭</div>
@@ -291,6 +292,31 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div class="panel-body">
       <div class="hist-user-select" id="historyUserSelect"></div>
       <div id="historyTrail"></div>
+    </div>
+  </div>
+
+  <!-- SAVED POINTS PANEL -->
+  <div class="side-panel" id="pointsPanel">
+    <div class="panel-handle"></div>
+    <div class="panel-header"><h3>📌 נקודות שמורות</h3><div class="panel-close" onclick="closePanel('points')">✕</div></div>
+    <div style="padding:10px 14px 0;flex-shrink:0;display:flex;gap:8px">
+      <button class="btn secondary" style="flex:1;padding:10px" onclick="toggleAllPoints()">👁️ הצג/הסתר הכל</button>
+      <button class="btn" style="flex:1;padding:10px" onclick="openAddPointModal()">➕ נקודה חדשה</button>
+    </div>
+    <div class="panel-body" id="pointsList"></div>
+  </div>
+
+  <!-- ADD POINT MODAL -->
+  <div class="modal" id="addPointModal">
+    <div class="modal-box">
+      <h3>📌 נקודה חדשה</h3>
+      <div class="input-wrap"><label>שם הנקודה</label><input type="text" id="pointNameInput" placeholder="לדוגמה: בית, חניה, מסעדה..." maxlength="30"></div>
+      <div class="input-wrap"><label>תיאור (אופציונלי)</label><input type="text" id="pointDescInput" placeholder="פרטים נוספים..." maxlength="60"></div>
+      <p id="pointCoordsDisplay" style="font-size:12px;color:var(--accent)"></p>
+      <div class="modal-actions">
+        <button class="btn" onclick="savePoint()">שמור</button>
+        <button class="btn secondary" onclick="closeModal('addPointModal');cancelAddPointMode()">ביטול</button>
+      </div>
     </div>
   </div>
 
@@ -424,6 +450,7 @@ function startApp(){
   startLocationTracking();
   listenUsers();
   listenGroupChat();
+  listenSavedPoints();
   updateMyUI();
   if(isAdmin){document.getElementById('adminBtn').style.display='flex';}
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
@@ -1152,6 +1179,175 @@ function goToSearchResult(lat,lng,name){
   document.getElementById('searchResults').innerHTML='';
   showToast('📍 '+name.substring(0,40),'success');
 }
+
+// ===== SAVED POINTS =====
+let savedPoints={};
+let pointMarkers={};
+let visiblePoints={};
+let addPointMode=false;
+let addPointCoords=null;
+let unsubPoints=null;
+
+function listenSavedPoints(){
+  if(unsubPoints)unsubPoints();
+  unsubPoints=onSnapshot(collection(db,'savedPoints'),snap=>{
+    savedPoints={};
+    snap.forEach(d=>{savedPoints[d.id]=d.data();});
+    renderPointsList();
+    renderPointMarkers();
+  });
+}
+
+function renderPointsList(){
+  const list=document.getElementById('pointsList');
+  if(!list)return;
+  list.innerHTML='';
+  const ids=Object.keys(savedPoints);
+  if(!ids.length){
+    list.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px;font-size:13px">אין נקודות שמורות עדיין</div>';
+    return;
+  }
+  ids.forEach(id=>{
+    const p=savedPoints[id];
+    if(visiblePoints[id]===undefined)visiblePoints[id]=true;
+    const item=document.createElement('div');
+    item.className='user-item';
+    item.innerHTML=`
+      <div class="user-avatar">📌</div>
+      <div class="user-info" style="cursor:pointer" onclick="flyToPoint('${id}')">
+        <div class="user-name">${escHtml(p.name||'נקודה')}</div>
+        <div class="user-status">${escHtml(p.desc||'')||'נוצר ע״י '+escHtml(p.creatorName||'')}</div>
+      </div>
+      <div class="user-actions">
+        <div class="user-act-btn" onclick="togglePointVisibility('${id}')" title="הצג/הסתר">${visiblePoints[id]?'👁️':'🚫'}</div>
+        <div class="user-act-btn" onclick="navigateToPoint('${id}')" title="ניווט">🧭</div>
+        <div class="user-act-btn" onclick="deletePoint('${id}')" title="מחק">🗑️</div>
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+function renderPointMarkers(){
+  Object.keys(savedPoints).forEach(id=>{
+    const p=savedPoints[id];
+    if(visiblePoints[id]===undefined)visiblePoints[id]=true;
+    if(!visiblePoints[id]){
+      if(pointMarkers[id]){pointMarkers[id].remove();delete pointMarkers[id];}
+      return;
+    }
+    if(pointMarkers[id])return;
+    const el=document.createElement('div');
+    el.innerHTML='<div style="font-size:28px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4));cursor:pointer">📌</div>';
+    const marker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([p.lng,p.lat]).addTo(map);
+    el.addEventListener('click',()=>showPointPopup(id,p));
+    pointMarkers[id]=marker;
+  });
+  // הסר markers של נקודות שנמחקו
+  Object.keys(pointMarkers).forEach(id=>{
+    if(!savedPoints[id]){pointMarkers[id].remove();delete pointMarkers[id];}
+  });
+}
+
+function showPointPopup(id,p){
+  new maplibregl.Popup({closeButton:true}).setLngLat([p.lng,p.lat]).setHTML(`
+    <div style="padding:4px;min-width:160px">
+      <div style="font-weight:700;margin-bottom:4px">📌 ${escHtml(p.name||'')}</div>
+      ${p.desc?`<div style="font-size:12px;color:var(--text2);margin-bottom:8px">${escHtml(p.desc)}</div>`:''}
+      <button onclick="navigateToPoint('${id}')" style="width:100%;background:#00d4aa;color:#000;border:none;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:inherit">🧭 נווט לנקודה</button>
+    </div>`).addTo(map);
+}
+
+function flyToPoint(id){
+  const p=savedPoints[id];
+  if(!p)return;
+  map.flyTo({center:[p.lng,p.lat],zoom:16});
+  closeAllPanels();
+}
+
+function togglePointVisibility(id){
+  visiblePoints[id]=!visiblePoints[id];
+  renderPointsList();
+  renderPointMarkers();
+}
+
+function toggleAllPoints(){
+  const allVisible=Object.values(visiblePoints).every(v=>v);
+  Object.keys(savedPoints).forEach(id=>{visiblePoints[id]=!allVisible;});
+  renderPointsList();
+  renderPointMarkers();
+  showToast(allVisible?'כל הנקודות הוסתרו':'כל הנקודות מוצגות');
+}
+
+async function deletePoint(id){
+  await deleteDoc(doc(db,'savedPoints',id));
+  showToast('נקודה נמחקה','success');
+}
+
+function navigateToPoint(id){
+  const p=savedPoints[id];
+  if(!p)return;
+  // נסה Waze, אז Google Maps כ-fallback
+  const wazeUrl='https://waze.com/ul?ll='+p.lat+','+p.lng+'&navigate=yes';
+  window.open(wazeUrl,'_blank');
+}
+
+// הוספת נקודה - מצב לחיצה על המפה
+function openAddPointModal(){
+  showToast('לחץ על המפה לבחירת מיקום, או לחץ שמור למיקום הנוכחי');
+  addPointMode=true;
+  map.getCanvas().style.cursor='crosshair';
+  map.once('click',onAddPointMapClick);
+  // גם אפשר לשמור על מיקום נוכחי ישירות
+  if(lastLat&&lastLng){
+    addPointCoords={lat:lastLat,lng:lastLng};
+    document.getElementById('pointCoordsDisplay').textContent='📍 '+lastLat.toFixed(5)+', '+lastLng.toFixed(5)+' (מיקומך הנוכחי - או לחץ במפה)';
+  }
+  openModal('addPointModal');
+}
+
+function onAddPointMapClick(e){
+  addPointCoords={lat:e.lngLat.lat,lng:e.lngLat.lng};
+  document.getElementById('pointCoordsDisplay').textContent='📍 '+e.lngLat.lat.toFixed(5)+', '+e.lngLat.lng.toFixed(5);
+  map.getCanvas().style.cursor='';
+  addPointMode=false;
+}
+
+function cancelAddPointMode(){
+  addPointMode=false;
+  addPointCoords=null;
+  map.getCanvas().style.cursor='';
+  map.off('click',onAddPointMapClick);
+  document.getElementById('pointNameInput').value='';
+  document.getElementById('pointDescInput').value='';
+  document.getElementById('pointCoordsDisplay').textContent='';
+}
+
+async function savePoint(){
+  const name=document.getElementById('pointNameInput').value.trim();
+  const desc=document.getElementById('pointDescInput').value.trim();
+  if(!name){showToast('הכנס שם לנקודה','error');return;}
+  if(!addPointCoords){showToast('בחר מיקום על המפה','error');return;}
+  await addDoc(collection(db,'savedPoints'),{
+    name,desc,
+    lat:addPointCoords.lat,
+    lng:addPointCoords.lng,
+    creatorUid:myUID,
+    creatorName:currentUser?currentUser.name:'',
+    createdAt:serverTimestamp()
+  });
+  closeModal('addPointModal');
+  cancelAddPointMode();
+  showToast('נקודה נשמרה ✓','success');
+}
+
+window.toggleAllPoints=toggleAllPoints;
+window.openAddPointModal=openAddPointModal;
+window.cancelAddPointMode=cancelAddPointMode;
+window.savePoint=savePoint;
+window.flyToPoint=flyToPoint;
+window.togglePointVisibility=togglePointVisibility;
+window.deletePoint=deletePoint;
+window.navigateToPoint=navigateToPoint;
 
 window.openSearchModal=openSearchModal;
 window.doSearch=doSearch;
