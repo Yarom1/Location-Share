@@ -1142,6 +1142,10 @@ function goToSearchResult(lat,lng,name){
   const el=document.createElement('div');
   el.innerHTML='<div style="font-size:26px;opacity:0.85;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));transform:rotate(8deg)">📍</div>';
   searchMarker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([lng,lat]).addTo(map);
+  el.style.cursor='pointer';
+  el.addEventListener('click',()=>{
+    if(searchMarker){searchMarker.remove();searchMarker=null;showToast('הסיכה הוסרה');}
+  });
   map.flyTo({center:[lng,lat],zoom:16});
   closeModal('searchModal');
   document.getElementById('searchInput').value='';
