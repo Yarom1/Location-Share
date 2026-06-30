@@ -288,6 +288,15 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     </div>
   </div>
 
+  <div class="layers-panel" id="poiLayersPanel">
+    <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:4px">שכבות נוספות</div>
+    <div class="layer-item"><input type="checkbox" id="poiFuel" onchange="togglePOI('fuel')"><label for="poiFuel">⛽ תחנות דלק</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiTransit" onchange="togglePOI('transit')"><label for="poiTransit">🚌 תחבורה ציבורית</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiRail" onchange="togglePOI('rail')"><label for="poiRail">🚆 תשתיות רכבת</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiFood" onchange="togglePOI('food')"><label for="poiFood">🍽️ מסעדות/בתי קפה</label></div>
+    <div class="layer-item"><input type="checkbox" id="poiParking" onchange="togglePOI('parking')"><label for="poiParking">🅿️ חניות</label></div>
+  </div>
+
   <!-- USERS PANEL -->
   <div class="side-panel" id="usersPanel">
     <div class="panel-handle"></div>
@@ -700,6 +709,68 @@ function setLayer(t){
   else map.on('load',apply);
   document.getElementById('layersPanel').classList.remove('open');
 }
+
+// ===== POI LAYERS (Overpass API) =====
+const poiLayers={};
+const poiConfig={
+  fuel:{tag:'amenity=fuel',color:'#ff9800',icon:'⛽'},
+  transit:{tag:'highway=bus_stop',color:'#2196f3',icon:'🚌'},
+  rail:{tag:'railway=station',color:'#9c27b0',icon:'🚆'},
+  food:{tag:'amenity=restaurant|amenity=cafe',color:'#f44336',icon:'🍽️'},
+  parking:{tag:'amenity=parking',color:'#4caf50',icon:'🅿️'}
+};
+
+function togglePOILayers(){
+  document.getElementById('poiLayersPanel').classList.toggle('open');
+}
+
+async function togglePOI(type){
+  const checked=document.getElementById('poi'+type.charAt(0).toUpperCase()+type.slice(1)).checked;
+  if(!checked){
+    if(poiLayers[type]){
+      poiLayers[type].forEach(m=>m.remove());
+      delete poiLayers[type];
+    }
+    return;
+  }
+  showToast('טוען '+poiConfig[type].icon+' ...');
+  await loadPOILayer(type);
+}
+
+async function loadPOILayer(type){
+  const cfg=poiConfig[type];
+  const bounds=map.getBounds();
+  const bbox=bounds.getSouth()+','+bounds.getWest()+','+bounds.getNorth()+','+bounds.getEast();
+  const tags=cfg.tag.split('|').map(t=>{
+    const[k,v]=t.split('=');
+    return 'node['+k+'='+JSON.stringify(v)+'](' +bbox+');';
+  }).join('');
+  const query='[out:json][timeout:15];('+tags+');out body 80;';
+  try{
+    const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:query});
+    const data=await res.json();
+    poiLayers[type]=[];
+    data.elements.forEach(el=>{
+      if(!el.lat||!el.lon)return;
+      const markerEl=document.createElement('div');
+      markerEl.innerHTML='<div style="font-size:18px;background:'+cfg.color+';border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.4);border:2px solid white">'+cfg.icon+'</div>';
+      const marker=new maplibregl.Marker({element:markerEl}).setLngLat([el.lon,el.lat]).addTo(map);
+      if(el.tags&&el.tags.name){
+        markerEl.addEventListener('click',()=>{
+          new maplibregl.Popup({closeButton:true}).setLngLat([el.lon,el.lat]).setHTML('<div style="padding:4px;font-size:13px;font-weight:600">'+escHtml(el.tags.name)+'</div>').addTo(map);
+        });
+      }
+      poiLayers[type].push(marker);
+    });
+    showToast(cfg.icon+' '+data.elements.length+' נמצאו','success');
+  }catch(e){
+    showToast('שגיאה בטעינת שכבה','error');
+    document.getElementById('poi'+type.charAt(0).toUpperCase()+type.slice(1)).checked=false;
+  }
+}
+
+window.togglePOILayers=togglePOILayers;
+window.togglePOI=togglePOI;
 
 function toggleLayers(){document.getElementById('layersPanel').classList.toggle('open');}
 function showMapView(){closeAllPanels();setTimeout(()=>map&&map.resize(),350);setActiveNav('navMap');}
