@@ -457,7 +457,7 @@ function toggleDarkMode(){
   isDark=!isDark;
   document.body.classList.toggle('light',!isDark);
   document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';
-  if(map)map.invalidateSize();
+  if(map)map.resize();
 }
 
 function checkAdminPass(){
