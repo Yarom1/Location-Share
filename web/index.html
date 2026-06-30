@@ -760,12 +760,26 @@ async function loadPOILayer(type){
     poiLayers[type]=[];
     data.elements.forEach(el=>{
       if(!el.lat||!el.lon)return;
+      const brand=el.tags&&(el.tags.brand||el.tags.operator||'');
+      let icon=cfg.icon, bg=cfg.color;
+      if(type==='fuel'&&brand){
+        const b=brand.toLowerCase();
+        if(b.includes('sonol')||b.includes('סונול')){icon='⛽';bg='#0066b3';}
+        else if(b.includes('paz')||b.includes('פז')){icon='⛽';bg='#e30613';}
+        else if(b.includes('delek')||b.includes('דלק')){icon='⛽';bg='#ffcc00';}
+        else if(b.includes('dor')||b.includes('דור אלון')||b.includes('alon')){icon='⛽';bg='#00a651';}
+        else if(b.includes('ten')||b.includes('טן')){icon='⛽';bg='#f7941d';}
+      }
       const markerEl=document.createElement('div');
-      markerEl.innerHTML='<div style="font-size:18px;background:'+cfg.color+';border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.4);border:2px solid white">'+cfg.icon+'</div>';
+      const label=brand?brand:'';
+      markerEl.innerHTML='<div style="display:flex;flex-direction:column;align-items:center">'+
+        (label?'<div style="background:rgba(13,17,23,0.8);color:#fff;font-size:9px;font-weight:600;padding:1px 5px;border-radius:6px;margin-bottom:2px;white-space:nowrap">'+escHtml(label)+'</div>':'')+
+        '<div style="font-size:16px;background:'+bg+';border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.4);border:2px solid white">'+icon+'</div></div>';
       const marker=new maplibregl.Marker({element:markerEl}).setLngLat([el.lon,el.lat]).addTo(map);
-      if(el.tags&&el.tags.name){
+      const displayName=el.tags&&(el.tags.name||brand);
+      if(displayName){
         markerEl.addEventListener('click',()=>{
-          new maplibregl.Popup({closeButton:true}).setLngLat([el.lon,el.lat]).setHTML('<div style="padding:4px;font-size:13px;font-weight:600">'+escHtml(el.tags.name)+'</div>').addTo(map);
+          new maplibregl.Popup({closeButton:true}).setLngLat([el.lon,el.lat]).setHTML('<div style="padding:4px;font-size:13px;font-weight:600">'+escHtml(displayName)+'</div>').addTo(map);
         });
       }
       poiLayers[type].push(marker);
