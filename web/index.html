@@ -1546,6 +1546,7 @@ async function savePoint(){
     createdAt:serverTimestamp()
   });
   closeAddPointSheet();
+  stopCenterPinRefine();
   if(pinPreviewMarker){pinPreviewMarker.remove();pinPreviewMarker=null;}
   addPointCoords=null;
   document.getElementById('pointNameInput').value='';
