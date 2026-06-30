@@ -610,19 +610,20 @@ function setLayer(t){
 }
 
 function toggleLayers(){document.getElementById('layersPanel').classList.toggle('open');}
-function showMapView(){closeAllPanels();setTimeout(()=>map&&map.invalidateSize(),350);setActiveNav('navMap');}
+function showMapView(){closeAllPanels();setTimeout(()=>map&&map.resize(),350);setActiveNav('navMap');}
 let locating=false;let lastLat=0,lastLng=0;function locateMe(){
   if(lastLat&&lastLng){map.flyTo({center:[lastLng,lastLat],zoom:17});return;}
   if(locating)return;locating=true;
-  document.getElementById('locateBtn').textContent='⏳';
+  const btn=document.getElementById('locateBtn');
+  if(btn)btn.textContent='⏳';
   navigator.geolocation?.getCurrentPosition(p=>{
-    map.flyTo([p.coords.latitude,p.coords.longitude],17);
+    map.flyTo({center:[p.coords.longitude,p.coords.latitude],zoom:17});
     locating=false;
-    document.getElementById('locateBtn').textContent='📍';
+    const b2=document.getElementById('locateBtn');if(b2)b2.textContent='📍';
   },()=>{
     showToast('לא ניתן לקבל מיקום','error');
     locating=false;
-    document.getElementById('locateBtn').textContent='📍';
+    const b2=document.getElementById('locateBtn');if(b2)b2.textContent='📍';
   },{timeout:5000,maximumAge:30000,enableHighAccuracy:false});
 }
 function flyToUser(uid){if(markers[uid]){const ll=markers[uid].getLngLat();map.flyTo({center:[ll.lng,ll.lat],zoom:17});closeAllPanels();}else showToast('משתמש לא על המפה');}
@@ -656,7 +657,7 @@ function updateMarker(uid,data){
 }
 
 function showUserPopup(uid,data){
-  L.popup({closeButton:true,className:''}).setLatLng(markers[uid].getLatLng()).setContent(`
+  new maplibregl.Popup({closeButton:true}).setLngLat(markers[uid].getLngLat()).setHTML(`
     <div style="padding:4px;min-width:140px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <span style="font-size:26px">${data.avatar||'👤'}</span>
