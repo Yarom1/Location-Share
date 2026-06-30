@@ -214,6 +214,12 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   </div>
 
   <div id="map"></div>
+  <div id="centerPinFixed" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-100%);z-index:300;pointer-events:none">
+    <svg width="30" height="38" viewBox="0 0 22 28" style="filter:drop-shadow(0 3px 5px rgba(0,0,0,.5))">
+      <path d="M11 0C4.9 0 0 4.9 0 11c0 8.25 11 17 11 17s11-8.75 11-17C22 4.9 17.1 0 11 0z" fill="#00d4aa"/>
+      <circle cx="11" cy="11" r="4.5" fill="#0d1117"/>
+    </svg>
+  </div>
   <div id="mapMenuWrap" style="position:fixed;left:14px;bottom:80px;z-index:150;display:flex;flex-direction:column;align-items:center;gap:10px">
     <div onclick="toggleMapMenu()" style="width:50px;height:50px;border-radius:50%;background:rgba(0,212,170,0.85);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🛠️</div>
     <div id="mapMenuItems" style="display:none;flex-direction:column;gap:10px;align-items:center">
@@ -1387,12 +1393,48 @@ function closeAddPointSheet(){
 window.openAddPointSheet=openAddPointSheet;
 window.closeAddPointSheet=closeAddPointSheet;
 
+let centerPinActive=false;
+
+function startCenterPinRefine(lat,lng){
+  map.flyTo({center:[lng,lat],zoom:17});
+  document.getElementById('centerPinFixed').style.display='block';
+  centerPinActive=true;
+  addPointCoords={lat,lng};
+  updateCenterPinCoordsDisplay();
+  map.on('move',onCenterPinMove);
+  openAddPointSheet();
+  showToast('הזז את המפה כדי לדייק את המיקום 📍');
+}
+
+function onCenterPinMove(){
+  if(!centerPinActive)return;
+  const c=map.getCenter();
+  addPointCoords={lat:c.lat,lng:c.lng};
+  updateCenterPinCoordsDisplay();
+}
+
+function updateCenterPinCoordsDisplay(){
+  if(!addPointCoords)return;
+  const el=document.getElementById('pointCoordsDisplay');
+  if(el)el.textContent='📍 '+addPointCoords.lat.toFixed(5)+', '+addPointCoords.lng.toFixed(5)+' — הזז את המפה לדיוק';
+}
+
+function stopCenterPinRefine(){
+  centerPinActive=false;
+  document.getElementById('centerPinFixed').style.display='none';
+  map.off('move',onCenterPinMove);
+}
+
+window.startCenterPinRefine=startCenterPinRefine;
+window.stopCenterPinRefine=stopCenterPinRefine;
+
 function cancelAddPointMode(){
   addPointMode=false;
   addPointCoords=null;
   searchThenPinMode=false;
   map.getCanvas().style.cursor='';
   map.off('click',refinePinPosition);
+  stopCenterPinRefine();
   if(pinPreviewMarker){pinPreviewMarker.remove();pinPreviewMarker=null;}
   document.getElementById('pointNameInput').value='';
   document.getElementById('pointDescInput').value='';
