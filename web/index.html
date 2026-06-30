@@ -966,21 +966,24 @@ function toggleCompass(){
 let lastHeading=0;
 let lastAbsolute=false;
 function handleOrientation(e){
-  // העדף absolute event
   if(e.type==='deviceorientation'&&lastAbsolute)return;
   lastAbsolute=(e.type==='deviceorientationabsolute');
+
   let h=0;
   if(e.webkitCompassHeading!=null){
-    h=e.webkitCompassHeading; // iOS
-  }else if(e.absolute&&e.alpha!=null){
-    h=(360-e.alpha)%360; // Android absolute
+    // iOS - כבר מתחשב בכיוון המסך
+    h=e.webkitCompassHeading;
   }else if(e.alpha!=null){
-    h=(360-e.alpha)%360; // Android fallback
+    // Android - צריך לפצות על כיוון המסך (portrait/landscape)
+    const screenAngle=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
+    h=(360-e.alpha+screenAngle)%360;
   }
+
   if(Math.abs(h-lastHeading)>1.5){
     lastHeading=h;
     map.easeTo({bearing:h,duration:150});
-    document.getElementById("compassBtn").style.transform="rotate("+(-h)+"deg)";
+    const btn=document.getElementById("compassBtn");
+    if(btn)btn.style.transform="rotate("+(-h)+"deg)";
   }
 }
 
