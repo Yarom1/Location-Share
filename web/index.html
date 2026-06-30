@@ -1190,14 +1190,8 @@ function goToSearchResult(lat,lng,name){
   document.getElementById('searchResults').innerHTML='';
 
   if(searchThenPinMode){
-    // מצב יצירת נקודה - הצג סיכת תצוגה, אפשר לדייק בלחיצה על המפה
-    setAddPointCoords(lat,lng);
-    showToast('דייק את המיקום בלחיצה על המפה, או שמור ישירות');
-    map.once('click',e=>{
-      if(searchThenPinMode)setAddPointCoords(e.lngLat.lat,e.lngLat.lng);
-    });
-    setTimeout(()=>openAddPointSheet(),400);
     searchThenPinMode=false;
+    startCenterPinRefine(lat,lng);
     return;
   }
 
