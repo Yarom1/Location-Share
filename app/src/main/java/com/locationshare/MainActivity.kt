@@ -102,7 +102,6 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
-                // העבר לינקי ניווט (geo:, waze:, https://waze.com, https://maps.google.com) לאפליקציה חיצונית
                 val isNavLink = url.startsWith("geo:") ||
                         url.startsWith("waze:") ||
                         url.contains("waze.com") ||
@@ -110,11 +109,21 @@ class MainActivity : AppCompatActivity() {
                         url.contains("google.com/maps")
                 if (isNavLink) {
                     try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(intent)
+                        // השתמש ב-geo: URI כדי לקבל את תפריט הבחירה הטבעי של אנדרואיד
+                        val geoUri = if (url.startsWith("geo:")) {
+                            Uri.parse(url)
+                        } else {
+                            val regex = Regex("[-.0-9]+,[-.0-9]+")
+                            val match = regex.find(url)
+                            val coords = match?.value ?: ""
+                            Uri.parse("geo:0,0?q=$coords")
+                        }
+                        val intent = Intent(Intent.ACTION_VIEW, geoUri)
+                        val chooser = Intent.createChooser(intent, "נווט עם")
+                        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(chooser)
                     } catch (e: Exception) {
-                        Toast.makeText(this@MainActivity, "לא נמצאה אפליקציה מתאימה", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "לא נמצאה אפליקציית ניווט", Toast.LENGTH_SHORT).show()
                     }
                     return true
                 }
