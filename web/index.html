@@ -1235,7 +1235,7 @@ function renderPointsList(){
   }
   ids.forEach(id=>{
     const p=savedPoints[id];
-    if(visiblePoints[id]===undefined)visiblePoints[id]=true;
+    if(visiblePoints[id]===undefined)visiblePoints[id]=false;
     const item=document.createElement('div');
     item.className='user-item';
     item.innerHTML=`
@@ -1256,7 +1256,7 @@ function renderPointsList(){
 function renderPointMarkers(){
   Object.keys(savedPoints).forEach(id=>{
     const p=savedPoints[id];
-    if(visiblePoints[id]===undefined)visiblePoints[id]=true;
+    if(visiblePoints[id]===undefined)visiblePoints[id]=false;
     if(!visiblePoints[id]){
       if(pointMarkers[id]){pointMarkers[id].remove();delete pointMarkers[id];}
       return;
