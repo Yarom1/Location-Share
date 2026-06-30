@@ -954,10 +954,13 @@ function toggleCompass(){
   compassMode=!compassMode;
   document.getElementById("compassBtn").classList.toggle("active",compassMode);
   if(compassMode){
-    window.addEventListener("deviceorientation",handleOrientation);
+    lastAbsolute=false;
+    window.addEventListener("deviceorientationabsolute",handleOrientation,true);
+    window.addEventListener("deviceorientation",handleOrientation,true);
     showToast("מצפן פעיל 🧭");
   }else{
-    window.removeEventListener("deviceorientation",handleOrientation);
+    window.removeEventListener("deviceorientationabsolute",handleOrientation,true);
+    window.removeEventListener("deviceorientation",handleOrientation,true);
     document.getElementById("compassBtn").style.transform="rotate(0deg)";
     showToast("מצפן כבוי");
   }
