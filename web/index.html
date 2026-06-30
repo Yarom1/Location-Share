@@ -708,8 +708,9 @@ function listenUsers(){
       if(isOnline&&u.lat&&u.lng){
         updateMarker(d.id,{...u,online:isOnline});
       } else if(!isOnline&&markers[d.id]){
-        map.removeLayer(markers[d.id]);
+        markers[d.id].remove();
         delete markers[d.id];
+        delete markerCache[d.id];
       }
 
       // users list
