@@ -837,9 +837,19 @@ async function showUserHistory(uid){
     if(snap.empty){trail.innerHTML='<div style="color:var(--text2);font-size:13px">אין היסטוריה</div>';return;}
     const pts=[];
     snap.forEach(d=>{const h=d.data();if(h.lat&&h.lng)pts.push([h.lat,h.lng]);});
-    if(historyLayer)map.removeLayer(historyLayer);
-    if(pts.length>1){historyLayer=L.polyline(pts,{color:'#00d4aa',weight:3,opacity:.7,dashArray:'6,4'}).addTo(map);map.fitBounds(historyLayer.getBounds(),{padding:[50,50]});}
-    else if(pts.length===1)map.flyTo(pts[0],15);
+    try{
+      if(map.getLayer('history-line'))map.removeLayer('history-line');
+      if(map.getSource('history'))map.removeSource('history');
+    }catch(e){}
+    if(pts.length>1){
+      const bounds=pts.reduce((b,p)=>b.extend([p[1],p[0]]),new maplibregl.LngLatBounds([pts[0][1],pts[0][0]],[pts[0][1],pts[0][0]]));
+      map.fitBounds(bounds,{padding:50});
+      map.addSource('history',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:pts.map(p=>[p[1],p[0]])}}});
+      map.addLayer({id:'history-line',type:'line',source:'history',paint:{'line-color':'#00d4aa','line-width':3,'line-dasharray':[2,1]}});
+      historyLayer=true;
+    }else if(pts.length===1){
+      map.flyTo({center:[pts[0][1],pts[0][0]],zoom:15});
+    }
     let i=0;
     snap.forEach(d=>{
       const h=d.data();
@@ -890,7 +900,11 @@ async function clearHistory(){
   if(false)return;
   const snap=await getDocs(collection(db,'history'));
   await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'history',d.id))));
-  if(historyLayer){map.removeLayer(historyLayer);historyLayer=null;}
+  try{
+    if(map.getLayer('history-line'))map.removeLayer('history-line');
+    if(map.getSource('history'))map.removeSource('history');
+  }catch(e){}
+  historyLayer=null;
   showToast('היסטוריה נוקתה ✓','success');
 }
 
