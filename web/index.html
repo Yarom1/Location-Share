@@ -167,6 +167,18 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   </div>
 </div>
 
+<div class="modal" id="editPointModal">
+  <div class="modal-box">
+    <h3>✏️ עריכת נקודה</h3>
+    <div class="input-wrap"><label>שם הנקודה</label><input type="text" id="editPointNameInput" maxlength="30"></div>
+    <div class="input-wrap"><label>תיאור (אופציונלי)</label><input type="text" id="editPointDescInput" maxlength="60"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="saveEditedPoint()">שמור</button>
+      <button class="btn secondary" onclick="closeModal('editPointModal')">ביטול</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="searchModal">
   <div class="modal-box">
     <h3>🔍 חיפוש מיקום</h3>
@@ -1258,6 +1270,7 @@ function renderPointsList(){
       <div class="user-actions">
         <div class="user-act-btn" onclick="togglePointVisibility('${id}')" title="הצג/הסתר">${visiblePoints[id]?'👁️':'🚫'}</div>
         <div onclick="navigateToPoint('${id}')" title="ניווט" style="background:#1a73e8;border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,.3)"><svg width="16" height="16" viewBox="0 0 24 24" style="display:block"><path d="M12 2L4 21l8-5 8 5z" fill="white"/></svg></div>
+        <div class="user-act-btn" onclick="openEditPointModal('${id}')" title="ערוך">✏️</div>
         <div class="user-act-btn" onclick="deletePoint('${id}')" title="מחק">🗑️</div>
       </div>`;
     list.appendChild(item);
@@ -1327,6 +1340,31 @@ async function deletePoint(id){
 }
 
 let navTargetPoint=null;
+
+let editPointId=null;
+
+function openEditPointModal(id){
+  const p=savedPoints[id];
+  if(!p)return;
+  editPointId=id;
+  document.getElementById('editPointNameInput').value=p.name||'';
+  document.getElementById('editPointDescInput').value=p.desc||'';
+  openModal('editPointModal');
+}
+
+async function saveEditedPoint(){
+  if(!editPointId)return;
+  const name=document.getElementById('editPointNameInput').value.trim();
+  const desc=document.getElementById('editPointDescInput').value.trim();
+  if(!name){showToast('הכנס שם','error');return;}
+  await updateDoc(doc(db,'savedPoints',editPointId),{name,desc});
+  closeModal('editPointModal');
+  editPointId=null;
+  showToast('נקודה עודכנה ✓','success');
+}
+
+window.openEditPointModal=openEditPointModal;
+window.saveEditedPoint=saveEditedPoint;
 
 function navigateToPoint(id){
   const p=savedPoints[id];
