@@ -48,7 +48,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;background:var(--surface);border-top:1px solid var(--border);padding:6px 0 max(6px,env(safe-area-inset-bottom));box-shadow:0 -2px 8px rgba(0,0,0,.15)}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 0;font-size:11px;color:var(--text2);transition:.2s}
 .nav-item.active{color:var(--accent)}
-.nav-item svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-item svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .layers-panel{position:fixed;top:65px;left:12px;z-index:500;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:none;flex-direction:column;gap:8px;min-width:180px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 .layers-panel.open{display:flex}
 .layer-item{display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px;transition:.2s}
@@ -218,7 +218,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div onclick="toggleMapMenu()" style="width:50px;height:50px;border-radius:50%;background:rgba(0,212,170,0.85);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🛠️</div>
     <div id="mapMenuItems" style="display:none;flex-direction:column;gap:10px;align-items:center">
       <div onclick="openSearchModal()" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🔍</div>
-      <div onclick="openPanel('points')" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">📌</div>
       <div onclick="locateMe()" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">📍</div>
       <div onclick="toggleTracking()" id="trackBtn" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🎯</div>
       <div onclick="toggleCompass()" id="compassBtn" style="width:50px;height:50px;border-radius:50%;background:rgba(13,17,23,0.8);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.5);cursor:pointer;touch-action:manipulation">🧭</div>
@@ -250,6 +249,9 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     </div>
     <div class="nav-item" id="navHistory" onclick="openPanel('history')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>היסטוריה
+    </div>
+    <div class="nav-item" id="navPoints" onclick="openPanel('points')">
+      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>נקודות
     </div>
     <div class="nav-item" id="navSettings" onclick="openPanel('settings')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>הגדרות
@@ -301,13 +303,24 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div class="panel-header"><h3>📌 נקודות שמורות</h3><div class="panel-close" onclick="closePanel('points')">✕</div></div>
     <div style="padding:10px 14px 0;flex-shrink:0;display:flex;gap:8px">
       <button class="btn secondary" style="flex:1;padding:10px" onclick="toggleAllPoints()">👁️ הצג/הסתר הכל</button>
-      <button class="btn" style="flex:1;padding:10px" onclick="openAddPointModal()">➕ נקודה חדשה</button>
+      <button class="btn" style="flex:1;padding:10px" onclick="openCreatePointChooser()">➕ נקודה חדשה</button>
     </div>
     <div class="panel-body" id="pointsList"></div>
   </div>
 
   <!-- ADD POINT MODAL -->
-  <div class="modal" id="addPointModal">
+  <div class="modal" id="createPointChooserModal">
+  <div class="modal-box">
+    <h3>➕ נקודה חדשה</h3>
+    <p>איך תרצה להוסיף את הנקודה?</p>
+    <button class="btn secondary" style="margin-bottom:8px" onclick="closeModal('createPointChooserModal');startPinOnMap()">📍 דקור נקודה על המפה</button>
+    <button class="btn secondary" style="margin-bottom:8px" onclick="closeModal('createPointChooserModal');startSearchAndPin()">🔍 חפש מיקום (ואז דייק עם דקירה)</button>
+    <button class="btn secondary" style="margin-bottom:8px" onclick="closeModal('createPointChooserModal');startCurrentLocation()">🧭 המיקום הנוכחי שלי</button>
+    <button class="btn secondary" onclick="closeModal('createPointChooserModal')">ביטול</button>
+  </div>
+</div>
+
+<div class="modal" id="addPointModal">
     <div class="modal-box">
       <h3>📌 נקודה חדשה</h3>
       <div class="input-wrap"><label>שם הנקודה</label><input type="text" id="pointNameInput" placeholder="לדוגמה: בית, חניה, מסעדה..." maxlength="30"></div>
@@ -971,7 +984,7 @@ function openPanel(name){
   }
   
   if(name==='chat'){document.getElementById('chatDot').classList.remove('show');setTimeout(()=>switchChatTab(activeChatTab),100);}
-  const navMap={users:'navUsers',chat:'navChat',history:'navHistory',settings:'navSettings',admin:null};
+  const navMap={users:'navUsers',chat:'navChat',history:'navHistory',settings:'navSettings',points:'navPoints',admin:null};
   if(navMap[name])setActiveNav(navMap[name]);
 }
 
@@ -1124,6 +1137,7 @@ function toggleMapMenu(){
 
 window.toggleMapMenu=toggleMapMenu;
 let searchMarker=null;
+let searchThenPinMode=false;
 
 function openSearchModal(){
   openModal('searchModal');
@@ -1165,6 +1179,23 @@ async function doSearch(){
 }
 
 function goToSearchResult(lat,lng,name){
+  map.flyTo({center:[lng,lat],zoom:16});
+  closeModal('searchModal');
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchResults').innerHTML='';
+
+  if(searchThenPinMode){
+    // מצב יצירת נקודה - הצג סיכת תצוגה, אפשר לדייק בלחיצה על המפה
+    setAddPointCoords(lat,lng);
+    showToast('דייק את המיקום בלחיצה על המפה, או שמור ישירות');
+    map.once('click',e=>{
+      if(searchThenPinMode)setAddPointCoords(e.lngLat.lat,e.lngLat.lng);
+    });
+    setTimeout(()=>openModal('addPointModal'),400);
+    searchThenPinMode=false;
+    return;
+  }
+
   if(searchMarker)searchMarker.remove();
   const el=document.createElement('div');
   el.innerHTML='<div style="font-size:26px;opacity:0.85;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));transform:rotate(8deg)">📍</div>';
@@ -1173,10 +1204,6 @@ function goToSearchResult(lat,lng,name){
   el.addEventListener('click',()=>{
     if(searchMarker){searchMarker.remove();searchMarker=null;showToast('הסיכה הוסרה');}
   });
-  map.flyTo({center:[lng,lat],zoom:16});
-  closeModal('searchModal');
-  document.getElementById('searchInput').value='';
-  document.getElementById('searchResults').innerHTML='';
   showToast('📍 '+name.substring(0,40),'success');
 }
 
@@ -1291,32 +1318,60 @@ function navigateToPoint(id){
   window.open(wazeUrl,'_blank');
 }
 
-// הוספת נקודה - מצב לחיצה על המפה
-function openAddPointModal(){
-  showToast('לחץ על המפה לבחירת מיקום, או לחץ שמור למיקום הנוכחי');
-  addPointMode=true;
+// ===== שלוש דרכים ליצירת נקודה =====
+let pinPreviewMarker=null;
+
+function openCreatePointChooser(){
+  closePanel('points');
+  openModal('createPointChooserModal');
+}
+window.openCreatePointChooser=openCreatePointChooser;
+
+// שיטה 1: דקירה ישירה על המפה
+function startPinOnMap(){
+  addPointCoords=null;
+  showToast('לחץ במקום הרצוי על המפה 📍');
   map.getCanvas().style.cursor='crosshair';
-  map.once('click',onAddPointMapClick);
-  // גם אפשר לשמור על מיקום נוכחי ישירות
-  if(lastLat&&lastLng){
-    addPointCoords={lat:lastLat,lng:lastLng};
-    document.getElementById('pointCoordsDisplay').textContent='📍 '+lastLat.toFixed(5)+', '+lastLng.toFixed(5)+' (מיקומך הנוכחי - או לחץ במפה)';
-  }
+  map.once('click',e=>{
+    setAddPointCoords(e.lngLat.lat,e.lngLat.lng);
+    map.getCanvas().style.cursor='';
+    openModal('addPointModal');
+  });
+}
+window.startPinOnMap=startPinOnMap;
+
+// שיטה 2: חיפוש ואז דקירה לדיוק
+function startSearchAndPin(){
+  openModal('searchModal');
+  searchThenPinMode=true;
+  showToast('חפש מיקום, ולאחר מכן תוכל לדייק בלחיצה על המפה');
+}
+window.startSearchAndPin=startSearchAndPin;
+
+// שיטה 3: מיקום נוכחי
+function startCurrentLocation(){
+  if(!lastLat||!lastLng){showToast('אין מיקום זמין כרגע','error');return;}
+  setAddPointCoords(lastLat,lastLng);
   openModal('addPointModal');
 }
+window.startCurrentLocation=startCurrentLocation;
 
-function onAddPointMapClick(e){
-  addPointCoords={lat:e.lngLat.lat,lng:e.lngLat.lng};
-  document.getElementById('pointCoordsDisplay').textContent='📍 '+e.lngLat.lat.toFixed(5)+', '+e.lngLat.lng.toFixed(5);
-  map.getCanvas().style.cursor='';
-  addPointMode=false;
+function setAddPointCoords(lat,lng){
+  addPointCoords={lat,lng};
+  document.getElementById('pointCoordsDisplay').textContent='📍 '+lat.toFixed(5)+', '+lng.toFixed(5);
+  // הצג סיכת תצוגה מקדימה
+  if(pinPreviewMarker)pinPreviewMarker.remove();
+  const el=document.createElement('div');
+  el.innerHTML='<div style="font-size:30px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))">📍</div>';
+  pinPreviewMarker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([lng,lat]).addTo(map);
 }
 
 function cancelAddPointMode(){
   addPointMode=false;
   addPointCoords=null;
+  searchThenPinMode=false;
   map.getCanvas().style.cursor='';
-  map.off('click',onAddPointMapClick);
+  if(pinPreviewMarker){pinPreviewMarker.remove();pinPreviewMarker=null;}
   document.getElementById('pointNameInput').value='';
   document.getElementById('pointDescInput').value='';
   document.getElementById('pointCoordsDisplay').textContent='';
@@ -1336,7 +1391,11 @@ async function savePoint(){
     createdAt:serverTimestamp()
   });
   closeModal('addPointModal');
-  cancelAddPointMode();
+  if(pinPreviewMarker){pinPreviewMarker.remove();pinPreviewMarker=null;}
+  addPointCoords=null;
+  document.getElementById('pointNameInput').value='';
+  document.getElementById('pointDescInput').value='';
+  document.getElementById('pointCoordsDisplay').textContent='';
   showToast('נקודה נשמרה ✓','success');
 }
 
