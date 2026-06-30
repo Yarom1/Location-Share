@@ -328,7 +328,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
       <p id="pointCoordsDisplay" style="font-size:12px;color:var(--accent)"></p>
       <div class="modal-actions">
         <button class="btn" onclick="savePoint()">שמור</button>
-        <button class="btn secondary" onclick="closeModal('addPointModal');cancelAddPointMode()">ביטול</button>
+        <button class="btn secondary" onclick="closeAddPointSheet();cancelAddPointMode()">ביטול</button>
       </div>
     </div>
   </div>
@@ -1338,7 +1338,7 @@ function startPinOnMap(){
   map.once('click',e=>{
     setAddPointCoords(e.lngLat.lat,e.lngLat.lng);
     map.getCanvas().style.cursor='';
-    openModal('addPointModal');
+    openAddPointSheet();
   });
 }
 window.startPinOnMap=startPinOnMap;
@@ -1355,25 +1355,42 @@ window.startSearchAndPin=startSearchAndPin;
 function startCurrentLocation(){
   if(!lastLat||!lastLng){showToast('אין מיקום זמין כרגע','error');return;}
   setAddPointCoords(lastLat,lastLng);
-  openModal('addPointModal');
+  openAddPointSheet();
 }
 window.startCurrentLocation=startCurrentLocation;
 
 function setAddPointCoords(lat,lng){
   addPointCoords={lat,lng};
-  document.getElementById('pointCoordsDisplay').textContent='📍 '+lat.toFixed(5)+', '+lng.toFixed(5);
-  // הצג סיכת תצוגה מקדימה
+  document.getElementById('pointCoordsDisplay').textContent='📍 '+lat.toFixed(5)+', '+lng.toFixed(5)+' — לחץ על המפה לדיוק נוסף';
   if(pinPreviewMarker)pinPreviewMarker.remove();
   const el=document.createElement('div');
-  el.innerHTML='<div style="font-size:30px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))">📍</div>';
+  el.innerHTML='<div style="font-size:28px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))">📍</div>';
   pinPreviewMarker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([lng,lat]).addTo(map);
+  // אפשר ללחוץ שוב על המפה לדייק כל עוד ה-sheet פתוח
+  map.off('click',refinePinPosition);
+  map.on('click',refinePinPosition);
 }
+
+function refinePinPosition(e){
+  if(document.getElementById('addPointSheet').style.display!=='flex')return;
+  setAddPointCoords(e.lngLat.lat,e.lngLat.lng);
+}
+
+function openAddPointSheet(){
+  document.getElementById('addPointSheet').style.display='flex';
+}
+function closeAddPointSheet(){
+  document.getElementById('addPointSheet').style.display='none';
+}
+window.openAddPointSheet=openAddPointSheet;
+window.closeAddPointSheet=closeAddPointSheet;
 
 function cancelAddPointMode(){
   addPointMode=false;
   addPointCoords=null;
   searchThenPinMode=false;
   map.getCanvas().style.cursor='';
+  map.off('click',refinePinPosition);
   if(pinPreviewMarker){pinPreviewMarker.remove();pinPreviewMarker=null;}
   document.getElementById('pointNameInput').value='';
   document.getElementById('pointDescInput').value='';
@@ -1393,7 +1410,7 @@ async function savePoint(){
     creatorName:currentUser?currentUser.name:'',
     createdAt:serverTimestamp()
   });
-  closeModal('addPointModal');
+  closeAddPointSheet();
   if(pinPreviewMarker){pinPreviewMarker.remove();pinPreviewMarker=null;}
   addPointCoords=null;
   document.getElementById('pointNameInput').value='';
