@@ -1331,22 +1331,11 @@ let navTargetPoint=null;
 function navigateToPoint(id){
   const p=savedPoints[id];
   if(!p)return;
-  navTargetPoint=p;
-  openModal('navAppModal');
+  window.location.href='geo:'+p.lat+','+p.lng+'?q='+p.lat+','+p.lng;
 }
 
-function launchNav(app){
-  if(!navTargetPoint)return;
-  const lat=navTargetPoint.lat,lng=navTargetPoint.lng;
-  let url='';
-  if(app==='waze')url='https://waze.com/ul?ll='+lat+','+lng+'&navigate=yes';
-  else if(app==='google')url='https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng+'&travelmode=driving';
-  else if(app==='geo')url='geo:'+lat+','+lng+'?q='+lat+','+lng;
-  // ניווט ישיר ב-window.location כדי שה-Android WebViewClient יתפוס ויפתח אפליקציה חיצונית
-  window.location.href=url;
-  closeModal('navAppModal');
-  navTargetPoint=null;
-}
+function launchNav(app){}
+
 window.navigateToPoint=navigateToPoint;
 window.launchNav=launchNav;
 
