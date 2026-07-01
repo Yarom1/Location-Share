@@ -887,6 +887,8 @@ function listenUsers(){
     const al=document.getElementById('adminUserList');
     const hs=document.getElementById('historyUserSelect');
     ul.innerHTML='';al.innerHTML='';hs.innerHTML='';
+    // עדכן allUsersData קודם
+    snap.forEach(d=>{allUsersData[d.id]=d.data();});
     const myData=allUsersData[myUID];
     const iAmBanned=myData&&myData.banned===true;
     snap.forEach(d=>{
