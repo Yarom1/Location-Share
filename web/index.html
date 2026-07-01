@@ -222,14 +222,13 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 
 <div class="screen" id="main">
   <div class="topbar">
-    <div class="topbar-left" style="display:flex;align-items:center;gap:8px">
-      <div class="my-avatar" id="myAvatarBtn" onclick="openPanel('users')">👤</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%">
       <div class="topbar-title" style="font-size:16px;font-weight:700">Location Share</div>
-      <div class="online-badge" id="onlineBadge" style="font-size:11px;padding:2px 10px">● 0 מחוברים</div>
+      <div class="online-badge" id="onlineBadge" style="font-size:11px;padding:2px 10px;white-space:nowrap">● 0 מחוברים</div>
     </div>
-    <div class="topbar-actions" style="justify-content:flex-end">
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <div class="my-avatar" id="myAvatarBtn" onclick="openPanel('users')">👤</div>
+      <div class="topbar-actions">
       <div class="icon-btn" onclick="toggleDarkMode()" id="themeBtn" title="מצב תצוגה">🌙</div>
       <div class="icon-btn" onclick="toggleLayers()" title="שכבות מפה">🗺️</div>
       <div class="icon-btn" onclick="togglePOILayers()" title="שכבות נוספות">
