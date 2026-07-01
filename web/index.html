@@ -889,7 +889,7 @@ function listenUsers(){
     ul.innerHTML='';al.innerHTML='';hs.innerHTML='';
     snap.forEach(d=>{
       const u=d.data();total++;
-      const now=Date.now();const lastSeen=u.lastSeen?u.lastSeen.toMillis():0;const isOnline=u.online&&(now-lastSeen<120000);if(isOnline)online++;
+      const isOnline=u.online===true;if(isOnline)online++;
       if(isOnline&&u.lat&&u.lng){
         updateMarker(d.id,{...u,online:isOnline});
       } else if(!isOnline&&markers[d.id]){
