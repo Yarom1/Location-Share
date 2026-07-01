@@ -887,9 +887,12 @@ function listenUsers(){
     const al=document.getElementById('adminUserList');
     const hs=document.getElementById('historyUserSelect');
     ul.innerHTML='';al.innerHTML='';hs.innerHTML='';
+    const myData=allUsersData[myUID];
+    const iAmBanned=myData&&myData.banned===true;
     snap.forEach(d=>{
       const u=d.data();total++;
       const isOnline=u.online===true;if(isOnline)online++;
+      if(iAmBanned&&d.id!==myUID)return;
       if(isOnline&&u.lat&&u.lng){
         updateMarker(d.id,{...u,online:isOnline});
       } else if(!isOnline&&markers[d.id]){
@@ -1039,6 +1042,12 @@ async function showUserHistory(uid){
     });
   }catch(e){trail.innerHTML='<div style="color:var(--danger);font-size:13px">שגיאה בטעינה</div>';console.error(e);}
 }
+
+async function toggleBanUser(uid, isBanned){
+  await updateDoc(doc(db,'users',uid),{banned:!isBanned});
+  showToast(!isBanned?'משתמש נוטרל 🚫':'משתמש שוחרר 🔓','success');
+}
+window.toggleBanUser=toggleBanUser;
 
 async function kickUser(uid){
   if(false)return;
