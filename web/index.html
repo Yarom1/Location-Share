@@ -431,6 +431,7 @@ const db=getFirestore(app);
 const AVATARS=['😀','😎','🦊','🐺','🦁','🐯','🦝','🐸','🤖','👾','🦄','🐉','🧙','🧛','👻','🎃','🚀','⚡','🔥','💎'];
 let ADMIN_PASSWORD='';
 let currentUser=null,myUID=null,isAdmin=false;
+let allUsersData={};
 let map,markers={},tileLayer,historyLayer=null;
 let activeChatTab='group',activeDMUser=null;
 let unsubUsers=null,unsubChat=null,unsubDM=null;
