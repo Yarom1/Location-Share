@@ -1717,21 +1717,24 @@ async function savePoint(){
     panel=null;
   }
   document.addEventListener('mousedown',e=>{
-    if(!e.target.classList.contains('panel-handle'))return;
-    panel=e.target.closest('.side-panel');
+    const handle=e.target.closest('.panel-handle');
+    if(!handle)return;
+    panel=handle.closest('.side-panel');
     if(!panel)return;
     startY=e.clientY;startH=panel.offsetHeight;
     document.addEventListener('mousemove',onMove);
     document.addEventListener('mouseup',onUp);
   });
   document.addEventListener('touchstart',e=>{
-    if(!e.target.classList.contains('panel-handle'))return;
-    panel=e.target.closest('.side-panel');
+    const handle=e.target.closest('.panel-handle');
+    if(!handle)return;
+    panel=handle.closest('.side-panel');
     if(!panel)return;
+    e.preventDefault();
     startY=e.touches[0].clientY;startH=panel.offsetHeight;
-    document.addEventListener('touchmove',onMove,{passive:true});
+    document.addEventListener('touchmove',onMove,{passive:false});
     document.addEventListener('touchend',onUp);
-  });
+  },{passive:false});
 })();
 
 window.toggleAllPoints=toggleAllPoints;
