@@ -687,6 +687,14 @@ function initMap(){
   }
   map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
   map.on('load',()=>{
+    // סגור פאנלים בלחיצה/גרירה במפה
+    ['click','dragstart'].forEach(evt=>map.on(evt,()=>{
+      // אל תסגור אם מצב דיוק נקודה פעיל
+      if(document.getElementById('addPointSheet').style.display==='flex')return;
+      closeAllPanels();
+      document.getElementById('layersPanel').classList.remove('open');
+      document.getElementById('poiLayersPanel').classList.remove('open');
+    }));
     map.on('click',e=>{
       if(measureMode)return;
       // בדוק אם יש feature ניתן ללחיצה
