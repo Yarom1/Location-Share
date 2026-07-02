@@ -691,6 +691,20 @@ function initMap(){
       if(measureMode)return;
       // בדוק אם יש feature ניתן ללחיצה
       const features=map.queryRenderedFeatures(e.point);
+      const poi=features.find(f=>f.properties&&(f.properties.name||f.properties.amenity||f.properties.leisure||f.properties.tourism||f.properties.shop));
+      if(poi){
+        const pr=poi.properties;
+        const name=pr.name||pr.amenity||pr.leisure||pr.tourism||pr.shop||'נקודה';
+        let rows='';
+        const labels={amenity:'🏷️',leisure:'🌿',tourism:'📸',shop:'🛍️',opening_hours:'🕐 שעות',phone:'📞',operator:'👤',capacity:'🅿️ קיבולת',fee:'💰 תשלום',wheelchair:'♿ נגישות',network:'🚌 רשת',ref:'🔢'};
+        Object.keys(labels).forEach(k=>{if(pr[k])rows+='<div style="margin:3px 0">'+labels[k]+' '+escHtml(String(pr[k]))+'</div>';});
+        if(pr.website)rows+='<div style="margin:3px 0"><a href="'+escHtml(pr.website)+'" style="color:#00d4aa">🌐 אתר</a></div>';
+        new maplibregl.Popup({closeButton:true,maxWidth:'260px',className:'dark-popup'})
+          .setLngLat(e.lngLat)
+          .setHTML('<div style="direction:rtl;padding:4px;color:#e6edf3;font-family:inherit"><b style="font-size:14px;display:block;margin-bottom:6px;color:#fff">'+escHtml(name)+'</b>'+rows+'</div>')
+          .addTo(map);
+        return;
+      }
       // ללא feature - הצג קואורדינטות
       const p=document.getElementById('coordsPanel');
       p.textContent='📍 '+e.lngLat.lat.toFixed(6)+', '+e.lngLat.lng.toFixed(6);
