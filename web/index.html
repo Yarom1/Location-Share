@@ -691,24 +691,9 @@ function initMap(){
       if(measureMode)return;
       // בדוק אם יש feature ניתן ללחיצה
       const features=map.queryRenderedFeatures(e.point);
-      if(features.length){
-        const info=features.slice(0,3).map(f=>'layer:'+f.layer.id+' props:'+Object.keys(f.properties||{}).join(',')).join('\n');
-        showToast(info.substring(0,80));
-      }
-      const poi=features.find(f=>f.properties&&(f.properties.name||f.properties.amenity||f.properties.leisure||f.properties.tourism||f.properties.shop||f.properties.class||f.properties.type));
-      if(poi){
-        const pr=poi.properties;
-        const name=pr.name||pr.amenity||pr.leisure||pr.tourism||pr.shop||'נקודה';
-        let rows='';
-        const labels={amenity:'🏷️',leisure:'🌿',tourism:'📸',shop:'🛍️',opening_hours:'🕐',phone:'📞',operator:'👤',capacity:'🅿️ קיבולת',fee:'💰 תשלום',surface:'🛤️ משטח',wheelchair:'♿ נגישות',network:'🚌 רשת',ref:'🔢 מזהה'};
-        Object.keys(labels).forEach(k=>{if(pr[k])rows+='<div style="margin:3px 0">'+labels[k]+' '+escHtml(String(pr[k]))+'</div>';});
-        if(pr.website)rows+='<div style="margin:3px 0"><a href="'+escHtml(pr.website)+'" style="color:#00d4aa">🌐 אתר</a></div>';
-        new maplibregl.Popup({closeButton:true,maxWidth:'260px',className:'dark-popup'})
-          .setLngLat(e.lngLat)
-          .setHTML('<div style="direction:rtl;padding:4px;color:#e6edf3;font-family:inherit"><b style="font-size:14px;display:block;margin-bottom:6px;color:#fff">'+escHtml(name)+'</b>'+rows+'</div>')
-          .addTo(map);
-        return;
-      }
+      // שאל Overpass על מה שיש בנקודה
+      queryOverpassAtPoint(e.lngLat.lat,e.lngLat.lng,e.lngLat);
+      return;
       // ללא feature - הצג קואורדינטות
       const p=document.getElementById('coordsPanel');
       p.textContent='📍 '+e.lngLat.lat.toFixed(6)+', '+e.lngLat.lng.toFixed(6);
@@ -716,6 +701,41 @@ function initMap(){
       setTimeout(()=>p.style.display='none',3000);
     });
   });
+}
+
+async function queryOverpassAtPoint(lat,lng,lngLat){
+  const r=0.0003; // רדיוס ~30 מטר
+  const bbox=(lat-r)+','+(lng-r)+','+(lat+r)+','+(lng+r);
+  const query='[out:json][timeout:5];(node('+bbox+'););out body 5;';
+  try{
+    const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:query});
+    const data=await res.json();
+    if(!data.elements||!data.elements.length){
+      // הצג קואורדינטות בלבד
+      const p=document.getElementById('coordsPanel');
+      p.textContent='📍 '+lat.toFixed(6)+', '+lng.toFixed(6);
+      p.style.display='block';
+      setTimeout(()=>p.style.display='none',3000);
+      return;
+    }
+    // מצא את הרלוונטי ביותר (עם שם או תיאור)
+    const el=data.elements.find(e=>e.tags&&(e.tags.name||e.tags.amenity||e.tags.leisure))||data.elements[0];
+    const t=el.tags||{};
+    const name=t.name||t.amenity||t.leisure||t.tourism||t.shop||t.highway||'נקודה';
+    let rows='';
+    const labels={amenity:'🏷️',leisure:'🌿',tourism:'📸',shop:'🛍️',highway:'🛣️',opening_hours:'🕐 שעות',phone:'📞',operator:'👤',capacity:'🅿️ קיבולת',fee:'💰 תשלום',surface:'🛤️ משטח',wheelchair:'♿ נגישות',network:'🚌 רשת',ref:'🔢',description:'📝'};
+    Object.keys(labels).forEach(k=>{if(t[k])rows+='<div style="margin:3px 0">'+labels[k]+' '+escHtml(String(t[k]))+'</div>';});
+    if(t.website)rows+='<div style="margin:3px 0"><a href="'+escHtml(t.website)+'" style="color:#00d4aa">🌐 אתר</a></div>';
+    new maplibregl.Popup({closeButton:true,maxWidth:'270px',className:'dark-popup'})
+      .setLngLat(lngLat)
+      .setHTML('<div style="direction:rtl;padding:4px;color:#e6edf3;font-family:inherit"><b style="font-size:14px;display:block;margin-bottom:6px;color:#fff">'+escHtml(name)+'</b>'+rows+'</div>')
+      .addTo(map);
+  }catch(e){
+    const p=document.getElementById('coordsPanel');
+    p.textContent='📍 '+lat.toFixed(6)+', '+lng.toFixed(6);
+    p.style.display='block';
+    setTimeout(()=>p.style.display='none',3000);
+  }
 }
 
 function setLayer(t){
