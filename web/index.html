@@ -1168,7 +1168,7 @@ function closePanel(name){
 }
 
 function closeAllPanels(){
-  ['users','chat','history','settings','admin'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
+  ['users','chat','history','settings','admin','points'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
   document.getElementById('layersPanel').classList.remove('open');
   
 }
