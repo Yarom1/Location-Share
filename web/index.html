@@ -1433,7 +1433,7 @@ function renderPointMarkers(){
       </svg>
     </div>`;
     const marker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([p.lng,p.lat]).addTo(map);
-    el.addEventListener('click',()=>showPointPopup(id,p));
+    el.addEventListener('click',(e)=>{e.stopPropagation();showPointPopup(id,p);});
     pointMarkers[id]=marker;
   });
   // הסר markers של נקודות שנמחקו
