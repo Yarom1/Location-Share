@@ -790,7 +790,7 @@ async function loadPOILayer(type){
     const[k,v]=t.split('=');
     return 'node['+k+'='+JSON.stringify(v)+'](' +bbox+');';
   }).join('');
-  const query='[out:json][timeout:30];('+tags+');out body 300;';
+  const query='[out:json][timeout:30];('+tags+');out body 500;';
   try{
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),30000);
