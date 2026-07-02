@@ -724,7 +724,18 @@ function setLayer(t){
     fiord:'https://tiles.openfreemap.org/styles/fiord'
   };
   const url=styles[t]||styles.liberty;
-  const apply=()=>map.setStyle(url);
+  const apply=()=>{
+    map.setStyle(url);
+    // אחרי שינוי style - נקה markers של POI (הם עדיין על המפה אבל ה-sources נמחקו)
+    map.once('styledata',()=>{
+      Object.keys(poiLayers).forEach(type=>{
+        if(poiLayers[type])poiLayers[type].forEach(m=>m.remove());
+        delete poiLayers[type];
+        const cb=document.getElementById('poi'+type.charAt(0).toUpperCase()+type.slice(1));
+        if(cb)cb.checked=false;
+      });
+    });
+  };
   if(map.isStyleLoaded())apply();
   else map.on('load',apply);
   document.getElementById('layersPanel').classList.remove('open');
