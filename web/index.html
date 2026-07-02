@@ -1700,6 +1700,40 @@ async function savePoint(){
   showToast('נקודה נשמרה ✓','success');
 }
 
+// ===== RESIZABLE PANELS =====
+(function(){
+  let startY=0,startH=0,panel=null;
+  function onMove(e){
+    const y=e.touches?e.touches[0].clientY:e.clientY;
+    const newH=startH-(y-startY);
+    const clamped=Math.max(200,Math.min(window.innerHeight*0.9,newH));
+    panel.style.height=clamped+'px';
+  }
+  function onUp(){
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+    document.removeEventListener('touchmove',onMove);
+    document.removeEventListener('touchend',onUp);
+    panel=null;
+  }
+  document.addEventListener('mousedown',e=>{
+    if(!e.target.classList.contains('panel-handle'))return;
+    panel=e.target.closest('.side-panel');
+    if(!panel)return;
+    startY=e.clientY;startH=panel.offsetHeight;
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+  document.addEventListener('touchstart',e=>{
+    if(!e.target.classList.contains('panel-handle'))return;
+    panel=e.target.closest('.side-panel');
+    if(!panel)return;
+    startY=e.touches[0].clientY;startH=panel.offsetHeight;
+    document.addEventListener('touchmove',onMove,{passive:true});
+    document.addEventListener('touchend',onUp);
+  });
+})();
+
 window.toggleAllPoints=toggleAllPoints;
 window.cancelAddPointMode=cancelAddPointMode;
 window.savePoint=savePoint;
