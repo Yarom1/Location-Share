@@ -998,7 +998,7 @@ function listenGroupChat(){
     snap.forEach(d=>appendMsg(d.data()));
     msgs.scrollTop=msgs.scrollHeight;
     if(!document.getElementById('chatPanel').classList.contains('open'))
-      document.getElementById('chatDot').classList.add('show');
+      document.getElementById('chatDot')?.classList.add('show');
   });
 }
 
