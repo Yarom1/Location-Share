@@ -272,9 +272,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 
   <div id="coordsPanel" style="position:fixed;bottom:130px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:12px;display:none;color:var(--text)"></div><div id="measurePanel" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:8px 16px;font-size:13px;display:none;color:var(--accent);text-align:center">📏 לחץ על המפה<br><span id="measureResult"></span><button onclick="clearMeasure()" style="background:none;border:none;color:var(--danger);cursor:pointer">✕</button></div>  
   <div class="bottom-nav">
-    <div class="nav-item active" id="navMap" onclick="showMapView()">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>מפה
-    </div>
+
     <div class="nav-item" id="navUsers" onclick="openPanel('users')">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>משתמשים
     </div>
