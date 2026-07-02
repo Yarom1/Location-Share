@@ -66,7 +66,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .panel-close{background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:var(--text)}
 .panel-body{overflow-y:auto;flex:1;padding:8px 10px;-webkit-overflow-scrolling:touch}
 .user-item{display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--surface2);border-radius:10px;margin-bottom:4px;border:1px solid var(--border);transition:.2s}
-.user-avatar{width:42px;height:42px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;position:relative}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;position:relative}
 .user-online-dot{position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;border:2px solid var(--surface2);transition:background .5s}
 .user-info{flex:1;min-width:0}
 .user-name{font-size:14px;font-weight:600}
@@ -301,9 +301,9 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div class="panel-handle"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 14px;flex-shrink:0"><span style="font-size:14px;font-weight:700">👥 משתמשים מחוברים</span></div>
     <div style="padding:10px 14px 0;flex-shrink:0;display:flex;gap:6px">
-    <button class="chat-tab active" id="filterAll" onclick="setFilter('all')">הכל</button>
-    <button class="chat-tab" id="filterOnline" onclick="setFilter('online')">מחוברים</button>
-    <button class="chat-tab" id="filterOffline" onclick="setFilter('offline')">לא מחוברים</button>
+    <button class="chat-tab active" id="filterAll" onclick="setFilter('all')" style="padding:4px 8px;font-size:11px">הכל</button>
+    <button class="chat-tab" id="filterOnline" onclick="setFilter('online')" style="padding:4px 8px;font-size:11px">מחוברים</button>
+    <button class="chat-tab" id="filterOffline" onclick="setFilter('offline')" style="padding:4px 8px;font-size:11px">לא מחוברים</button>
   </div>
   <div class="panel-body" id="usersList"></div>
   </div>
