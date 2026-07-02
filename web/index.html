@@ -783,7 +783,7 @@ async function loadPOILayer(type){
     const[k,v]=t.split('=');
     return 'node['+k+'='+JSON.stringify(v)+'](' +bbox+');';
   }).join('');
-  const query='[out:json][timeout:15];('+tags+');out body 80;';
+  const query='[out:json][timeout:30];('+tags+');out body 300;';
   try{
     const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:query});
     const data=await res.json();
