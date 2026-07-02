@@ -685,7 +685,7 @@ function initMap(){
       );
     }catch(e){}
   }
-  map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-left');
+  
   map.on('load',()=>{
     // סגור פאנלים בלחיצה/גרירה במפה
     ['click','dragstart'].forEach(evt=>map.on(evt,()=>{
