@@ -36,6 +36,9 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .btn.danger{background:var(--danger);color:#fff}
 #main{flex-direction:column;background:var(--bg)}
 #map{position:fixed;inset:0;z-index:1}.maplibregl-map{font-family:inherit}
+.dark-popup .maplibregl-popup-content{background:#161b22;border:1px solid #30363d;border-radius:10px;color:#e6edf3;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.dark-popup .maplibregl-popup-close-button{color:#e6edf3;font-size:16px;padding:4px 8px}
+.dark-popup .maplibregl-popup-tip{border-top-color:#161b22;border-bottom-color:#161b22}
 .topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .topbar-left{display:flex;align-items:center;gap:10px}
 .my-avatar{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0}
@@ -696,9 +699,9 @@ function initMap(){
         const labels={amenity:'🏷️',leisure:'🌿',tourism:'📸',shop:'🛍️',opening_hours:'🕐',phone:'📞',operator:'👤',capacity:'🅿️ קיבולת',fee:'💰 תשלום',surface:'🛤️ משטח',wheelchair:'♿ נגישות',network:'🚌 רשת',ref:'🔢 מזהה'};
         Object.keys(labels).forEach(k=>{if(pr[k])rows+='<div style="margin:3px 0">'+labels[k]+' '+escHtml(String(pr[k]))+'</div>';});
         if(pr.website)rows+='<div style="margin:3px 0"><a href="'+escHtml(pr.website)+'" style="color:#00d4aa">🌐 אתר</a></div>';
-        new maplibregl.Popup({closeButton:true,maxWidth:'260px'})
+        new maplibregl.Popup({closeButton:true,maxWidth:'260px',className:'dark-popup'})
           .setLngLat(e.lngLat)
-          .setHTML('<div style="direction:rtl;padding:2px"><b style="font-size:14px">'+escHtml(name)+'</b>'+rows+'</div>')
+          .setHTML('<div style="direction:rtl;padding:4px;color:#e6edf3;font-family:inherit"><b style="font-size:14px;display:block;margin-bottom:6px;color:#fff">'+escHtml(name)+'</b>'+rows+'</div>')
           .addTo(map);
         return;
       }
