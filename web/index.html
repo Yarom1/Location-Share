@@ -352,16 +352,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   </div>
 
   <!-- ADD POINT MODAL -->
-  <div class="modal" id="createPointChooserModal">
-  <div class="modal-box">
-    <h3>➕ נקודה חדשה</h3>
-    <p>איך תרצה להוסיף את הנקודה?</p>
-    <button class="btn secondary" style="margin-bottom:8px" onclick="closeModal('createPointChooserModal');startPinOnMap()">📍 דקור נקודה על המפה</button>
-    <button class="btn secondary" style="margin-bottom:8px" onclick="closeModal('createPointChooserModal');startSearchAndPin()">🔍 חפש מיקום (ואז דייק עם דקירה)</button>
-    <button class="btn secondary" style="margin-bottom:8px" onclick="closeModal('createPointChooserModal');startCurrentLocation()">🧭 המיקום הנוכחי שלי</button>
-    <button class="btn secondary" onclick="closeModal('createPointChooserModal')">ביטול</button>
-  </div>
-</div>
+  <div class="modal" id="createPointChooserModal"><div class="modal-box" style="padding:12px;max-width:260px"><div style="font-size:13px;font-weight:700;margin-bottom:8px;text-align:center">➕ נקודה חדשה</div><div style="display:flex;flex-direction:column;gap:5px"><button class="btn secondary" style="padding:7px;font-size:12px" onclick="closeModal('createPointChooserModal');startPinOnMap()">📍 דקור על המפה</button><button class="btn secondary" style="padding:7px;font-size:12px" onclick="closeModal('createPointChooserModal');startSearchAndPin()">🔍 חפש ודייק</button><button class="btn secondary" style="padding:7px;font-size:12px" onclick="closeModal('createPointChooserModal');startCurrentLocation()">🧭 מיקום נוכחי</button><button class="btn secondary" style="padding:7px;font-size:12px" onclick="closeModal('createPointChooserModal')">ביטול</button></div></div></div>
 
 <div id="addPointSheet" style="position:fixed;bottom:78px;left:14px;right:14px;z-index:550;background:rgba(22,27,34,0.95);border:1px solid var(--border);border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.5);display:none;flex-direction:column;padding:10px 12px;gap:6px;max-width:340px;margin:0 auto">
   <div style="display:flex;align-items:center;justify-content:space-between">
