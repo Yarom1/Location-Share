@@ -300,7 +300,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   <!-- USERS PANEL -->
   <div class="side-panel" id="usersPanel">
     <div class="panel-handle"></div>
-    <div class="panel-header"><h3>👥 משתמשים מחוברים</h3><div class="panel-close" onclick="closePanel('users')">✕</div></div>
+    <div class="panel-header"><h3>👥 משתמשים מחוברים</h3></div>
     <div style="padding:10px 14px 0;flex-shrink:0;display:flex;gap:6px">
     <button class="chat-tab active" id="filterAll" onclick="setFilter('all')">הכל</button>
     <button class="chat-tab" id="filterOnline" onclick="setFilter('online')">מחוברים</button>
@@ -312,7 +312,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   <!-- CHAT PANEL -->
   <div class="side-panel" id="chatPanel">
     <div class="panel-handle"></div>
-    <div class="panel-header"><h3>💬 צ'אט</h3><div class="panel-close" onclick="closePanel('chat')">✕</div></div>
+    <div class="panel-header"><h3>💬 צ'אט</h3></div>
     <div class="panel-body" style="display:flex;flex-direction:column;gap:0;padding:12px 14px 8px">
       <div class="chat-tabs">
         <div class="chat-tab active" id="tabGroup" onclick="switchChatTab('group')">🌐 כולם</div>
@@ -329,7 +329,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   <!-- HISTORY PANEL -->
   <div class="side-panel" id="historyPanel">
     <div class="panel-handle"></div>
-    <div class="panel-header"><h3>🕐 היסטוריית מיקומים</h3><div class="panel-close" onclick="closePanel('history')">✕</div></div>
+    <div class="panel-header"><h3>🕐 היסטוריית מיקומים</h3></div>
     <div class="panel-body">
       <div class="hist-user-select" id="historyUserSelect"></div>
       <div id="historyTrail"></div>
@@ -339,7 +339,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   <!-- SAVED POINTS PANEL -->
   <div class="side-panel" id="pointsPanel">
     <div class="panel-handle"></div>
-    <div class="panel-header"><h3>📌 נקודות שמורות</h3><div class="panel-close" onclick="closePanel('points')">✕</div></div>
+    <div class="panel-header"><h3>📌 נקודות שמורות</h3></div>
     <div style="padding:10px 14px 0;flex-shrink:0;display:flex;gap:8px">
       <button class="btn secondary" style="flex:1;padding:10px" onclick="toggleAllPoints()">👁️ הצג/הסתר הכל</button>
       <button class="btn" style="flex:1;padding:10px" onclick="openCreatePointChooser()">➕ נקודה חדשה</button>
@@ -374,7 +374,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   <!-- SETTINGS PANEL -->
   <div class="side-panel" id="settingsPanel">
     <div class="panel-handle"></div>
-    <div class="panel-header"><h3>⚙️ הגדרות</h3><div class="panel-close" onclick="closePanel('settings')">✕</div></div>
+    <div class="panel-header"><h3>⚙️ הגדרות</h3></div>
     <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
       <div class="user-item" style="cursor:default">
         <div class="user-avatar" id="settingsAvatar">👤</div>
@@ -392,7 +392,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   <!-- ADMIN PANEL -->
   <div class="side-panel" id="adminPanel">
     <div class="panel-handle"></div>
-    <div class="panel-header"><h3>🛡️ ממשק מנהל</h3><div class="panel-close" onclick="closePanel('admin')">✕</div></div>
+    <div class="panel-header"><h3>🛡️ ממשק מנהל</h3></div>
     <div class="panel-body">
       <div class="admin-stat-grid">
         <div class="admin-stat"><div class="admin-stat-num" id="adminOnlineCount">0</div><div class="admin-stat-label">מחוברים</div></div>
@@ -687,11 +687,13 @@ function initMap(){
   map.on('load',()=>{
     // סגור פאנלים בלחיצה/גרירה במפה
     ['click','dragstart'].forEach(evt=>map.on(evt,()=>{
-      // אל תסגור אם מצב דיוק נקודה פעיל
       if(document.getElementById('addPointSheet').style.display==='flex')return;
       closeAllPanels();
       document.getElementById('layersPanel').classList.remove('open');
       document.getElementById('poiLayersPanel').classList.remove('open');
+      // סגור כרטיסיית נקודות
+      const pp=document.getElementById('pointsPanel');
+      if(pp)pp.classList.remove('active');
     }));
     map.on('click',e=>{
       if(measureMode)return;
