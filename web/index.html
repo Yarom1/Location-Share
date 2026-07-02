@@ -58,9 +58,9 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .layer-item:hover{background:var(--surface2)}
 .layer-item input{accent-color:var(--accent);width:16px;height:16px}
 .layer-item label{font-size:13px;cursor:pointer;color:var(--text)}
-.side-panel{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--surface);border-top:1px solid var(--border);border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:82dvh;display:flex;flex-direction:column;box-shadow:0 -8px 32px rgba(0,0,0,.5)}
+.side-panel{position:fixed;bottom:0;left:0;right:0;z-index:400;background:var(--surface);border-top:1px solid var(--border);border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);height:55vh;min-height:200px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 -8px 32px rgba(0,0,0,.5)}
 .side-panel.open{transform:translateY(0)}
-.panel-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 0;flex-shrink:0;cursor:ns-resize;touch-action:none}
+.panel-handle{width:60px;height:6px;background:var(--border);border-radius:3px;margin:0 auto;flex-shrink:0;cursor:ns-resize;touch-action:none;padding:12px 0;box-sizing:content-box;background-clip:content-box}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .panel-header h3{font-size:17px;font-weight:700}
 .panel-close{background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:var(--text)}
@@ -1700,26 +1700,32 @@ async function savePoint(){
 
 // ===== RESIZABLE PANELS =====
 (function(){
-  let startY=0,startH=0,panel=null;
+  let startY=0,startH=0,panel=null,dragging=false;
   function onMove(e){
+    if(!panel)return;
     const y=e.touches?e.touches[0].clientY:e.clientY;
     const newH=startH-(y-startY);
-    const clamped=Math.max(200,Math.min(window.innerHeight*0.9,newH));
+    const clamped=Math.max(200,Math.min(window.innerHeight*0.92,newH));
     panel.style.height=clamped+'px';
+    panel.style.transition='none';
+    dragging=true;
+    e.stopPropagation();
+    if(e.cancelable)e.preventDefault();
   }
   function onUp(){
+    if(panel)panel.style.transition='';
+    panel=null;dragging=false;
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
     document.removeEventListener('touchmove',onMove);
     document.removeEventListener('touchend',onUp);
-    panel=null;
   }
   document.addEventListener('mousedown',e=>{
     const handle=e.target.closest('.panel-handle');
     if(!handle)return;
     panel=handle.closest('.side-panel');
     if(!panel)return;
-    startY=e.clientY;startH=panel.offsetHeight;
+    startY=e.clientY;startH=panel.offsetHeight;dragging=false;
     document.addEventListener('mousemove',onMove);
     document.addEventListener('mouseup',onUp);
   });
@@ -1728,11 +1734,10 @@ async function savePoint(){
     if(!handle)return;
     panel=handle.closest('.side-panel');
     if(!panel)return;
-    e.preventDefault();
-    startY=e.touches[0].clientY;startH=panel.offsetHeight;
+    startY=e.touches[0].clientY;startH=panel.offsetHeight;dragging=false;
     document.addEventListener('touchmove',onMove,{passive:false});
     document.addEventListener('touchend',onUp);
-  },{passive:false});
+  },{passive:true});
 })();
 
 window.toggleAllPoints=toggleAllPoints;
