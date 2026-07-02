@@ -1157,7 +1157,7 @@ function openPanel(name){
     addSwipeToClose(panelEl,name);
   }
   
-  if(name==='chat'){document.getElementById('chatDot').classList.remove('show');setTimeout(()=>switchChatTab(activeChatTab),100);}
+  if(name==='chat'){document.getElementById('chatDot')?.classList.remove('show');setTimeout(()=>switchChatTab(activeChatTab),100);}
   const navMap={users:'navUsers',chat:'navChat',history:'navHistory',settings:'navSettings',points:'navPoints',admin:null};
   if(navMap[name])setActiveNav(navMap[name]);
 }
