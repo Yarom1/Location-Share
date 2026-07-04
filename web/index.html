@@ -202,8 +202,8 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <p>הכנס סיסמת מנהל</p>
     <div class="input-wrap"><input type="password" id="adminPassInput" placeholder="סיסמה..." onkeydown="if(event.key==='Enter')checkAdminPass()"></div>
     <div class="modal-actions">
-      <button class="btn" onclick="checkAdminPass()">כניסה</button>
-      <button class="btn secondary" onclick="closeModal('adminModal')">ביטול</button>
+      <button onclick="checkAdminPass()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">כניסה</button>
+      <button onclick="closeModal('adminModal')" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">ביטול</button>
     </div>
   </div>
 </div>
