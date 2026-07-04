@@ -99,13 +99,13 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .hist-user-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
 .hist-chip{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:13px;color:var(--text);transition:.2s}
 .hist-chip.selected{border-color:var(--accent);color:var(--accent)}
-.admin-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.admin-stat{background:var(--surface2);border-radius:var(--radius);padding:14px;text-align:center;border:1px solid var(--border)}
-.admin-stat-num{font-size:26px;font-weight:700;color:var(--accent)}
-.admin-stat-label{font-size:12px;color:var(--text2);margin-top:3px}
-.admin-user-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:10px;margin-bottom:6px;border:1px solid var(--border)}
-.kick-btn{background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.4);color:var(--danger);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit}
-.connect-btn{background:rgba(0,212,170,.15);border:1px solid rgba(0,212,170,.4);color:var(--accent);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+.admin-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.admin-stat{background:var(--surface2);border-radius:var(--row-radius);padding:var(--row-pad);text-align:center;border:1px solid var(--border)}
+.admin-stat-num{font-size:16px;font-weight:700;color:var(--accent)}
+.admin-stat-label{font-size:var(--text-sub);color:var(--text2);margin-top:2px}
+.admin-user-item{display:flex;align-items:center;gap:6px;padding:var(--row-pad);background:var(--surface2);border-radius:10px;margin-bottom:4px;border:1px solid var(--border)}
+.kick-btn{background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.4);color:var(--danger);border-radius:8px;padding:3px 8px;font-size:var(--text-sub);cursor:pointer;font-family:inherit}
+.connect-btn{background:rgba(0,212,170,.15);border:1px solid rgba(0,212,170,.4);color:var(--accent);border-radius:8px;padding:3px 8px;font-size:var(--text-sub);cursor:pointer;font-family:inherit}
 .custom-marker{display:flex;flex-direction:column;align-items:center;cursor:pointer}
 .marker-avatar{width:42px;height:42px;border-radius:50%;background:var(--surface);border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:21px;box-shadow:0 2px 10px rgba(0,0,0,.7)}
 .marker-name{background:rgba(13,17,23,.88);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-top:3px;white-space:nowrap;backdrop-filter:blur(4px)}
@@ -393,12 +393,12 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
         <div class="admin-stat"><div class="admin-stat-num" id="adminOnlineCount">0</div><div class="admin-stat-label">מחוברים</div></div>
         <div class="admin-stat"><div class="admin-stat-num" id="adminTotalCount">0</div><div class="admin-stat-label">סה"כ</div></div>
       </div>
-      <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px">ניהול משתמשים</div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">ניהול משתמשים</div>
       <div id="adminUserList"></div>
-      <div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">
-        <button class="btn secondary" onclick="broadcastMessage()">📢 הודעה לכולם</button>
-        <button class="btn danger" onclick="clearHistory()">🗑️ נקה היסטוריה</button>
-        <button class="btn danger" onclick="deleteInactiveUsers()">👤 מחק משתמשים לא פעילים</button>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">
+        <button onclick="broadcastMessage()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">📢 הודעה לכולם</button>
+        <button onclick="clearHistory()" style="background:rgba(255,71,87,0.1);color:var(--danger);border:1px solid rgba(255,71,87,0.3);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🗑️ נקה היסטוריה</button>
+        <button onclick="deleteInactiveUsers()" style="background:rgba(255,71,87,0.1);color:var(--danger);border:1px solid rgba(255,71,87,0.3);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">👤 מחק משתמשים לא פעילים</button>
       </div>
     </div>
   </div>
@@ -969,10 +969,10 @@ function listenUsers(){
 
       // admin list
       const ad=document.createElement('div');ad.className='admin-user-item';
-      ad.innerHTML=`<span style="font-size:20px">${u.avatar||'👤'}</span>
-        <div style="flex:1"><div style="font-size:13px;font-weight:600">${escHtml(u.name||'אנונימי')}</div>
-        <div style="font-size:11px;color:var(--text2)">${isOnline?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
-        <div style="display:flex;gap:5px">
+      ad.innerHTML=`<div style="width:28px;height:28px;border-radius:50%;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${u.avatar||'👤'}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(u.name||'אנונימי')}</div>
+        <div style="font-size:10px;color:var(--text2)">${isOnline?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
           ${d.id!==myUID&&isOnline?`<button class="kick-btn" onclick="kickUser('${d.id}')">נתק</button>`:''}
           ${d.id!==myUID&&!isOnline?`<button class="connect-btn" onclick="reconnectUser('${d.id}')">חבר</button>`:''}
         </div>`;
