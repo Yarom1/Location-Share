@@ -62,15 +62,15 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .side-panel.open{transform:translateY(0)}
 .panel-handle{width:60px;height:6px;background:var(--border);border-radius:3px;margin:0 auto;flex-shrink:0;cursor:ns-resize;touch-action:none;padding:12px 0;box-sizing:content-box;background-clip:content-box}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
-.panel-header h3{font-size:17px;font-weight:700}
+.panel-header h3{font-size:var(--panel-title);font-weight:700}
 .panel-close{background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:var(--text)}
 .panel-body{overflow-y:auto;flex:1;padding:8px 10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .user-item{display:flex;align-items:center;gap:var(--row-gap);padding:var(--row-pad);background:var(--surface2);border-radius:var(--row-radius);margin-bottom:var(--row-mb);border:1px solid var(--border);transition:.2s}
 .user-avatar{width:30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;position:relative}
 .user-online-dot{position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;border:2px solid var(--surface2);transition:background .5s}
 .user-info{flex:1;min-width:0}
-.user-name{font-size:14px;font-weight:600}
-.user-time{font-size:12px;color:var(--text2)}
+.user-name{font-size:var(--text-main);font-weight:600}
+.user-time{font-size:var(--text-sub);color:var(--text2)}
 .user-actions{display:flex;gap:5px}
 .user-act-btn{background:var(--bg);border:1px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:.2s;color:var(--text)}
 .chat-tabs{display:flex;gap:8px;margin-bottom:12px;flex-shrink:0}
@@ -370,17 +370,17 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   <div class="side-panel" id="settingsPanel">
     <div class="panel-handle"></div>
     <div class="panel-header"><h3>⚙️ הגדרות</h3></div>
-    <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
+    <div class="panel-body" style="display:flex;flex-direction:column;gap:5px">
       <div class="user-item" style="cursor:default">
         <div class="user-avatar" id="settingsAvatar">👤</div>
-        <div class="user-info"><div class="user-name" id="settingsName">-</div><div class="user-time" id="settingsUID" style="font-size:10px;word-break:break-all"></div></div>
+        <div class="user-info"><div class="user-name" id="settingsName">-</div><div class="user-time" id="settingsUID" style="font-size:var(--text-sub);word-break:break-all"></div></div>
       </div>
-      <button class="btn secondary" onclick="openEditProfile()">✏️ עריכת פרופיל</button>
-      <button class="btn secondary" onclick="toggleDarkMode()">🌙 החלף מצב תצוגה</button>
-      <button class="btn secondary" onclick="openModal('adminModal')" id="adminLoginBtn">🔐 כניסת מנהל</button>
-      <button class="btn danger" id="adminLogoutBtn" onclick="logoutAdmin()" style="display:none">🚪 יציאה ממנהל</button>
-      <button class="btn secondary" id="changePassBtn" onclick="changeAdminPassword()" style="display:none">🔑 שנה סיסמת מנהל</button>
-      <div style="font-size:12px;color:var(--text2);text-align:center;margin-top:8px">Location Share v1.0</div>
+      <button onclick="openEditProfile()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">✏️ עריכת פרופיל</button>
+      <button onclick="toggleDarkMode()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🌙 החלף מצב תצוגה</button>
+      <button onclick="openModal('adminModal')" id="adminLoginBtn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🔐 כניסת מנהל</button>
+      <button id="adminLogoutBtn" onclick="logoutAdmin()" style="display:none;background:rgba(255,71,87,0.1);color:var(--danger);border:1px solid rgba(255,71,87,0.3);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🚪 יציאה ממנהל</button>
+      <button id="changePassBtn" onclick="changeAdminPassword()" style="display:none;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🔑 שנה סיסמת מנהל</button>
+      <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px">Location Share v1.0</div>
     </div>
   </div>
 
