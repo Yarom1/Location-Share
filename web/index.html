@@ -26,9 +26,9 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .avatar-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;width:100%;max-width:340px}
 .avatar-opt{width:56px;height:56px;border-radius:50%;border:3px solid transparent;cursor:pointer;font-size:26px;display:flex;align-items:center;justify-content:center;background:var(--surface2);transition:.2s}
 .avatar-opt.selected{border-color:var(--accent);transform:scale(1.1)}
-.input-wrap{width:100%;max-width:340px;display:flex;flex-direction:column;gap:8px}
-.input-wrap label{font-size:13px;color:var(--text2)}
-.input-wrap input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;color:var(--text);font-size:16px;outline:none;width:100%;transition:.2s}
+.input-wrap{width:100%;max-width:340px;display:flex;flex-direction:column;gap:5px}
+.input-wrap label{font-size:11px;color:var(--text2)}
+.input-wrap input{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;width:100%;transition:.2s}
 .input-wrap input:focus{border-color:var(--accent)}
 .btn{background:var(--accent);color:#000;border:none;border-radius:var(--radius);padding:14px 32px;font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:340px;transition:.2s}
 .btn:disabled{opacity:.4;cursor:not-allowed}
@@ -117,12 +117,12 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:350;display:none;}
 .overlay.show{display:block}
 .locate-btn{position:fixed;bottom:72px;left:14px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
-.modal{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;padding:24px}
+.modal{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
 .modal.open{display:flex}
-.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:320px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 32px rgba(0,0,0,.7)}
-.modal-box h3{font-size:18px;font-weight:700}
-.modal-box p{font-size:13px;color:var(--text2)}
-.modal-actions{display:flex;gap:8px}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;width:100%;max-width:300px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.7)}
+.modal-box h3{font-size:15px;font-weight:700}
+.modal-box p{font-size:12px;color:var(--text2)}
+.modal-actions{display:flex;gap:6px}
 .leaflet-popup-content-wrapper{background:var(--popup-bg)!important;border:1px solid var(--border)!important;border-radius:12px!important;box-shadow:0 4px 16px rgba(0,0,0,.4)!important;color:var(--text)!important}
 .leaflet-popup-tip{background:var(--popup-bg)!important}
 .offline-chip{opacity:.6}::-webkit-scrollbar{width:4px}
@@ -135,26 +135,26 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 <div class="modal" id="editProfileModal">
   <div class="modal-box">
     <h3>✏️ עריכת פרופיל</h3>
-    <div style="display:flex;justify-content:center;margin-bottom:8px">
-      <div id="editAvatarPreview" style="font-size:48px;cursor:pointer" onclick="document.getElementById('editAvatarGrid').style.display=document.getElementById('editAvatarGrid').style.display==='none'?'grid':'none'">😀</div>
+    <div style="display:flex;justify-content:center;margin-bottom:4px">
+      <div id="editAvatarPreview" style="font-size:40px;cursor:pointer" onclick="document.getElementById('editAvatarGrid').style.display=document.getElementById('editAvatarGrid').style.display==='none'?'grid':'none'">😀</div>
     </div>
-    <div id="editAvatarGrid" style="display:none;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px"></div>
+    <div id="editAvatarGrid" style="display:none;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px"></div>
     <div class="input-wrap">
       <label>שם תצוגה</label>
       <input type="text" id="editNameInput" placeholder="שם..." maxlength="20">
     </div>
-    <div style="margin-top:8px">
-      <label style="font-size:13px;color:var(--text2);display:block;margin-bottom:6px">תמונת פרופיל</label>
+    <div style="margin-top:4px">
+      <label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">תמונת פרופיל</label>
       <input type="file" id="profileImageInput" accept="image/*" capture="user" style="display:none" onchange="handleProfileImage(event)">
-      <button class="btn secondary" style="margin-bottom:8px" onclick="document.getElementById('profileImageInput').click()">📷 צלם/בחר תמונה</button>
-      <div id="profileImagePreview" style="display:none;text-align:center;margin-bottom:8px">
-        <img id="profileImg" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid var(--accent)">
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">תמונה נבחרה ✓</div>
+      <button onclick="document.getElementById('profileImageInput').click()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;margin-bottom:6px">📷 צלם/בחר תמונה</button>
+      <div id="profileImagePreview" style="display:none;text-align:center;margin-bottom:6px">
+        <img id="profileImg" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid var(--accent)">
+        <div style="font-size:10px;color:var(--text2);margin-top:3px">תמונה נבחרה ✓</div>
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn" onclick="saveEditProfile()">שמור</button>
-      <button class="btn secondary" onclick="closeModal('editProfileModal')">ביטול</button>
+      <button onclick="saveEditProfile()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">שמור</button>
+      <button onclick="closeModal('editProfileModal')" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">ביטול</button>
     </div>
   </div>
 </div>
