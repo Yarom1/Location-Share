@@ -88,16 +88,16 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 13px;color:var(--text);font-size:14px;outline:none;resize:none;max-height:80px;font-family:inherit}
 .chat-input:focus{border-color:var(--accent)}
 .send-btn{background:var(--accent);border:none;border-radius:var(--radius);width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0}
-.hist-point{display:flex;gap:12px;padding:10px 0;align-items:flex-start}
+.hist-point{display:flex;gap:8px;padding:5px 0;align-items:flex-start}
 .hist-dot-col{display:flex;flex-direction:column;align-items:center;gap:0}
-.hist-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--bg);flex-shrink:0;margin-top:3px}
-.hist-line{width:2px;background:var(--border);min-height:24px;flex:1}
+.hist-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--bg);flex-shrink:0;margin-top:2px}
+.hist-line{width:2px;background:var(--border);min-height:20px;flex:1}
 .hist-info{flex:1}
-.hist-time{font-size:12px;color:var(--text2)}
-.hist-coords{font-size:13px;font-weight:500;color:var(--text)}
-.hist-show-map{font-size:12px;color:var(--accent);cursor:pointer;margin-top:3px;display:inline-block}
-.hist-user-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-.hist-chip{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:13px;color:var(--text);transition:.2s}
+.hist-time{font-size:var(--text-sub);color:var(--text2)}
+.hist-coords{font-size:var(--text-main);font-weight:500;color:var(--text)}
+.hist-show-map{font-size:var(--text-sub);color:var(--accent);cursor:pointer;margin-top:2px;display:inline-block}
+.hist-user-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.hist-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:12px;color:var(--text);transition:.2s}
 .hist-chip.selected{border-color:var(--accent);color:var(--accent)}
 .admin-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
 .admin-stat{background:var(--surface2);border-radius:var(--row-radius);padding:var(--row-pad);text-align:center;border:1px solid var(--border)}
@@ -1056,12 +1056,12 @@ function handleChatKey(e){
 async function showUserHistory(uid){
   openPanel('history');
   const trail=document.getElementById('historyTrail');
-  trail.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">טוען...</div>';
+  trail.innerHTML='<div style="color:var(--text2);font-size:12px;padding:6px 0">טוען...</div>';
   try{
     const q=query(collection(db,'history'),where('uid','==',uid),orderBy('ts','desc'),limit(25));
     const snap=await getDocs(q);
     trail.innerHTML='';
-    if(snap.empty){trail.innerHTML='<div style="color:var(--text2);font-size:13px">אין היסטוריה</div>';return;}
+    if(snap.empty){trail.innerHTML='<div style="color:var(--text2);font-size:12px">אין היסטוריה</div>';return;}
     const pts=[];
     snap.forEach(d=>{const h=d.data();if(h.lat&&h.lng)pts.push([h.lat,h.lng]);});
     try{
