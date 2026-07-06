@@ -377,10 +377,28 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
       </div>
       <button onclick="openEditProfile()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">✏️ עריכת פרופיל</button>
       <button onclick="toggleDarkMode()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🌙 החלף מצב תצוגה</button>
+      <button onclick="openPanel('groups')" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">👥 הקבוצות שלי</button>
       <button onclick="openModal('adminModal')" id="adminLoginBtn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🔐 כניסת מנהל</button>
       <button id="adminLogoutBtn" onclick="logoutAdmin()" style="display:none;background:rgba(255,71,87,0.1);color:var(--danger);border:1px solid rgba(255,71,87,0.3);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🚪 יציאה ממנהל</button>
       <button id="changePassBtn" onclick="changeAdminPassword()" style="display:none;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🔑 שנה סיסמת מנהל</button>
       <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px">Location Share v1.0</div>
+    </div>
+  </div>
+
+  <div class="side-panel" id="groupsPanel">
+    <div class="panel-handle"></div>
+    <div class="panel-header"><h3>👥 הקבוצות שלי</h3></div>
+    <div class="panel-body">
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <input type="text" id="newGroupNameInput" placeholder="שם קבוצה חדשה..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:6px 10px;color:var(--text);font-size:12px;outline:none">
+        <button onclick="createGroup()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">צור</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <input type="text" id="joinGroupCodeInput" placeholder="קוד הצטרפות..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:6px 10px;color:var(--text);font-size:12px;outline:none">
+        <button onclick="joinGroupByCode()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">הצטרף</button>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">קבוצות שאני חבר בהן</div>
+      <div id="myGroupsList"></div>
     </div>
   </div>
 
@@ -499,6 +517,8 @@ function startApp(){
   listenGroupChat();
   listenSavedPoints();
   updateMyUI();
+  activeGroupId=currentUser?.activeGroupId||null;
+  loadMyGroups();
   if(isAdmin){document.getElementById('adminBtn').style.display='flex';}
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   setInterval(()=>{
@@ -1168,7 +1188,7 @@ function closePanel(name){
 }
 
 function closeAllPanels(){
-  ['users','chat','history','settings','admin','points'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
+  ['users','chat','history','settings','admin','points','groups'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
   document.getElementById('layersPanel').classList.remove('open');
   
 }
@@ -1794,6 +1814,106 @@ window.toggleFullscreen=toggleFullscreen;
 window.clearMeasure=clearMeasure;
 
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+let myGroups={},activeGroupId=null,unsubMyGroups=null;
+
+function genInviteCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code='';
+  for(let i=0;i<6;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+async function createGroup(){
+  const nameInput=document.getElementById('newGroupNameInput');
+  const name=nameInput.value.trim();
+  if(!name){showToast('הכנס שם לקבוצה','error');return;}
+  try{
+    const code=genInviteCode();
+    const groupRef=doc(collection(db,'groups'));
+    const batch=writeBatch(db);
+    batch.set(groupRef,{name,ownerUid:myUID,inviteCode:code,createdAt:serverTimestamp()});
+    batch.set(doc(db,'groups',groupRef.id,'members',myUID),{name:currentUser?.name||'אנונימי',avatar:currentUser?.avatar||'👤',joinedAt:serverTimestamp(),role:'owner'});
+    batch.set(doc(db,'userGroups',myUID,'memberOf',groupRef.id),{joinedAt:serverTimestamp()});
+    await batch.commit();
+    nameInput.value='';
+    showToast(`✅ הקבוצה "${name}" נוצרה! קוד: ${code}`,'success');
+  }catch(e){showToast('שגיאה ביצירת קבוצה','error');console.error(e);}
+}
+window.createGroup=createGroup;
+
+async function joinGroupByCode(){
+  const codeInput=document.getElementById('joinGroupCodeInput');
+  const code=codeInput.value.trim().toUpperCase();
+  if(!code){showToast('הכנס קוד הצטרפות','error');return;}
+  try{
+    const q=query(collection(db,'groups'),where('inviteCode','==',code),limit(1));
+    const snap=await getDocs(q);
+    if(snap.empty){showToast('קוד לא נמצא','error');return;}
+    const groupDoc=snap.docs[0];
+    const groupId=groupDoc.id;
+    const existing=await getDoc(doc(db,'groups',groupId,'members',myUID));
+    if(existing.exists()){showToast('כבר חבר בקבוצה זו','error');return;}
+    const batch=writeBatch(db);
+    batch.set(doc(db,'groups',groupId,'members',myUID),{name:currentUser?.name||'אנונימי',avatar:currentUser?.avatar||'👤',joinedAt:serverTimestamp(),role:'member'});
+    batch.set(doc(db,'userGroups',myUID,'memberOf',groupId),{joinedAt:serverTimestamp()});
+    await batch.commit();
+    codeInput.value='';
+    showToast(`✅ הצטרפת ל"${groupDoc.data().name}"`,'success');
+  }catch(e){showToast('שגיאה בהצטרפות','error');console.error(e);}
+}
+window.joinGroupByCode=joinGroupByCode;
+
+function loadMyGroups(){
+  if(!myUID)return;
+  if(unsubMyGroups)unsubMyGroups();
+  unsubMyGroups=onSnapshot(collection(db,'userGroups',myUID,'memberOf'),async snap=>{
+    myGroups={};
+    await Promise.all(snap.docs.map(async d=>{
+      const groupSnap=await getDoc(doc(db,'groups',d.id));
+      if(groupSnap.exists())myGroups[d.id]=groupSnap.data();
+    }));
+    renderMyGroupsList();
+  });
+}
+
+function renderMyGroupsList(){
+  const list=document.getElementById('myGroupsList');
+  if(!list)return;
+  list.innerHTML='';
+  const ids=Object.keys(myGroups);
+  if(!ids.length){
+    list.innerHTML='<div style="color:var(--text2);text-align:center;padding:14px;font-size:12px">אין קבוצות עדיין</div>';
+    return;
+  }
+  ids.forEach(id=>{
+    const g=myGroups[id];
+    const isActive=activeGroupId===id;
+    const item=document.createElement('div');
+    item.style.cssText=`display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--surface2);border-radius:10px;margin-bottom:4px;border:1px solid ${isActive?'var(--accent)':'var(--border)'}`;
+    item.innerHTML=`
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="selectGroup('${id}')">
+        <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isActive?'✅ ':''}${escHtml(g.name||'קבוצה')}</div>
+        <div style="font-size:10px;color:var(--text2)">קוד: ${g.inviteCode||''}</div>
+      </div>
+      <button onclick="copyInviteCode('${g.inviteCode||''}')" title="העתק קוד" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">📋</button>`;
+    list.appendChild(item);
+  });
+}
+
+async function selectGroup(groupId){
+  activeGroupId=groupId;
+  try{await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});}catch(e){}
+  renderMyGroupsList();
+  showToast(`✅ קבוצה פעילה: ${myGroups[groupId]?.name||''}`,'success');
+}
+window.selectGroup=selectGroup;
+
+function copyInviteCode(code){
+  if(!code)return;
+  navigator.clipboard?.writeText(code).then(()=>showToast('📋 הקוד הועתק','success')).catch(()=>showToast(code,''));
+}
+window.copyInviteCode=copyInviteCode;
 
 let currentFilter='all';
 function setFilter(f){
