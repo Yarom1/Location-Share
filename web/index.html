@@ -1837,7 +1837,9 @@ async function createGroup(){
     batch.set(doc(db,'userGroups',myUID,'memberOf',groupRef.id),{joinedAt:serverTimestamp()});
     await batch.commit();
     nameInput.value='';
-    showToast(`✅ הקבוצה "${name}" נוצרה! קוד: ${code}`,'success');
+    activeGroupId=groupRef.id;
+    await setDoc(doc(db,'users',myUID),{activeGroupId:groupRef.id},{merge:true});
+    showToast(`✅ הקבוצה "${name}" נוצרה והופעלה! קוד: ${code}`,'success');
   }catch(e){showToast('שגיאה ביצירת קבוצה','error');console.error(e);}
 }
 window.createGroup=createGroup;
@@ -1859,7 +1861,9 @@ async function joinGroupByCode(){
     batch.set(doc(db,'userGroups',myUID,'memberOf',groupId),{joinedAt:serverTimestamp()});
     await batch.commit();
     codeInput.value='';
-    showToast(`✅ הצטרפת ל"${groupDoc.data().name}"`,'success');
+    activeGroupId=groupId;
+    await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});
+    showToast(`✅ הצטרפת ל"${groupDoc.data().name}" (הופעלה)`,'success');
   }catch(e){showToast('שגיאה בהצטרפות','error');console.error(e);}
 }
 window.joinGroupByCode=joinGroupByCode;
