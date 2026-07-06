@@ -1864,7 +1864,7 @@ async function joinGroupByCode(){
     activeGroupId=groupId;
     await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});
     showToast(`✅ הצטרפת ל"${groupDoc.data().name}" (הופעלה)`,'success');
-  }catch(e){showToast('שגיאה בהצטרפות','error');console.error(e);}
+  }catch(e){showToast('שגיאה: '+(e.code||e.message||e),'error');console.error(e);}
 }
 window.joinGroupByCode=joinGroupByCode;
 
