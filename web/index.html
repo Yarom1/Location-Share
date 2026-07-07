@@ -447,6 +447,14 @@ let allUsersData={};
 let map,markers={},tileLayer,historyLayer=null;
 let activeChatTab='group',activeDMUser=null;
 let unsubUsers=null,unsubChat=null,unsubDM=null;
+let unsubMembers=null,unsubLocations=null;
+let groupMembersCache={},groupLocationsCache={};
+function gCol(sub){return collection(db,'groups',activeGroupId,sub);}
+function gDoc(sub,id){return doc(db,'groups',activeGroupId,sub,id);}
+let unsubMembers=null,unsubLocations=null;
+let groupMembersCache={},groupLocationsCache={};
+function gCol(sub){return collection(db,'groups',activeGroupId,sub);}
+function gDoc(sub,id){return doc(db,'groups',activeGroupId,sub,id);}
 let isDark=true;
 
 window.saveProfile=saveProfile;window.openPanel=openPanel;window.closePanel=closePanel;
@@ -512,12 +520,12 @@ async function loadAdminPassword(){
 function startApp(){
   showScreen('main');
   initMap();
+  activeGroupId=currentUser?.activeGroupId||null;
   startLocationTracking();
   listenUsers();
   listenGroupChat();
   listenSavedPoints();
   updateMyUI();
-  activeGroupId=currentUser?.activeGroupId||null;
   loadMyGroups();
   if(isAdmin){document.getElementById('adminBtn').style.display='flex';}
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
@@ -925,21 +933,22 @@ function startLocationTracking(){
   if(!navigator.geolocation)return;
   // קבל מיקום מה-Android Service כשהאפליקציה ברקע
   window.onBackgroundLocation=async function(lat,lng){
-    if(!myUID||!currentUser)return;
+    if(!myUID||!currentUser||!activeGroupId)return;
     const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
     if(dist<0.00005)return;
     lastLat=lat;lastLng=lng;
-    await setDoc(doc(db,'users',myUID),{lat,lng,lastSeen:serverTimestamp()},{merge:true});
-    await addDoc(collection(db,'history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
+    await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
+    await addDoc(gCol('history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
   };
 
   navigator.geolocation.watchPosition(async pos=>{
+    if(!activeGroupId)return;
     const{latitude:lat,longitude:lng}=pos.coords;
     const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
     if(dist<0.00005)return; // פחות מ-5 מטר - אל תעדכן
     lastLat=lat;lastLng=lng;
-    await setDoc(doc(db,'users',myUID),{lat,lng,lastSeen:serverTimestamp()},{merge:true});
-    await addDoc(collection(db,'history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
+    await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
+    await addDoc(gCol('history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
     if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
     if(trackingMode)map.easeTo({center:[lng,lat],duration:500});
   },null,{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
@@ -947,7 +956,15 @@ function startLocationTracking(){
 
 function listenUsers(){
   if(unsubUsers)unsubUsers();
-  unsubUsers=onSnapshot(collection(db,'users'),snap=>{
+  if(unsubMembers)unsubMembers();
+  if(!activeGroupId){
+    allUsersData={};
+    const ul0=document.getElementById('usersList');if(ul0)ul0.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px;font-size:12px">בחר קבוצה פעילה בהגדרות</div>';
+    const badge0=document.getElementById('onlineBadge');if(badge0)badge0.textContent='● אין קבוצה פעילה';
+    return;
+  }
+  unsubMembers=onSnapshot(gCol('members'),snap=>{groupMembersCache={};snap.forEach(d=>{groupMembersCache[d.id]=d.data();});});
+  unsubUsers=onSnapshot(gCol('locations'),snap=>{
     let online=0,total=0;
     const ul=document.getElementById('usersList');
     const al=document.getElementById('adminUserList');
@@ -958,7 +975,7 @@ function listenUsers(){
     const myData=allUsersData[myUID];
     const iAmBanned=myData&&myData.banned===true;
     snap.forEach(d=>{
-      const u=d.data();total++;
+      const u={...(groupMembersCache[d.id]||{}),...d.data()};total++;
       const isOnline=u.online===true;if(isOnline)online++;
       if(iAmBanned&&d.id!==myUID)return;
       if(isOnline&&u.lat&&u.lng){
@@ -1006,7 +1023,12 @@ function listenUsers(){
 
 function listenGroupChat(){
   if(unsubChat)unsubChat();
-  const q=query(collection(db,'groupChat'),orderBy('ts','asc'),limit(100));
+  if(!activeGroupId){
+    const msgs=document.getElementById('chatMessages');
+    if(msgs&&activeChatTab==='group')msgs.innerHTML='<div style="color:var(--text2);text-align:center;padding:24px;font-size:12px">בחר קבוצה פעילה בהגדרות</div>';
+    return;
+  }
+  const q=query(gCol('groupChat'),orderBy('ts','asc'),limit(100));
   unsubChat=onSnapshot(q,snap=>{
     if(activeChatTab!=='group')return;
     const msgs=document.getElementById('chatMessages');
@@ -1062,7 +1084,10 @@ async function sendMessage(){
   if(!text||!currentUser)return;
   input.value='';input.style.height='auto';
   const msgData={uid:myUID,name:currentUser.name,avatar:currentUser.avatar,text,ts:serverTimestamp()};
-  if(activeChatTab==='group')await addDoc(collection(db,'groupChat'),msgData);
+  if(activeChatTab==='group'){
+    if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
+    await addDoc(gCol('groupChat'),msgData);
+  }
   else if(activeDMUser){
     const dmId=[myUID,activeDMUser.uid].sort().join('_');
     await addDoc(collection(db,'dms',dmId,'messages'),msgData);
@@ -1077,8 +1102,9 @@ async function showUserHistory(uid){
   openPanel('history');
   const trail=document.getElementById('historyTrail');
   trail.innerHTML='<div style="color:var(--text2);font-size:12px;padding:6px 0">טוען...</div>';
+  if(!activeGroupId){trail.innerHTML='<div style="color:var(--text2);font-size:12px">בחר קבוצה פעילה</div>';return;}
   try{
-    const q=query(collection(db,'history'),where('uid','==',uid),orderBy('ts','desc'),limit(25));
+    const q=query(gCol('history'),where('uid','==',uid),orderBy('ts','desc'),limit(25));
     const snap=await getDocs(q);
     trail.innerHTML='';
     if(snap.empty){trail.innerHTML='<div style="color:var(--text2);font-size:12px">אין היסטוריה</div>';return;}
@@ -1112,24 +1138,27 @@ async function showUserHistory(uid){
 }
 
 async function toggleBanUser(uid, isBanned){
-  await updateDoc(doc(db,'users',uid),{banned:!isBanned});
+  if(!activeGroupId)return;
+  await updateDoc(gDoc('locations',uid),{banned:!isBanned});
   showToast(!isBanned?'משתמש נוטרל 🚫':'משתמש שוחרר 🔓','success');
 }
 window.toggleBanUser=toggleBanUser;
 
 async function kickUser(uid){
-  if(false)return;
-  await updateDoc(doc(db,'users',uid),{online:false,kickedBy:myUID,lastSeen:serverTimestamp()});
+  if(!activeGroupId)return;
+  await updateDoc(gDoc('locations',uid),{online:false,kickedBy:myUID,lastSeen:serverTimestamp()});
   showToast('משתמש נותק','success');
 }
 
 async function reconnectUser(uid){
-  await updateDoc(doc(db,'users',uid),{online:true,kickedBy:null});
+  if(!activeGroupId)return;
+  await updateDoc(gDoc('locations',uid),{online:true,kickedBy:null});
   showToast('משתמש חובר מחדש','success');
 }
 
 async function deleteInactiveUsers(){
-  const snap=await getDocs(collection(db,'users'));
+  if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
+  const snap=await getDocs(gCol('locations'));
   const batch=writeBatch(db);
   let count=0;
   const now=Date.now();
@@ -1144,15 +1173,16 @@ async function deleteInactiveUsers(){
 }
 
 async function broadcastMessage(){
+  if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
   const msg=prompt('הודעה לכולם:');if(!msg)return;
-  await addDoc(collection(db,'groupChat'),{uid:'admin',name:'📢 מנהל',avatar:'⚙️',text:msg,ts:serverTimestamp()});
+  await addDoc(gCol('groupChat'),{uid:'admin',name:'📢 מנהל',avatar:'⚙️',text:msg,ts:serverTimestamp()});
   showToast('הודעה נשלחה ✓','success');
 }
 
 async function clearHistory(){
-  if(false)return;
-  const snap=await getDocs(collection(db,'history'));
-  await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'history',d.id))));
+  if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
+  const snap=await getDocs(gCol('history'));
+  await Promise.all(snap.docs.map(d=>deleteDoc(gDoc('history',d.id))));
   try{
     if(map.getLayer('history-line'))map.removeLayer('history-line');
     if(map.getSource('history'))map.removeSource('history');
@@ -1839,6 +1869,8 @@ async function createGroup(){
     nameInput.value='';
     activeGroupId=groupRef.id;
     await setDoc(doc(db,'users',myUID),{activeGroupId:groupRef.id},{merge:true});
+    listenUsers();
+    listenGroupChat();
     showToast(`✅ הקבוצה "${name}" נוצרה והופעלה! קוד: ${code}`,'success');
   }catch(e){showToast('שגיאה ביצירת קבוצה','error');console.error(e);}
 }
@@ -1863,6 +1895,8 @@ async function joinGroupByCode(){
     codeInput.value='';
     activeGroupId=groupId;
     await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});
+    listenUsers();
+    listenGroupChat();
     showToast(`✅ הצטרפת ל"${groupDoc.data().name}" (הופעלה)`,'success');
   }catch(e){showToast('שגיאה בהצטרפות','error');console.error(e);}
 }
@@ -1909,6 +1943,8 @@ async function selectGroup(groupId){
   activeGroupId=groupId;
   try{await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});}catch(e){}
   renderMyGroupsList();
+  listenUsers();
+  listenGroupChat();
   showToast(`✅ קבוצה פעילה: ${myGroups[groupId]?.name||''}`,'success');
 }
 window.selectGroup=selectGroup;
