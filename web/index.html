@@ -719,7 +719,27 @@ function initMap(){
       openAddPointSheet();
       showToast('📍 נקודה חדשה - הזן שם ושמור');
     });
+    let longPressTimer=null,longPressStart=null,longPressFired=false;
+    map.on('touchstart',e=>{
+      if(e.points&&e.points.length>1)return;
+      longPressFired=false;
+      longPressStart=e.point;
+      longPressTimer=setTimeout(()=>{
+        longPressFired=true;
+        setAddPointCoords(e.lngLat.lat,e.lngLat.lng);
+        openAddPointSheet();
+        showToast('📍 נקודה חדשה - הזן שם ושמור');
+      },550);
+    });
+    map.on('touchmove',e=>{
+      if(!longPressTimer||!longPressStart)return;
+      const dx=e.point.x-longPressStart.x,dy=e.point.y-longPressStart.y;
+      if(Math.sqrt(dx*dx+dy*dy)>10){clearTimeout(longPressTimer);longPressTimer=null;}
+    });
+    map.on('touchend',()=>{if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}});
+    map.on('touchcancel',()=>{if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}});
     map.on('click',e=>{
+      if(longPressFired){longPressFired=false;return;}
       if(measureMode)return;
       // בדוק אם יש feature ניתן ללחיצה
       const features=map.queryRenderedFeatures(e.point);
