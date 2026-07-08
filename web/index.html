@@ -236,7 +236,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
         <div class="icon-btn" id="adminBtn" onclick="openPanel('admin')" style="display:none">⚙️</div>
       </div>
       <div class="online-badge" id="onlineBadge" style="font-size:11px;padding:2px 10px;white-space:nowrap">● 0 מחוברים</div>
-      <div class="my-avatar" id="myAvatarBtn" onclick="openPanel('users')" style="flex-shrink:0">👤</div>
+      <div class="my-avatar" id="myAvatarBtn" onclick="openPanel('groups')" style="flex-shrink:0">👤</div>
     </div>
   </div>
 
@@ -272,9 +272,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   <div id="coordsPanel" style="position:fixed;bottom:130px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:12px;display:none;color:var(--text)"></div><div id="measurePanel" style="position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:8px 16px;font-size:13px;display:none;color:var(--accent);text-align:center">📏 לחץ על המפה<br><span id="measureResult"></span><button onclick="clearMeasure()" style="background:none;border:none;color:var(--danger);cursor:pointer">✕</button></div>  
   <div class="bottom-nav">
 
-    <div class="nav-item" id="navUsers" onclick="openPanel('users')">
-      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>משתמשים
-    </div>
     <div class="nav-item" id="navChat" onclick="openPanel('chat')">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>צ'אט
     </div>
@@ -285,7 +282,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
       <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>נקודות
     </div>
     <div class="nav-item" id="navGroups" onclick="openPanel('groups')">
-      <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>קבוצות
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>קבוצות
     </div>
     <div class="nav-item" id="navSettings" onclick="openPanel('settings')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>הגדרות
@@ -299,17 +296,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
                             <div class="layer-item"><input type="checkbox" id="poiBank" onchange="togglePOI('bank')"><label for="poiBank">🏧 בנקים/כספומטים</label></div>
               </div>
 
-  <!-- USERS PANEL -->
-  <div class="side-panel" id="usersPanel">
-    <div class="panel-handle"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 14px;flex-shrink:0"><span style="font-size:14px;font-weight:700">👥 משתמשים מחוברים</span></div>
-    <div style="padding:10px 14px 0;flex-shrink:0;display:flex;gap:6px">
-    <button class="chat-tab active" id="filterAll" onclick="setFilter('all')" style="padding:4px 8px;font-size:11px">הכל</button>
-    <button class="chat-tab" id="filterOnline" onclick="setFilter('online')" style="padding:4px 8px;font-size:11px">מחוברים</button>
-    <button class="chat-tab" id="filterOffline" onclick="setFilter('offline')" style="padding:4px 8px;font-size:11px">לא מחוברים</button>
-  </div>
-  <div class="panel-body" id="usersList"></div>
-  </div>
 
   <!-- CHAT PANEL -->
   <div class="side-panel" id="chatPanel">
@@ -401,6 +387,14 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
       </div>
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">קבוצות שאני חבר בהן</div>
       <div id="myGroupsList"></div>
+
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin:14px 0 6px;border-top:1px solid var(--border);padding-top:10px">👥 חברי הקבוצה הפעילה</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="chat-tab active" id="filterAll" onclick="setFilter('all')" style="padding:4px 8px;font-size:11px;flex:1">הכל</button>
+        <button class="chat-tab" id="filterOnline" onclick="setFilter('online')" style="padding:4px 8px;font-size:11px;flex:1">מחוברים</button>
+        <button class="chat-tab" id="filterOffline" onclick="setFilter('offline')" style="padding:4px 8px;font-size:11px;flex:1">לא מחוברים</button>
+      </div>
+      <div id="usersList"></div>
     </div>
   </div>
 
@@ -1214,7 +1208,7 @@ function openPanel(name){
   }
   
   if(name==='chat'){document.getElementById('chatDot')?.classList.remove('show');setTimeout(()=>switchChatTab(activeChatTab),100);}
-  const navMap={users:'navUsers',chat:'navChat',history:'navHistory',settings:'navSettings',points:'navPoints',admin:null};
+  const navMap={groups:'navGroups',chat:'navChat',history:'navHistory',settings:'navSettings',points:'navPoints',admin:null};
   if(navMap[name])setActiveNav(navMap[name]);
 }
 
@@ -1224,7 +1218,7 @@ function closePanel(name){
 }
 
 function closeAllPanels(){
-  ['users','chat','history','settings','admin','points','groups'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
+  ['chat','history','settings','admin','points','groups'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
   document.getElementById('layersPanel').classList.remove('open');
   
 }
