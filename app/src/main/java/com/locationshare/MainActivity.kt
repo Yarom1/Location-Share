@@ -4,11 +4,14 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.webkit.*
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -23,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     private val FILE_CHOOSER_CODE = 1003
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var cameraUri: Uri? = null
+    private var waitingForLocationEnable = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -186,14 +190,45 @@ class MainActivity : AppCompatActivity() {
                 return
             }
         }
-        startLocationServiceAndLoad()
+        checkLocationEnabledAndProceed()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             LOCATION_PERMISSION_CODE -> requestBackgroundLocation()
-            BACKGROUND_LOCATION_CODE -> startLocationServiceAndLoad()
+            BACKGROUND_LOCATION_CODE -> checkLocationEnabledAndProceed()
+        }
+    }
+
+    private fun isLocationEnabled(): Boolean {
+        val lm = getSystemService(LOCATION_SERVICE) as LocationManager
+        return lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
+    private fun checkLocationEnabledAndProceed() {
+        if (isLocationEnabled()) {
+            waitingForLocationEnable = false
+            startLocationServiceAndLoad()
+        } else {
+            waitingForLocationEnable = true
+            AlertDialog.Builder(this)
+                .setTitle("שירותי מיקום כבויים")
+                .setMessage("כדי להשתמש באפליקציה יש להפעיל את שירותי המיקום (GPS) במכשיר.")
+                .setCancelable(false)
+                .setPositiveButton("פתח הגדרות") { _, _ ->
+                    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }
+                .show()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (waitingForLocationEnable && isLocationEnabled()) {
+            waitingForLocationEnable = false
+            startLocationServiceAndLoad()
         }
     }
 
