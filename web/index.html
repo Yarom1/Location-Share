@@ -929,22 +929,26 @@ function startLocationTracking(){
   if(!navigator.geolocation)return;
   // קבל מיקום מה-Android Service כשהאפליקציה ברקע
   window.onBackgroundLocation=async function(lat,lng){
-    if(!myUID||!currentUser||!activeGroupId)return;
+    if(!myUID||!currentUser)return;
     const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
     if(dist<0.00005)return;
     lastLat=lat;lastLng=lng;
-    await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
-    await addDoc(gCol('history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
+    if(activeGroupId){
+      await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
+      await addDoc(gCol('history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
+    }
+    if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
   };
 
   navigator.geolocation.watchPosition(async pos=>{
-    if(!activeGroupId)return;
     const{latitude:lat,longitude:lng}=pos.coords;
     const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
     if(dist<0.00005)return; // פחות מ-5 מטר - אל תעדכן
     lastLat=lat;lastLng=lng;
-    await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
-    await addDoc(gCol('history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
+    if(activeGroupId){
+      await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
+      await addDoc(gCol('history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
+    }
     if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
     if(trackingMode)map.easeTo({center:[lng,lat],duration:500});
   },null,{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
@@ -955,7 +959,9 @@ function listenUsers(){
   if(unsubMembers)unsubMembers();
   if(!activeGroupId){
     allUsersData={};
-    const ul0=document.getElementById('usersList');if(ul0)ul0.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px;font-size:12px">בחר קבוצה פעילה בהגדרות</div>';
+    if(currentUser&&lastLat&&lastLng)updateMarker(myUID,{...currentUser,lat:lastLat,lng:lastLng,online:true});
+    const ul0=document.getElementById('usersList');
+    if(ul0)ul0.innerHTML=`<div class="user-item" style="cursor:default"><div class="user-avatar">${currentUser?.avatar||'👤'}<div class="user-online-dot" style="background:#00d4aa"></div></div><div class="user-info"><div class="user-name">${escHtml(currentUser?.name||'אני')} <span style="font-size:11px;color:var(--text2)">(אני)</span></div><div class="user-time">בחר קבוצה פעילה כדי לראות אחרים</div></div></div>`;
     const badge0=document.getElementById('onlineBadge');if(badge0)badge0.textContent='● אין קבוצה פעילה';
     return;
   }
