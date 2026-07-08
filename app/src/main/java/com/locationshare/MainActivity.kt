@@ -224,14 +224,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        if (waitingForLocationEnable && isLocationEnabled()) {
-            waitingForLocationEnable = false
-            startLocationServiceAndLoad()
-        }
-    }
-
     private fun startLocationServiceAndLoad() {
         val serviceIntent = Intent(this, LocationService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -250,6 +242,13 @@ class MainActivity : AppCompatActivity() {
         if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
     }
 
-    override fun onResume() { super.onResume(); webView.onResume() }
+    override fun onResume() {
+        super.onResume()
+        webView.onResume()
+        if (waitingForLocationEnable && isLocationEnabled()) {
+            waitingForLocationEnable = false
+            startLocationServiceAndLoad()
+        }
+    }
     override fun onPause() { super.onPause(); webView.onPause() }
 }
