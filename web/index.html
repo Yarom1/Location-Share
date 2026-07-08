@@ -449,6 +449,7 @@ let allUsersData={};
 let map,markers={},tileLayer,historyLayer=null;
 let activeChatTab='group',activeDMUser=null;
 let unsubUsers=null,unsubChat=null,unsubDM=null;
+let currentUserPopup=null;
 let unsubMembers=null,unsubLocations=null;
 let groupMembersCache={},groupLocationsCache={};
 function gCol(sub){return collection(db,'groups',activeGroupId,sub);}
@@ -914,7 +915,7 @@ function updateMarker(uid,data){
 }
 
 function showUserPopup(uid,data){
-  new maplibregl.Popup({closeButton:true}).setLngLat(markers[uid].getLngLat()).setHTML(`
+  currentUserPopup=new maplibregl.Popup({closeButton:true}).setLngLat(markers[uid].getLngLat()).setHTML(`
     <div style="padding:4px;min-width:140px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <span style="font-size:26px">${data.avatar||'👤'}</span>
@@ -1070,7 +1071,7 @@ function openDM(uid,name,avatar){
   activeDMUser={uid,name,avatar};
   document.getElementById('tabDM').textContent=`💌 ${name}`;
   openPanel('chat');switchChatTab('dm');
-  map.closePopup();
+  if(currentUserPopup){currentUserPopup.remove();currentUserPopup=null;}
 }
 
 function listenDM(uid){
