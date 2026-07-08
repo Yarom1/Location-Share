@@ -957,6 +957,7 @@ function startLocationTracking(){
 function listenUsers(){
   if(unsubUsers)unsubUsers();
   if(unsubMembers)unsubMembers();
+  Object.keys(markers).forEach(id=>{markers[id].remove();delete markers[id];if(typeof markerCache!=='undefined')delete markerCache[id];});
   if(!activeGroupId){
     allUsersData={};
     if(currentUser&&lastLat&&lastLng)updateMarker(myUID,{...currentUser,lat:lastLat,lng:lastLng,online:true});
