@@ -1160,18 +1160,22 @@ async function reconnectUser(uid){
 
 async function deleteInactiveUsers(){
   if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
-  const snap=await getDocs(gCol('locations'));
   const batch=writeBatch(db);
   let count=0;
   const now=Date.now();
-  snap.forEach(d=>{
-    const u=d.data();
-    const ls=u.lastSeen?u.lastSeen.toMillis():0;
-    const inactive=!u.online||(now-ls>300000);
-    if(inactive&&d.id!==myUID){batch.delete(d.ref);count++;}
+  Object.keys(groupMembersCache).forEach(id=>{
+    if(id===myUID)return;
+    const loc=groupLocationsCache[id];
+    const ls=loc&&loc.lastSeen?loc.lastSeen.toMillis():0;
+    const inactive=!loc||!loc.online||(now-ls>300000);
+    if(inactive){
+      batch.delete(gDoc('members',id));
+      if(loc)batch.delete(gDoc('locations',id));
+      count++;
+    }
   });
   await batch.commit();
-  showToast(count+' משתמשים נמחקו','success');
+  showToast(count+' משתמשי רפאים נמחקו','success');
 }
 
 async function broadcastMessage(){
