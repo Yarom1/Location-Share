@@ -713,6 +713,12 @@ function initMap(){
       const pp=document.getElementById('pointsPanel');
       if(pp)pp.classList.remove('active');
     }));
+    map.on('contextmenu',e=>{
+      if(e.originalEvent&&e.originalEvent.preventDefault)e.originalEvent.preventDefault();
+      setAddPointCoords(e.lngLat.lat,e.lngLat.lng);
+      openAddPointSheet();
+      showToast('📍 נקודה חדשה - הזן שם ושמור');
+    });
     map.on('click',e=>{
       if(measureMode)return;
       // בדוק אם יש feature ניתן ללחיצה
