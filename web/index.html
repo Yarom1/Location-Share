@@ -1904,6 +1904,31 @@ async function joinGroupByCode(){
 }
 window.joinGroupByCode=joinGroupByCode;
 
+async function deleteGroup(groupId,groupName){
+  const g=myGroups[groupId];
+  if(!g||g.ownerUid!==myUID){showToast('רק יוצר הקבוצה יכול למחוק אותה','error');return;}
+  if(!confirm(`למחוק את הקבוצה "${groupName}" לצמיתות? פעולה זו לא ניתנת לביטול.`))return;
+  try{
+    const subs=['members','locations','history','groupChat'];
+    for(const sub of subs){
+      const snap=await getDocs(collection(db,'groups',groupId,sub));
+      const batch=writeBatch(db);
+      snap.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+    }
+    await deleteDoc(doc(db,'userGroups',myUID,'memberOf',groupId));
+    await deleteDoc(doc(db,'groups',groupId));
+    if(activeGroupId===groupId){
+      activeGroupId=null;
+      await setDoc(doc(db,'users',myUID),{activeGroupId:null},{merge:true});
+      listenUsers();
+      listenGroupChat();
+    }
+    showToast(`🗑️ הקבוצה "${groupName}" נמחקה`,'success');
+  }catch(e){showToast('שגיאה במחיקת הקבוצה','error');console.error(e);}
+}
+window.deleteGroup=deleteGroup;
+
 function loadMyGroups(){
   if(!myUID)return;
   if(unsubMyGroups)unsubMyGroups();
@@ -1936,7 +1961,8 @@ function renderMyGroupsList(){
         <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isActive?'✅ ':''}${escHtml(g.name||'קבוצה')}</div>
         <div style="font-size:10px;color:var(--text2)">קוד: ${g.inviteCode||''}</div>
       </div>
-      <button onclick="copyInviteCode('${g.inviteCode||''}')" title="העתק קוד" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">📋</button>`;
+      <button onclick="copyInviteCode('${g.inviteCode||''}')" title="העתק קוד" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">📋</button>
+      ${g.ownerUid===myUID?`<button onclick="deleteGroup('${id}','${escHtml(g.name||'')}')" title="מחק קבוצה" style="background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px">🗑️</button>`:''}`;
     list.appendChild(item);
   });
 }
