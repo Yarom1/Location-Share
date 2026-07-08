@@ -452,6 +452,8 @@ let isDark=true;
 
 window.saveProfile=saveProfile;window.openPanel=openPanel;window.closePanel=closePanel;
 window.closeAllPanels=closeAllPanels;window.toggleLayers=toggleLayers;window.setLayer=setLayer;
+function flyToHistoryPoint(lng,lat){map.flyTo({center:[lng,lat],zoom:17});closeAllPanels();}
+window.flyToHistoryPoint=flyToHistoryPoint;
 window.locateMe=locateMe;window.showMapView=showMapView;window.switchChatTab=switchChatTab;
 window.handleChatKey=handleChatKey;window.sendMessage=sendMessage;window.broadcastMessage=broadcastMessage;
 window.clearHistory=clearHistory;window.openDM=openDM;window.flyToUser=flyToUser;
@@ -1131,7 +1133,7 @@ async function showUserHistory(uid){
       el.innerHTML=`<div class="hist-dot-col"><div class="hist-dot" style="background:${i===0?'#00d4aa':'#30363d'}"></div>${i<snap.size-1?'<div class="hist-line"></div>':''}</div>
         <div class="hist-info"><div class="hist-time">${time}</div>
         <div class="hist-coords">📍 ${h.lat?.toFixed(5)}, ${h.lng?.toFixed(5)}</div>
-        <span class="hist-show-map" onclick="map.flyTo({center:[${h.lng},${h.lat}],zoom:17});closeAllPanels()">הצג על המפה →</span></div>`;
+        <span class="hist-show-map" onclick="flyToHistoryPoint(${h.lng},${h.lat})">הצג על המפה →</span></div>`;
       trail.appendChild(el);i++;
     });
   }catch(e){trail.innerHTML='<div style="color:var(--danger);font-size:13px">שגיאה בטעינה</div>';console.error(e);}
