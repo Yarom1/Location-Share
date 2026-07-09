@@ -1164,7 +1164,7 @@ async function sendMessage(){
   const text=input.value.trim();
   if(!text||!currentUser)return;
   input.value='';input.style.height='auto';
-  const msgData={uid:myUID,name:currentUser.name,avatar:currentUser.avatar,text,ts:serverTimestamp()};
+  const msgData={uid:myUID,name:currentUser.name,avatar:currentUser.avatar,photoURL:currentUser.photoURL||null,text,ts:serverTimestamp()};
   if(activeChatTab==='group'){
     if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
     await addDoc(gCol('groupChat'),msgData);
