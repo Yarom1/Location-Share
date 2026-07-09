@@ -524,15 +524,20 @@ function startApp(){
   loadMyGroups();
   if(isAdmin){document.getElementById('adminBtn').style.display='flex';}
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
+  if(activeGroupId)setDoc(gDoc('locations',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   setInterval(()=>{
-    if(!document.hidden&&myUID)
+    if(!document.hidden&&myUID){
       setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
+      if(activeGroupId)setDoc(gDoc('locations',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
+    }
   },30000);
   window.addEventListener('beforeunload',()=>{
     setDoc(doc(db,'users',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
+    if(activeGroupId)setDoc(gDoc('locations',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
   });
   document.addEventListener('visibilitychange',()=>{
     setDoc(doc(db,'users',myUID),{online:!document.hidden,lastSeen:serverTimestamp()},{merge:true});
+    if(activeGroupId)setDoc(gDoc('locations',myUID),{online:!document.hidden,lastSeen:serverTimestamp()},{merge:true});
   });
 }
 
