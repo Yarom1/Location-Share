@@ -685,6 +685,7 @@ async function saveEditProfile(){
   currentUser={...currentUser,...updates};
   await setDoc(doc(db,'users',myUID),updates,{merge:true});
   if(activeGroupId)await setDoc(gDoc('members',myUID),{name:updates.name,avatar:updates.avatar,photoURL:updates.photoURL,pinColor:updates.pinColor},{merge:true});
+  if(lastLat&&lastLng)updateMarker(myUID,{...currentUser,lat:lastLat,lng:lastLng});
   updateMyUI();
   closeModal('editProfileModal');
   showToast('פרופיל עודכן ✓','success');
@@ -968,15 +969,16 @@ function createMarkerHTML(u){
 const markerCache={};
 function updateMarker(uid,data){
   if(!data.lat||!data.lng)return;
+  const cacheKey=data.name+data.avatar+(data.photoURL||'')+(data.pinColor||'');
   if(markers[uid]){
     markers[uid].setLngLat([data.lng,data.lat]);
-    if(markerCache[uid]!==data.name+data.avatar){
-      markerCache[uid]=data.name+data.avatar;
+    if(markerCache[uid]!==cacheKey){
+      markerCache[uid]=cacheKey;
       markers[uid].getElement().innerHTML=createMarkerHTML(data);
     }
     return;
   }
-  markerCache[uid]=data.name+data.avatar;
+  markerCache[uid]=cacheKey;
   const el=document.createElement('div');
   el.innerHTML=createMarkerHTML(data);
   const marker=new maplibregl.Marker({element:el,anchor:'bottom'})
