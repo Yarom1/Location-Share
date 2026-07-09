@@ -250,5 +250,5 @@ class MainActivity : AppCompatActivity() {
             startLocationServiceAndLoad()
         }
     }
-    override fun onPause() { super.onPause(); webView.onPause() }
+    override fun onPause() { super.onPause() } // לא קוראים ל-webView.onPause() בכוונה - זה משהה את מנוע ה-JS ומונע עדכוני מיקום ברקע
 }
