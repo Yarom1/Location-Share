@@ -818,7 +818,8 @@ function togglePOILayers(e){
   if(!wasOpen&&e&&e.currentTarget){
     const r=e.currentTarget.getBoundingClientRect();
     panel.style.top=(r.bottom+8)+'px';
-    panel.style.left=r.left+'px';
+    panel.style.left='auto';
+    panel.style.right=(window.innerWidth-r.right)+'px';
   }
 }
 
@@ -905,7 +906,8 @@ function toggleLayers(e){
   if(!wasOpen&&e&&e.currentTarget){
     const r=e.currentTarget.getBoundingClientRect();
     panel.style.top=(r.bottom+8)+'px';
-    panel.style.left=r.left+'px';
+    panel.style.left='auto';
+    panel.style.right=(window.innerWidth-r.right)+'px';
   }
 }
 function showMapView(){closeAllPanels();setTimeout(()=>map&&map.resize(),350);setActiveNav('navMap');}
