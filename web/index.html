@@ -1029,7 +1029,7 @@ function listenUsers(){
     const iAmBanned=myData&&myData.banned===true;
     snap.forEach(d=>{
       const u={...(groupMembersCache[d.id]||{}),...d.data()};total++;
-      const isOnline=u.online===true&&u.lastSeen&&(Date.now()-u.lastSeen.toMillis()<90000);if(isOnline)online++;
+      const isOnline=u.online===true&&(!u.lastSeen||(Date.now()-u.lastSeen.toMillis()<90000));if(isOnline)online++;
       if(iAmBanned&&d.id!==myUID)return;
       if(isOnline&&u.lat&&u.lng){
         updateMarker(d.id,{...u,online:isOnline});
