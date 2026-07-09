@@ -526,7 +526,7 @@ function startApp(){
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   if(activeGroupId)setDoc(gDoc('locations',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   setInterval(()=>{
-    if(!document.hidden&&myUID){
+    if(myUID){
       setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
       if(activeGroupId)setDoc(gDoc('locations',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
     }
@@ -535,10 +535,7 @@ function startApp(){
     setDoc(doc(db,'users',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
     if(activeGroupId)setDoc(gDoc('locations',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
   });
-  document.addEventListener('visibilitychange',()=>{
-    setDoc(doc(db,'users',myUID),{online:!document.hidden,lastSeen:serverTimestamp()},{merge:true});
-    if(activeGroupId)setDoc(gDoc('locations',myUID),{online:!document.hidden,lastSeen:serverTimestamp()},{merge:true});
-  });
+  // הוסר מכוון: visibilitychange כבר לא מסמן לא-מחובר, כי מעקב ברקע אמור להמשיך לשתף מיקום
 }
 
 function updateMyUI(){
