@@ -41,7 +41,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .dark-popup .maplibregl-popup-tip{border-top-color:#161b22;border-bottom-color:#161b22}
 .topbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .topbar-left{display:flex;align-items:center;gap:10px}
-.my-avatar{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0}
+.my-avatar{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;overflow:hidden}
 .topbar-title{font-size:15px;font-weight:700}
 .online-badge{font-size:11px;color:var(--accent);background:rgba(0,212,170,.1);padding:3px 8px;border-radius:20px;border:1px solid rgba(0,212,170,.3)}
 .topbar-actions{display:flex;gap:6px}
@@ -66,7 +66,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .panel-close{background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:var(--text)}
 .panel-body{overflow-y:auto;flex:1;padding:8px 10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .user-item{display:flex;align-items:center;gap:var(--row-gap);padding:var(--row-pad);background:var(--surface2);border-radius:var(--row-radius);margin-bottom:var(--row-mb);border:1px solid var(--border);transition:.2s}
-.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;position:relative}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;position:relative;overflow:hidden}
 .user-online-dot{position:absolute;bottom:0;right:0;width:11px;height:11px;border-radius:50%;border:2px solid var(--surface2);transition:background .5s}
 .user-info{flex:1;min-width:0}
 .user-name{font-size:var(--text-main);font-weight:600}
@@ -545,8 +545,8 @@ function startApp(){
 
 function updateMyUI(){
   if(!currentUser)return;
-  document.getElementById('myAvatarBtn').textContent=currentUser.avatar;
-  document.getElementById('settingsAvatar').textContent=currentUser.avatar;
+  document.getElementById('myAvatarBtn').innerHTML=avatarHTML(currentUser.avatar,currentUser.photoURL);
+  document.getElementById('settingsAvatar').innerHTML=avatarHTML(currentUser.avatar,currentUser.photoURL);
   document.getElementById('settingsName').textContent=currentUser.name;
   document.getElementById('settingsUID').textContent='UID: '+myUID;
   if(isAdmin){
@@ -992,7 +992,7 @@ function showUserPopup(uid,data){
   currentUserPopup=new maplibregl.Popup({closeButton:true}).setLngLat(markers[uid].getLngLat()).setHTML(`
     <div style="padding:4px;min-width:140px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <span style="font-size:26px">${data.avatar||'👤'}</span>
+        <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${avatarHTML(data.avatar,data.photoURL)}</div>
         <strong style="font-size:14px">${data.name||''}</strong>
       </div>
       <div style="display:flex;gap:6px">
@@ -1039,7 +1039,7 @@ function listenUsers(){
     allUsersData={};
     if(currentUser&&lastLat&&lastLng)updateMarker(myUID,{...currentUser,lat:lastLat,lng:lastLng,online:true});
     const ul0=document.getElementById('usersList');
-    if(ul0)ul0.innerHTML=`<div class="user-item" style="cursor:default"><div class="user-avatar">${currentUser?.avatar||'👤'}<div class="user-online-dot" style="background:#00d4aa"></div></div><div class="user-info"><div class="user-name">${escHtml(currentUser?.name||'אני')} <span style="font-size:11px;color:var(--text2)">(אני)</span></div><div class="user-time">בחר קבוצה פעילה כדי לראות אחרים</div></div></div>`;
+    if(ul0)ul0.innerHTML=`<div class="user-item" style="cursor:default"><div class="user-avatar">${avatarHTML(currentUser?.avatar,currentUser?.photoURL)}<div class="user-online-dot" style="background:#00d4aa"></div></div><div class="user-info"><div class="user-name">${escHtml(currentUser?.name||'אני')} <span style="font-size:11px;color:var(--text2)">(אני)</span></div><div class="user-time">בחר קבוצה פעילה כדי לראות אחרים</div></div></div>`;
     const badge0=document.getElementById('onlineBadge');if(badge0)badge0.textContent='● אין קבוצה פעילה';
     return;
   }
@@ -1069,7 +1069,7 @@ function listenUsers(){
 
       // users list
       const li=document.createElement('div');li.className='user-item';li.dataset.online=isOnline;
-      li.innerHTML=`<div class="user-avatar">${u.avatar||'👤'}<div class="user-online-dot" style="background:${isOnline?'#00d4aa':'#555'}"></div></div>
+      li.innerHTML=`<div class="user-avatar">${avatarHTML(u.avatar,u.photoURL)}<div class="user-online-dot" style="background:${isOnline?'#00d4aa':'#555'}"></div></div>
         <div class="user-info"><div class="user-name">${escHtml(u.name||'אנונימי')}${d.id===myUID?' <span style="font-size:11px;color:var(--text2)">(אני)</span>':''}</div>
         <div class="user-time">${isOnline?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
         <div class="user-actions">
@@ -1081,13 +1081,13 @@ function listenUsers(){
 
       // history chips
       const chip=document.createElement('div');chip.className='hist-chip'+(isOnline?'':' offline-chip');
-      chip.innerHTML=`${u.avatar||'👤'} ${escHtml(u.name||'אנונימי')}`;
+      chip.innerHTML=`<span style="display:inline-flex;width:18px;height:18px;border-radius:50%;overflow:hidden;vertical-align:middle">${avatarHTML(u.avatar,u.photoURL)}</span> ${escHtml(u.name||'אנונימי')}`;
       chip.onclick=()=>{document.querySelectorAll('.hist-chip').forEach(c=>c.classList.remove('selected'));chip.classList.add('selected');showUserHistory(d.id);};
       hs.appendChild(chip);
 
       // admin list
       const ad=document.createElement('div');ad.className='admin-user-item';
-      ad.innerHTML=`<div style="width:28px;height:28px;border-radius:50%;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${u.avatar||'👤'}</div>
+      ad.innerHTML=`<div style="width:28px;height:28px;border-radius:50%;overflow:hidden;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${avatarHTML(u.avatar,u.photoURL)}</div>
         <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(u.name||'אנונימי')}</div>
         <div style="font-size:10px;color:var(--text2)">${isOnline?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
         <div style="display:flex;gap:4px;flex-shrink:0">
@@ -1126,7 +1126,7 @@ function appendMsg(data){
   const mine=data.uid===myUID;
   const el=document.createElement('div');el.className=`msg ${mine?'mine':'theirs'}`;
   const time=data.ts?new Date(data.ts.toMillis()).toLocaleTimeString('he',{hour:'2-digit',minute:'2-digit'}):'';
-  el.innerHTML=`${!mine?`<div class="msg-meta">${data.avatar||''} <strong>${escHtml(data.name||'')}</strong></div>`:''}
+  el.innerHTML=`${!mine?`<div class="msg-meta"><span style="display:inline-flex;width:16px;height:16px;border-radius:50%;overflow:hidden;vertical-align:middle">${avatarHTML(data.avatar,data.photoURL)}</span> <strong>${escHtml(data.name||'')}</strong></div>`:''}
     <div class="msg-bubble">${escHtml(data.text||'')}</div>
     <div class="msg-meta">${time}</div>`;
   msgs.appendChild(el);
@@ -1929,6 +1929,7 @@ window.toggleFullscreen=toggleFullscreen;
 window.clearMeasure=clearMeasure;
 
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function avatarHTML(avatar,photoURL){return photoURL?`<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover">`:(avatar||'👤');}
 
 let myGroups={},activeGroupId=null,unsubMyGroups=null;
 
