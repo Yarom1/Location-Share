@@ -667,6 +667,7 @@ async function saveEditProfile(){
   }
   currentUser={...currentUser,...updates};
   await setDoc(doc(db,'users',myUID),updates,{merge:true});
+  if(activeGroupId)await setDoc(gDoc('members',myUID),{name:updates.name,avatar:updates.avatar,photoURL:updates.photoURL},{merge:true});
   updateMyUI();
   closeModal('editProfileModal');
   showToast('פרופיל עודכן ✓','success');
@@ -1016,7 +1017,7 @@ function listenUsers(){
     const badge0=document.getElementById('onlineBadge');if(badge0)badge0.textContent='● אין קבוצה פעילה';
     return;
   }
-  if(currentUser)setDoc(gDoc('members',myUID),{name:currentUser.name,avatar:currentUser.avatar},{merge:true});
+  if(currentUser)setDoc(gDoc('members',myUID),{name:currentUser.name,avatar:currentUser.avatar,photoURL:currentUser.photoURL||null},{merge:true});
   unsubMembers=onSnapshot(gCol('members'),snap=>{groupMembersCache={};snap.forEach(d=>{groupMembersCache[d.id]=d.data();});});
   unsubUsers=onSnapshot(gCol('locations'),snap=>{
     let online=0,total=0;
@@ -1921,7 +1922,7 @@ async function createGroup(){
     const groupRef=doc(collection(db,'groups'));
     const batch=writeBatch(db);
     batch.set(groupRef,{name,ownerUid:myUID,inviteCode:code,createdAt:serverTimestamp()});
-    batch.set(doc(db,'groups',groupRef.id,'members',myUID),{name:currentUser?.name||'אנונימי',avatar:currentUser?.avatar||'👤',joinedAt:serverTimestamp(),role:'owner'});
+    batch.set(doc(db,'groups',groupRef.id,'members',myUID),{name:currentUser?.name||'אנונימי',avatar:currentUser?.avatar||'👤',photoURL:currentUser?.photoURL||null,joinedAt:serverTimestamp(),role:'owner'});
     batch.set(doc(db,'userGroups',myUID,'memberOf',groupRef.id),{joinedAt:serverTimestamp()});
     await batch.commit();
     nameInput.value='';
@@ -1947,7 +1948,7 @@ async function joinGroupByCode(){
     const existing=await getDoc(doc(db,'groups',groupId,'members',myUID));
     if(existing.exists()){showToast('כבר חבר בקבוצה זו','error');return;}
     const batch=writeBatch(db);
-    batch.set(doc(db,'groups',groupId,'members',myUID),{name:currentUser?.name||'אנונימי',avatar:currentUser?.avatar||'👤',joinedAt:serverTimestamp(),role:'member'});
+    batch.set(doc(db,'groups',groupId,'members',myUID),{name:currentUser?.name||'אנונימי',avatar:currentUser?.avatar||'👤',photoURL:currentUser?.photoURL||null,joinedAt:serverTimestamp(),role:'member'});
     batch.set(doc(db,'userGroups',myUID,'memberOf',groupId),{joinedAt:serverTimestamp()});
     await batch.commit();
     codeInput.value='';
