@@ -1016,6 +1016,7 @@ function listenUsers(){
     const badge0=document.getElementById('onlineBadge');if(badge0)badge0.textContent='● אין קבוצה פעילה';
     return;
   }
+  if(currentUser)setDoc(gDoc('members',myUID),{name:currentUser.name,avatar:currentUser.avatar},{merge:true});
   unsubMembers=onSnapshot(gCol('members'),snap=>{groupMembersCache={};snap.forEach(d=>{groupMembersCache[d.id]=d.data();});});
   unsubUsers=onSnapshot(gCol('locations'),snap=>{
     let online=0,total=0;
