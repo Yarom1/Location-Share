@@ -374,7 +374,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
       <button onclick="openModal('adminModal')" id="adminLoginBtn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🔐 כניסת מנהל</button>
       <button id="adminLogoutBtn" onclick="logoutAdmin()" style="display:none;background:rgba(255,71,87,0.1);color:var(--danger);border:1px solid rgba(255,71,87,0.3);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🚪 יציאה ממנהל</button>
       <button id="changePassBtn" onclick="changeAdminPassword()" style="display:none;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🔑 שנה סיסמת מנהל</button>
-      <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px">Location Share v1.0 (navfix-B)</div>
+      <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px">Location Share v1.0</div>
     </div>
   </div>
 
@@ -451,14 +451,6 @@ let unsubUsers=null,unsubChat=null,unsubDM=null;
 
 function updateNavHeightVar(){
   const nav=document.querySelector('.bottom-nav');
-  let dbg=document.getElementById('navHeightDebug');
-  if(!dbg){
-    dbg=document.createElement('div');
-    dbg.id='navHeightDebug';
-    dbg.style.cssText='position:fixed;top:120px;left:8px;z-index:9999;background:red;color:white;font-size:12px;padding:4px 8px;border-radius:6px';
-    document.body.appendChild(dbg);
-  }
-  dbg.textContent='nav='+(nav?nav.offsetHeight:'null')+'px';
   if(nav&&nav.offsetHeight>0)document.documentElement.style.setProperty('--nav-height',nav.offsetHeight+'px');
 }
 window.addEventListener('resize',updateNavHeightVar);
@@ -1886,9 +1878,6 @@ async function savePoint(){
   function onUp(){
     if(panel){
       panel.style.transition='';
-      const r=panel.getBoundingClientRect();
-      let dbg=document.getElementById('navHeightDebug');
-      if(dbg)dbg.textContent='panel bottom='+Math.round(r.bottom)+' h='+Math.round(r.height)+' winH='+window.innerHeight;
       // שמור את הגובה שנקבע ידנית אבל אפשר כיווץ עד 50vh
       if(!dragging)panel.style.height='';
     }
