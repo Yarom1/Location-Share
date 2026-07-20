@@ -58,7 +58,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .layer-item:hover{background:var(--surface2)}
 .layer-item input{accent-color:var(--accent);width:16px;height:16px}
 .layer-item label{font-size:13px;cursor:pointer;color:var(--text)}
-.side-panel{position:fixed;bottom:var(--nav-height);left:0;right:0;z-index:400;background:var(--surface);border-top:1px solid var(--border);border-radius:20px 20px 0 0;transform:translateY(calc(100% + var(--nav-height)));transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:50vh;display:flex;flex-direction:column;box-shadow:0 -8px 32px rgba(0,0,0,.5)}
+.side-panel{position:fixed;bottom:calc(var(--nav-height) - 2px);left:0;right:0;z-index:400;background:var(--surface);border-top:1px solid var(--border);border-radius:20px 20px 0 0;transform:translateY(calc(100% + var(--nav-height) - 2px));transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:50vh;display:flex;flex-direction:column;box-shadow:0 -8px 32px rgba(0,0,0,.5)}
 .side-panel.open{transform:translateY(0)}
 .panel-handle{width:60px;height:6px;background:var(--border);border-radius:3px;margin:0 auto;flex-shrink:0;cursor:ns-resize;touch-action:none;padding:12px 0;box-sizing:content-box;background-clip:content-box}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
