@@ -451,6 +451,14 @@ let unsubUsers=null,unsubChat=null,unsubDM=null;
 
 function updateNavHeightVar(){
   const nav=document.querySelector('.bottom-nav');
+  let dbg=document.getElementById('navHeightDebug');
+  if(!dbg){
+    dbg=document.createElement('div');
+    dbg.id='navHeightDebug';
+    dbg.style.cssText='position:fixed;top:120px;left:8px;z-index:9999;background:red;color:white;font-size:12px;padding:4px 8px;border-radius:6px';
+    document.body.appendChild(dbg);
+  }
+  dbg.textContent='nav='+(nav?nav.offsetHeight:'null')+'px';
   if(nav&&nav.offsetHeight>0)document.documentElement.style.setProperty('--nav-height',nav.offsetHeight+'px');
 }
 window.addEventListener('resize',updateNavHeightVar);
