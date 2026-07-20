@@ -1886,6 +1886,9 @@ async function savePoint(){
   function onUp(){
     if(panel){
       panel.style.transition='';
+      const r=panel.getBoundingClientRect();
+      let dbg=document.getElementById('navHeightDebug');
+      if(dbg)dbg.textContent='panel bottom='+Math.round(r.bottom)+' h='+Math.round(r.height)+' winH='+window.innerHeight;
       // שמור את הגובה שנקבע ידנית אבל אפשר כיווץ עד 50vh
       if(!dragging)panel.style.height='';
     }
