@@ -529,6 +529,8 @@ async function loadAdminPassword(){
 
 function startApp(){
   showScreen('main');
+  updateNavHeightVar();
+  setTimeout(updateNavHeightVar,300);
   initMap();
   activeGroupId=currentUser?.activeGroupId||null;
   startLocationTracking();
