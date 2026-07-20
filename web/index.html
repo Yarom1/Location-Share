@@ -448,6 +448,16 @@ let allUsersData={};
 let map,markers={},tileLayer,historyLayer=null;
 let activeChatTab='group',activeDMUser=null;
 let unsubUsers=null,unsubChat=null,unsubDM=null;
+
+function updateNavHeightVar(){
+  const nav=document.querySelector('.bottom-nav');
+  if(nav&&nav.offsetHeight>0)document.documentElement.style.setProperty('--nav-height',nav.offsetHeight+'px');
+}
+window.addEventListener('resize',updateNavHeightVar);
+document.addEventListener('DOMContentLoaded',updateNavHeightVar);
+updateNavHeightVar();
+setTimeout(updateNavHeightVar,300);
+
 let currentUserPopup=null;
 let unsubMembers=null,unsubLocations=null;
 let groupMembersCache={},groupLocationsCache={};
