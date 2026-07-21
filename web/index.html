@@ -1364,6 +1364,19 @@ function toggleCompass(){
 
 let lastHeading=0;
 let lastAbsolute=false;
+function computeFullCompassHeading(alpha,beta,gamma){
+  // נוסחה תלת-ממדית מלאה - מדויקת גם כשהמכשיר עומד זקוף (כמו על מעמד ברכב), לא רק שוכב שטוח
+  const aR=alpha*(Math.PI/180),bR=beta*(Math.PI/180),gR=gamma*(Math.PI/180);
+  const cA=Math.cos(aR),sA=Math.sin(aR);
+  const cB=Math.cos(bR),sB=Math.sin(bR);
+  const cG=Math.cos(gR),sG=Math.sin(gR);
+  const Vx=-cA*sG-sA*sB*cG;
+  const Vy=-sA*sG+cA*sB*cG;
+  let heading=Math.atan2(Vx,Vy)*(180/Math.PI);
+  if(heading<0)heading+=360;
+  return heading;
+}
+
 function handleOrientation(e){
   if(e.type==='deviceorientation'&&lastAbsolute)return;
   lastAbsolute=(e.type==='deviceorientationabsolute');
@@ -1372,10 +1385,10 @@ function handleOrientation(e){
   if(e.webkitCompassHeading!=null){
     // iOS - כבר מתחשב בכיוון המסך
     h=e.webkitCompassHeading;
-  }else if(e.alpha!=null){
-    // Android - צריך לפצות על כיוון המסך (portrait/landscape)
+  }else if(e.alpha!=null&&e.beta!=null&&e.gamma!=null){
+    // Android - חישוב תלת-ממדי מלא, מדויק בכל זווית אחיזה
     const screenAngle=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
-    h=(360-e.alpha+screenAngle)%360;
+    h=(computeFullCompassHeading(e.alpha,e.beta,e.gamma)+screenAngle)%360;
   }
 
   if(Math.abs(h-lastHeading)>1.5){
