@@ -1381,6 +1381,12 @@ function handleOrientation(e){
 }
 
 function resetNorth(){
+  if(compassMode){
+    compassMode=false;
+    document.getElementById("compassBtn").classList.remove("active");
+    window.removeEventListener("deviceorientationabsolute",handleOrientation,true);
+    window.removeEventListener("deviceorientation",handleOrientation,true);
+  }
   lastHeading=0;
   map.easeTo({bearing:0,duration:300});
   document.getElementById("compassBtn").style.transform="rotate(0deg)";
