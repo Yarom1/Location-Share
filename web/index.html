@@ -1049,10 +1049,18 @@ function startLocationTracking(){
   };
 
   navigator.geolocation.watchPosition(async pos=>{
-    const{latitude:lat,longitude:lng}=pos.coords;
+    const{latitude:lat,longitude:lng,heading,speed}=pos.coords;
+    lastSpeed=speed||0;
     // עדכון חזותי מיידי בכל קריאת GPS - למעקב חלק ורציף בלי קפיצות
     if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
     if(trackingMode)map.easeTo({center:[lng,lat],duration:400});
+    // בזמן נסיעה בפועל - כיוון ה-GPS יציב הרבה יותר מהמצפן המגנטי שמושפע ממתכת הרכב
+    if(compassMode&&heading!=null&&lastSpeed>1&&Math.abs(heading-lastHeading)>1.5){
+      lastHeading=heading;
+      map.easeTo({bearing:heading,duration:400});
+      const cbtn=document.getElementById("compassBtn");
+      if(cbtn)cbtn.style.transform="rotate("+(-heading)+"deg)";
+    }
     // כתיבה ל-Firestore נשארת מוגבלת לתזוזה של 5+ מטר, לחיסכון בסוללה/רוחב פס
     const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
     if(dist<0.00005)return;
@@ -1350,6 +1358,7 @@ function showToast(msg,type=''){
 window.showToast=showToast;
 
 let trackingMode=false,compassMode=false,measureMode=false;
+let lastSpeed=0;
 let measurePoints=[],measureLayers=[];
 
 function toggleTracking(){
@@ -1383,6 +1392,7 @@ let lastAbsolute=false;
 function handleOrientation(e){
   if(e.type==='deviceorientation'&&lastAbsolute)return;
   lastAbsolute=(e.type==='deviceorientationabsolute');
+  if(lastSpeed>1)return; // בזמן נסיעה, כיוון ה-GPS שולט (ראה watchPosition)
 
   let h=0;
   if(e.webkitCompassHeading!=null){
