@@ -982,11 +982,27 @@ function createMarkerHTML(u){
 }
 
 const markerCache={};
+const markerAnimFrame={};
+function animateMarkerPosition(uid,marker,fromLat,fromLng,toLat,toLng,duration){
+  if(markerAnimFrame[uid])cancelAnimationFrame(markerAnimFrame[uid]);
+  const start=performance.now();
+  function step(now){
+    const t=Math.min(1,(now-start)/duration);
+    const lat=fromLat+(toLat-fromLat)*t;
+    const lng=fromLng+(toLng-fromLng)*t;
+    marker.setLngLat([lng,lat]);
+    if(t<1)markerAnimFrame[uid]=requestAnimationFrame(step);
+    else delete markerAnimFrame[uid];
+  }
+  markerAnimFrame[uid]=requestAnimationFrame(step);
+}
+
 function updateMarker(uid,data){
   if(!data.lat||!data.lng)return;
   const cacheKey=data.name+data.avatar+(data.photoURL||'')+(data.pinColor||'');
   if(markers[uid]){
-    markers[uid].setLngLat([data.lng,data.lat]);
+    const cur=markers[uid].getLngLat();
+    animateMarkerPosition(uid,markers[uid],cur.lat,cur.lng,data.lat,data.lng,400);
     if(markerCache[uid]!==cacheKey){
       markerCache[uid]=cacheKey;
       markers[uid].getElement().innerHTML=createMarkerHTML(data);
