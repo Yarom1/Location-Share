@@ -748,6 +748,9 @@ function initMap(){
       const pp=document.getElementById('pointsPanel');
       if(pp)pp.classList.remove('active');
     }));
+    map.on('dragstart',e=>{
+      if(e.originalEvent)stopTrackingAndCompass();
+    });
     map.on('contextmenu',e=>{
       if(e.originalEvent&&e.originalEvent.preventDefault)e.originalEvent.preventDefault();
       setAddPointCoords(e.lngLat.lat,e.lngLat.lng);
@@ -947,6 +950,7 @@ function toggleLayers(e){
 }
 function showMapView(){closeAllPanels();setTimeout(()=>map&&map.resize(),350);setActiveNav('navMap');}
 let locating=false;let lastLat=0,lastLng=0;function locateMe(){
+  stopTrackingAndCompass();
   if(lastLat&&lastLng){map.flyTo({center:[lastLng,lastLat],zoom:17});return;}
   if(locating)return;locating=true;
   const btn=document.getElementById('locateBtn');
@@ -1382,18 +1386,30 @@ function handleOrientation(e){
   }
 }
 
-function resetNorth(){
+function stopTrackingAndCompass(){
+  if(trackingMode){
+    trackingMode=false;
+    const tbtn=document.getElementById('trackBtn');
+    if(tbtn)tbtn.style.border='1px solid rgba(255,255,255,0.2)';
+  }
   if(compassMode){
     compassMode=false;
     const cbtn=document.getElementById("compassBtn");
-    cbtn.classList.remove("active");
-    cbtn.style.border='1px solid rgba(255,255,255,0.2)';
+    if(cbtn){
+      cbtn.classList.remove("active");
+      cbtn.style.border='1px solid rgba(255,255,255,0.2)';
+      cbtn.style.transform="rotate(0deg)";
+    }
     window.removeEventListener("deviceorientationabsolute",handleOrientation,true);
     window.removeEventListener("deviceorientation",handleOrientation,true);
   }
+}
+window.stopTrackingAndCompass=stopTrackingAndCompass;
+
+function resetNorth(){
+  stopTrackingAndCompass();
   lastHeading=0;
   map.easeTo({bearing:0,duration:300});
-  document.getElementById("compassBtn").style.transform="rotate(0deg)";
   showToast("מוצג לצפון ⬆️");
 }
 
