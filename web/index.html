@@ -1415,6 +1415,23 @@ function handleOrientation(e){
     h=(360-e.alpha+screenAngle)%360;
   }
 
+  // דיבאג זמני - מציג ערכי חיישן גולמיים על המסך
+  if(compassMode){
+    let dbg=document.getElementById('compassDebug');
+    if(!dbg){
+      dbg=document.createElement('div');
+      dbg.id='compassDebug';
+      dbg.style.cssText='position:fixed;top:120px;left:8px;right:8px;z-index:9999;background:red;color:white;font-size:12px;padding:6px 10px;border-radius:6px;white-space:pre-line';
+      document.body.appendChild(dbg);
+    }
+    dbg.textContent='alpha='+(e.alpha!=null?e.alpha.toFixed(1):'null')+
+      ' beta='+(e.beta!=null?e.beta.toFixed(1):'null')+
+      ' gamma='+(e.gamma!=null?e.gamma.toFixed(1):'null')+
+      '\nscreenAngle='+((screen.orientation&&screen.orientation.angle)||window.orientation||0)+
+      ' type='+e.type+' absolute='+e.absolute+
+      '\nh(מחושב)='+h.toFixed(1);
+  }
+
   if(Math.abs(h-lastHeading)>1.5){
     lastHeading=h;
     map.easeTo({bearing:h,duration:150});
