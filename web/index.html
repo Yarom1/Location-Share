@@ -1342,7 +1342,9 @@ function toggleTracking(){
 
 function toggleCompass(){
   compassMode=!compassMode;
-  document.getElementById("compassBtn").classList.toggle("active",compassMode);
+  const cbtn=document.getElementById("compassBtn");
+  cbtn.classList.toggle("active",compassMode);
+  cbtn.style.border=compassMode?'2px solid #00d4aa':'1px solid rgba(255,255,255,0.2)';
   if(compassMode){
     lastAbsolute=false;
     window.addEventListener("deviceorientationabsolute",handleOrientation,true);
@@ -1351,7 +1353,7 @@ function toggleCompass(){
   }else{
     window.removeEventListener("deviceorientationabsolute",handleOrientation,true);
     window.removeEventListener("deviceorientation",handleOrientation,true);
-    document.getElementById("compassBtn").style.transform="rotate(0deg)";
+    cbtn.style.transform="rotate(0deg)";
     showToast("מצפן כבוי");
   }
 }
@@ -1383,7 +1385,9 @@ function handleOrientation(e){
 function resetNorth(){
   if(compassMode){
     compassMode=false;
-    document.getElementById("compassBtn").classList.remove("active");
+    const cbtn=document.getElementById("compassBtn");
+    cbtn.classList.remove("active");
+    cbtn.style.border='1px solid rgba(255,255,255,0.2)';
     window.removeEventListener("deviceorientationabsolute",handleOrientation,true);
     window.removeEventListener("deviceorientation",handleOrientation,true);
   }
