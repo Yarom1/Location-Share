@@ -1423,7 +1423,13 @@ function handleOrientation(e){
     // iOS - כבר מתחשב בכיוון המסך
     h=e.webkitCompassHeading;
   }else if(e.alpha!=null&&e.beta!=null&&e.gamma!=null){
-    h=computeFullCompassHeading(e.alpha,e.beta,e.gamma);
+    // כשהמכשיר כמעט שטוח (beta וגם gamma קרובים ל-0), הנוסחה התלת-ממדית נכנסת ל"נקודת יחיד"
+    // מתמטית ורגישה מדי לרעש - שם עדיף הנוסחה הפשוטה שכבר הוכחה כיציבה
+    if(Math.abs(e.beta)<15&&Math.abs(e.gamma)<15){
+      h=(360-e.alpha)%360;
+    }else{
+      h=computeFullCompassHeading(e.alpha,e.beta,e.gamma);
+    }
   }
 
   // דיבאג זמני - מציג ערכי חיישן גולמיים על המסך
