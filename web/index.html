@@ -1051,9 +1051,15 @@ function startLocationTracking(){
   navigator.geolocation.watchPosition(async pos=>{
     const{latitude:lat,longitude:lng,heading,speed}=pos.coords;
     lastSpeed=speed||0;
+    // החלקת קואורדינטות (ממוצע נע) לתצוגה חלקה - לא משפיע על מה שנשמר ב-Firestore/היסטוריה
+    if(smoothLat===null){smoothLat=lat;smoothLng=lng;}
+    else{
+      smoothLat+=0.35*(lat-smoothLat);
+      smoothLng+=0.35*(lng-smoothLng);
+    }
     // עדכון חזותי מיידי בכל קריאת GPS - למעקב חלק ורציף בלי קפיצות
-    if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
-    if(trackingMode)map.easeTo({center:[lng,lat],duration:400});
+    if(currentUser)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
+    if(trackingMode)map.easeTo({center:[smoothLng,smoothLat],duration:400,padding:{top:window.innerHeight*0.45,bottom:0,left:0,right:0}});
     // בזמן נסיעה בפועל - כיוון ה-GPS יציב הרבה יותר מהמצפן המגנטי שמושפע ממתכת הרכב
     if(compassMode&&heading!=null&&lastSpeed>1&&Math.abs(heading-lastHeading)>1.5){
       lastHeading=heading;
@@ -1359,13 +1365,18 @@ window.showToast=showToast;
 
 let trackingMode=false,compassMode=false,measureMode=false;
 let lastSpeed=0;
+let smoothLat=null,smoothLng=null;
 let measurePoints=[],measureLayers=[];
 
 function toggleTracking(){
   trackingMode=!trackingMode;
   const btn=document.getElementById('trackBtn');
   if(btn)btn.style.border=trackingMode?'2px solid #00d4aa':'1px solid rgba(255,255,255,0.2)';
-  if(trackingMode&&lastLat&&lastLng)map.flyTo({center:[lastLng,lastLat],zoom:17});
+  if(trackingMode&&lastLat&&lastLng){
+    map.flyTo({center:[lastLng,lastLat],zoom:17,padding:{top:window.innerHeight*0.45,bottom:0,left:0,right:0}});
+  }else if(!trackingMode){
+    map.easeTo({padding:{top:0,bottom:0,left:0,right:0},duration:300});
+  }
   showToast(trackingMode?'🎯 מצב מעקב פעיל':'מצב מעקב כבוי');
 }
 
@@ -1417,6 +1428,7 @@ function stopTrackingAndCompass(){
     trackingMode=false;
     const tbtn=document.getElementById('trackBtn');
     if(tbtn)tbtn.style.border='1px solid rgba(255,255,255,0.2)';
+    map.easeTo({padding:{top:0,bottom:0,left:0,right:0},duration:300});
   }
   if(compassMode){
     compassMode=false;
