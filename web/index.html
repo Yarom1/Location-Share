@@ -1030,15 +1030,17 @@ function startLocationTracking(){
 
   navigator.geolocation.watchPosition(async pos=>{
     const{latitude:lat,longitude:lng}=pos.coords;
+    // עדכון חזותי מיידי בכל קריאת GPS - למעקב חלק ורציף בלי קפיצות
+    if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
+    if(trackingMode)map.easeTo({center:[lng,lat],duration:400});
+    // כתיבה ל-Firestore נשארת מוגבלת לתזוזה של 5+ מטר, לחיסכון בסוללה/רוחב פס
     const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
-    if(dist<0.00005)return; // פחות מ-5 מטר - אל תעדכן
+    if(dist<0.00005)return;
     lastLat=lat;lastLng=lng;
     if(activeGroupId){
       await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
       await addDoc(gCol('history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
     }
-    if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
-    if(trackingMode)map.easeTo({center:[lng,lat],duration:500});
   },null,{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
 }
 
@@ -1068,7 +1070,7 @@ function listenUsers(){
     const iAmBanned=myData&&myData.banned===true;
     snap.forEach(d=>{
       const u={...(groupMembersCache[d.id]||{}),...d.data()};total++;
-      const isOnline=u.online===true&&(!u.lastSeen||(Date.now()-u.lastSeen.toMillis()<90000));if(isOnline)online++;
+      const isOnline=u.online===true&&(!u.lastSeen||(Date.now()-u.lastSeen.toMillis()<120000));if(isOnline)online++;
       if(iAmBanned&&d.id!==myUID)return;
       if(isOnline&&u.lat&&u.lng){
         updateMarker(d.id,{...u,online:isOnline});
