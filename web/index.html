@@ -2109,7 +2109,7 @@ async function deleteGroup(groupId,groupName){
   if(!g||g.ownerUid!==myUID){showToast('רק יוצר הקבוצה יכול למחוק אותה','error');return;}
   if(!confirm(`למחוק את הקבוצה "${groupName}" לצמיתות? פעולה זו לא ניתנת לביטול.`))return;
   try{
-    const subs=['members','locations','history','groupChat'];
+    const subs=['locations','history','groupChat','members'];
     for(const sub of subs){
       const snap=await getDocs(collection(db,'groups',groupId,sub));
       const batch=writeBatch(db);
