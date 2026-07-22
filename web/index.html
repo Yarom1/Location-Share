@@ -563,8 +563,8 @@ function updateMyUI(){
   document.getElementById('settingsUID').textContent='UID: '+myUID;
   if(isAdmin){
     document.getElementById('adminLoginBtn').style.display='none';
-    document.getElementById('adminLogoutBtn').style.display='block';
-    document.getElementById('changePassBtn').style.display='block';
+    document.getElementById('adminLogoutBtn').style.display='flex';
+    document.getElementById('changePassBtn').style.display='flex';
     document.getElementById('adminBtn').style.display='flex';
   }
 }
@@ -584,8 +584,8 @@ function checkAdminPass(){
     closeModal('adminModal');
     document.getElementById('adminBtn').style.display='flex';
     document.getElementById('adminLoginBtn').style.display='none';
-    document.getElementById('adminLogoutBtn').style.display='block';
-    document.getElementById('changePassBtn').style.display='block';
+    document.getElementById('adminLogoutBtn').style.display='flex';
+    document.getElementById('changePassBtn').style.display='flex';
     showToast('✅ נכנסת כמנהל','success');
   }else{
     showToast('❌ סיסמה שגויה','error');
