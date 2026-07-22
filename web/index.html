@@ -492,6 +492,7 @@ function startApp(){
   listenSavedPoints();
   updateMyUI();
   loadMyGroups();
+  resumePendingJoinRequests();
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   if(activeGroupId)setDoc(gDoc('locations',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   setInterval(()=>{
@@ -983,6 +984,22 @@ function startLocationTracking(){
   },null,{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
 }
 
+let handlingAccessLoss=false;
+async function handleGroupAccessLost(err){
+  if(!err||err.code!=='permission-denied')return;
+  if(handlingAccessLoss)return;
+  handlingAccessLoss=true;
+  const lostGroupId=activeGroupId;
+  const groupName=myGroups[lostGroupId]?.name||'הקבוצה';
+  showToast(`🚫 הוסרת מהקבוצה "${groupName}"`,'error');
+  try{await deleteDoc(doc(db,'userGroups',myUID,'memberOf',lostGroupId));}catch(e){}
+  activeGroupId=null;
+  try{await setDoc(doc(db,'users',myUID),{activeGroupId:null},{merge:true});}catch(e){}
+  listenUsers();
+  listenGroupChat();
+  handlingAccessLoss=false;
+}
+
 function listenUsers(){
   if(unsubUsers)unsubUsers();
   if(unsubMembers)unsubMembers();
@@ -996,7 +1013,7 @@ function listenUsers(){
     return;
   }
   if(currentUser)setDoc(gDoc('members',myUID),{name:currentUser.name,avatar:currentUser.avatar,photoURL:currentUser.photoURL||null,pinColor:currentUser.pinColor||'#00d4aa'},{merge:true});
-  unsubMembers=onSnapshot(gCol('members'),snap=>{groupMembersCache={};snap.forEach(d=>{groupMembersCache[d.id]=d.data();});});
+  unsubMembers=onSnapshot(gCol('members'),snap=>{groupMembersCache={};snap.forEach(d=>{groupMembersCache[d.id]=d.data();});},handleGroupAccessLost);
   unsubUsers=onSnapshot(gCol('locations'),snap=>{
     let online=0,total=0;
     const ul=document.getElementById('usersList');
@@ -1038,7 +1055,7 @@ function listenUsers(){
 
     });
     document.getElementById('onlineBadge').textContent=`● ${online} מחוברים`;
-  });
+  },handleGroupAccessLost);
 }
 
 function listenGroupChat(){
@@ -1890,6 +1907,7 @@ function genInviteCode(){
 }
 
 async function createGroup(){
+  if(!currentUser?.name){showToast('הפרופיל עדיין נטען, נסה שוב בעוד רגע','error');return;}
   const nameInput=document.getElementById('newGroupNameInput');
   const name=nameInput.value.trim();
   if(!name){showToast('הכנס שם לקבוצה','error');return;}
@@ -1911,7 +1929,67 @@ async function createGroup(){
 }
 window.createGroup=createGroup;
 
+function getPendingJoinRequests(){
+  try{return JSON.parse(localStorage.getItem('pendingJoinRequests')||'[]');}catch(e){return [];}
+}
+function addPendingJoinRequest(groupId,groupName){
+  const list=getPendingJoinRequests().filter(r=>r.groupId!==groupId);
+  list.push({groupId,groupName});
+  localStorage.setItem('pendingJoinRequests',JSON.stringify(list));
+}
+function removePendingJoinRequest(groupId){
+  const list=getPendingJoinRequests().filter(r=>r.groupId!==groupId);
+  localStorage.setItem('pendingJoinRequests',JSON.stringify(list));
+}
+
+const myJoinRequestListeners={};
+function listenToMyJoinRequest(groupId,groupName){
+  if(myJoinRequestListeners[groupId])return;
+  myJoinRequestListeners[groupId]=onSnapshot(doc(db,'groups',groupId,'joinRequests',myUID),async snap=>{
+    if(!snap.exists()){
+      if(myJoinRequestListeners[groupId]){myJoinRequestListeners[groupId]();delete myJoinRequestListeners[groupId];}
+      removePendingJoinRequest(groupId);
+      try{
+        const m=await getDoc(doc(db,'groups',groupId,'members',myUID));
+        if(m.exists()){
+          await setDoc(doc(db,'userGroups',myUID,'memberOf',groupId),{joinedAt:serverTimestamp()});
+          activeGroupId=groupId;
+          await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});
+          listenUsers();
+          listenGroupChat();
+          showToast(`✅ בקשתך לקבוצה "${groupName}" אושרה!`,'success');
+        }else{
+          showToast(`❌ בקשתך לקבוצה "${groupName}" נדחתה`,'error');
+        }
+      }catch(e){console.error(e);}
+    }
+  });
+}
+
+async function resumePendingJoinRequests(){
+  const list=getPendingJoinRequests();
+  for(const req of list){
+    try{
+      const reqSnap=await getDoc(doc(db,'groups',req.groupId,'joinRequests',myUID));
+      if(reqSnap.exists()){
+        listenToMyJoinRequest(req.groupId,req.groupName);
+      }else{
+        removePendingJoinRequest(req.groupId);
+        const m=await getDoc(doc(db,'groups',req.groupId,'members',myUID));
+        if(m.exists()){
+          await setDoc(doc(db,'userGroups',myUID,'memberOf',req.groupId),{joinedAt:serverTimestamp()});
+          showToast(`✅ בקשתך לקבוצה "${req.groupName}" אושרה!`,'success');
+        }else{
+          showToast(`❌ בקשתך לקבוצה "${req.groupName}" נדחתה`,'error');
+        }
+      }
+    }catch(e){console.error(e);}
+  }
+}
+window.resumePendingJoinRequests=resumePendingJoinRequests;
+
 async function joinGroupByCode(){
+  if(!currentUser?.name){showToast('הפרופיל עדיין נטען, נסה שוב בעוד רגע','error');return;}
   const codeInput=document.getElementById('joinGroupCodeInput');
   const code=codeInput.value.trim().toUpperCase();
   if(!code){showToast('הכנס קוד הצטרפות','error');return;}
@@ -1921,21 +1999,60 @@ async function joinGroupByCode(){
     if(snap.empty){showToast('קוד לא נמצא','error');return;}
     const groupDoc=snap.docs[0];
     const groupId=groupDoc.id;
+    const groupName=groupDoc.data().name;
     const existing=await getDoc(doc(db,'groups',groupId,'members',myUID));
     if(existing.exists()){showToast('כבר חבר בקבוצה זו','error');return;}
-    const batch=writeBatch(db);
-    batch.set(doc(db,'groups',groupId,'members',myUID),{name:currentUser?.name||'אנונימי',avatar:currentUser?.avatar||'👤',photoURL:currentUser?.photoURL||null,pinColor:currentUser?.pinColor||'#00d4aa',joinedAt:serverTimestamp(),role:'member'});
-    batch.set(doc(db,'userGroups',myUID,'memberOf',groupId),{joinedAt:serverTimestamp()});
-    await batch.commit();
+    const existingReq=await getDoc(doc(db,'groups',groupId,'joinRequests',myUID));
+    if(existingReq.exists()){showToast('כבר שלחת בקשת הצטרפות, ממתין לאישור','error');return;}
+    await setDoc(doc(db,'groups',groupId,'joinRequests',myUID),{
+      name:currentUser.name,avatar:currentUser.avatar||'👤',photoURL:currentUser.photoURL||null,pinColor:currentUser.pinColor||'#00d4aa',requestedAt:serverTimestamp()
+    });
     codeInput.value='';
-    activeGroupId=groupId;
-    await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});
-    listenUsers();
-    listenGroupChat();
-    showToast(`✅ הצטרפת ל"${groupDoc.data().name}" (הופעלה)`,'success');
-  }catch(e){showToast('שגיאה בהצטרפות','error');console.error(e);}
+    addPendingJoinRequest(groupId,groupName);
+    listenToMyJoinRequest(groupId,groupName);
+    showToast(`בקשת הצטרפות ל"${groupName}" נשלחה, ממתין לאישור`,'success');
+  }catch(e){showToast('שגיאה בשליחת הבקשה','error');console.error(e);}
 }
 window.joinGroupByCode=joinGroupByCode;
+
+async function approveJoinRequest(groupId,uid,reqData){
+  try{
+    const batch=writeBatch(db);
+    batch.set(doc(db,'groups',groupId,'members',uid),{name:reqData.name,avatar:reqData.avatar,photoURL:reqData.photoURL||null,pinColor:reqData.pinColor||'#00d4aa',joinedAt:serverTimestamp(),role:'member'});
+    batch.delete(doc(db,'groups',groupId,'joinRequests',uid));
+    await batch.commit();
+    showToast(`✅ ${reqData.name} התקבל/ה לקבוצה`,'success');
+  }catch(e){showToast('שגיאה באישור הבקשה','error');console.error(e);}
+}
+window.approveJoinRequest=approveJoinRequest;
+
+async function rejectJoinRequest(groupId,uid,name){
+  try{
+    await deleteDoc(doc(db,'groups',groupId,'joinRequests',uid));
+    showToast(`בקשתו/ה של ${name} נדחתה`,'success');
+  }catch(e){showToast('שגיאה בדחיית הבקשה','error');console.error(e);}
+}
+window.rejectJoinRequest=rejectJoinRequest;
+
+async function removeMember(uid,name){
+  if(!confirm(`להסיר את ${name} מהקבוצה?`))return;
+  try{
+    await deleteDoc(gDoc('members',uid));
+    try{await deleteDoc(gDoc('locations',uid));}catch(e){}
+    showToast(`${name} הוסר/ה מהקבוצה`,'success');
+  }catch(e){showToast('שגיאה בהסרת המשתמש','error');console.error(e);}
+}
+window.removeMember=removeMember;
+
+function shareGroupInvite(name,code){
+  const text=`הצטרף/י לקבוצה "${name}" שלי ב-Location Share! קוד הצטרפות: ${code}`;
+  if(navigator.share){
+    navigator.share({title:'הזמנה לקבוצה',text}).catch(()=>{});
+  }else{
+    navigator.clipboard?.writeText(text).then(()=>showToast('הועתק ללוח','success'));
+  }
+}
+window.shareGroupInvite=shareGroupInvite;
 
 async function deleteGroup(groupId,groupName){
   const g=myGroups[groupId];
