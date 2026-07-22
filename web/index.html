@@ -103,9 +103,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .admin-stat{background:var(--surface2);border-radius:var(--row-radius);padding:var(--row-pad);text-align:center;border:1px solid var(--border)}
 .admin-stat-num{font-size:16px;font-weight:700;color:var(--accent)}
 .admin-stat-label{font-size:var(--text-sub);color:var(--text2);margin-top:2px}
-.admin-user-item{display:flex;align-items:center;gap:6px;padding:var(--row-pad);background:var(--surface2);border-radius:10px;margin-bottom:4px;border:1px solid var(--border)}
-.kick-btn{background:rgba(255,71,87,.15);border:1px solid rgba(255,71,87,.4);color:var(--danger);border-radius:8px;padding:3px 8px;font-size:var(--text-sub);cursor:pointer;font-family:inherit}
-.connect-btn{background:rgba(0,212,170,.15);border:1px solid rgba(0,212,170,.4);color:var(--accent);border-radius:8px;padding:3px 8px;font-size:var(--text-sub);cursor:pointer;font-family:inherit}
 .custom-marker{display:flex;flex-direction:column;align-items:center;cursor:pointer}
 .marker-name{background:rgba(13,17,23,.88);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-bottom:4px;white-space:nowrap;backdrop-filter:blur(4px)}
 .marker-pin{display:flex;flex-direction:column;align-items:center}
@@ -201,17 +198,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   </div>
 </div>
 
-<div class="modal" id="adminModal">
-  <div class="modal-box">
-    <h3>🔐 כניסת מנהל</h3>
-    <p>הכנס סיסמת מנהל</p>
-    <div class="input-wrap"><input type="password" id="adminPassInput" placeholder="סיסמה..." onkeydown="if(event.key==='Enter')checkAdminPass()"></div>
-    <div class="modal-actions">
-      <button onclick="checkAdminPass()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:7px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%">כניסה</button>
-      <button onclick="closeModal('adminModal')" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">ביטול</button>
-    </div>
-  </div>
-</div>
 
 
 <div class="screen active" id="splash">
@@ -238,7 +224,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
         <div class="icon-btn" onclick="togglePOILayers(event)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         </div>
-        <div class="icon-btn" id="adminBtn" onclick="openPanel('admin')" style="display:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
       </div>
       <div class="online-badge" id="onlineBadge" style="font-size:11px;padding:2px 10px;white-space:nowrap">● 0 מחוברים</div>
       <div class="my-avatar" id="myAvatarBtn" onclick="openPanel('groups')" style="flex-shrink:0">👤</div>
@@ -372,9 +357,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
       </div>
       <button onclick="openEditProfile()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;display:flex;align-items:center;justify-content:flex-start;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>עריכת פרופיל</button>
       <button onclick="toggleDarkMode()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;display:flex;align-items:center;justify-content:flex-start;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>החלף מצב תצוגה</button>
-      <button onclick="openModal('adminModal')" id="adminLoginBtn" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;display:flex;align-items:center;justify-content:flex-start;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>כניסת מנהל</button>
-      <button id="adminLogoutBtn" onclick="logoutAdmin()" style="display:none;background:rgba(255,71,87,0.1);color:var(--danger);border:1px solid rgba(255,71,87,0.3);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;align-items:center;justify-content:flex-start;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>יציאה ממנהל</button>
-      <button id="changePassBtn" onclick="changeAdminPassword()" style="display:none;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;align-items:center;justify-content:flex-start;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/></svg>שנה סיסמת מנהל</button>
       <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px">Location Share v1.0</div>
     </div>
   </div>
@@ -405,23 +387,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   </div>
 
   <!-- ADMIN PANEL -->
-  <div class="side-panel" id="adminPanel">
-    <div class="panel-handle"></div>
-    <div class="panel-header"><h3>🛡️ ממשק מנהל</h3></div>
-    <div class="panel-body">
-      <div class="admin-stat-grid">
-        <div class="admin-stat"><div class="admin-stat-num" id="adminOnlineCount">0</div><div class="admin-stat-label">מחוברים</div></div>
-        <div class="admin-stat"><div class="admin-stat-num" id="adminTotalCount">0</div><div class="admin-stat-label">סה"כ</div></div>
-      </div>
-      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">ניהול משתמשים</div>
-      <div id="adminUserList"></div>
-      <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">
-        <button onclick="broadcastMessage()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">📢 הודעה לכולם</button>
-        <button onclick="clearHistory()" style="background:rgba(255,71,87,0.1);color:var(--danger);border:1px solid rgba(255,71,87,0.3);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">🗑️ נקה היסטוריה</button>
-        <button onclick="deleteInactiveUsers()" style="background:rgba(255,71,87,0.1);color:var(--danger);border:1px solid rgba(255,71,87,0.3);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%">👤 מחק משתמשים לא פעילים</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -443,8 +408,7 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 const AVATARS=['😀','😎','🦊','🐺','🦁','🐯','🦝','🐸','🤖','👾','🦄','🐉','🧙','🧛','👻','🎃','🚀','⚡','🔥','💎'];
-let ADMIN_PASSWORD='';
-let currentUser=null,myUID=null,isAdmin=false;
+let currentUser=null,myUID=null;
 let allUsersData={};
 let map,markers={},tileLayer,historyLayer=null;
 let activeChatTab='group',activeDMUser=null;
@@ -471,11 +435,11 @@ window.closeAllPanels=closeAllPanels;window.toggleLayers=toggleLayers;window.set
 function flyToHistoryPoint(lng,lat){map.flyTo({center:[lng,lat],zoom:17});closeAllPanels();}
 window.flyToHistoryPoint=flyToHistoryPoint;
 window.locateMe=locateMe;window.showMapView=showMapView;window.switchChatTab=switchChatTab;
-window.handleChatKey=handleChatKey;window.sendMessage=sendMessage;window.broadcastMessage=broadcastMessage;
-window.clearHistory=clearHistory;window.openDM=openDM;window.flyToUser=flyToUser;
-window.showUserHistory=showUserHistory;window.kickUser=kickUser;window.reconnectUser=reconnectUser;
+window.handleChatKey=handleChatKey;window.sendMessage=sendMessage;
+window.openDM=openDM;window.flyToUser=flyToUser;
+window.showUserHistory=showUserHistory;
 window.toggleDarkMode=toggleDarkMode;window.openModal=openModal;window.closeModal=closeModal;
-window.checkAdminPass=checkAdminPass;window.logoutAdmin=logoutAdmin;window.changeAdminPassword=changeAdminPassword;window.deleteInactiveUsers=deleteInactiveUsers;window.clearHistory=clearHistory;window.setFilter=setFilter;
+window.setFilter=setFilter;
 
 function buildAvatarGrid(){
   const g=document.getElementById('avatarGrid');g.innerHTML='';
@@ -499,10 +463,9 @@ const savedUID = localStorage.getItem("savedUID");
 onAuthStateChanged(auth,async user=>{
   if(user){
     myUID=user.uid;
-    isAdmin=localStorage.getItem('isAdmin_'+myUID)==='true';
     const ud=await getDoc(doc(db,'users',myUID));
-    if(ud.exists()&&ud.data().name){currentUser={...ud.data(),uid:myUID};await loadAdminPassword();startApp();}
-    else{await loadAdminPassword();showScreen('profile-setup');}
+    if(ud.exists()&&ud.data().name){currentUser={...ud.data(),uid:myUID};startApp();}
+    else{showScreen('profile-setup');}
   }else{signInAnonymously(auth);}
 });
 signInAnonymously(auth).catch(e=>{document.getElementById('splashMsg').textContent='שגיאה: '+e.code;});
@@ -517,17 +480,6 @@ async function saveProfile(){
   startApp();
 }
 
-async function loadAdminPassword(){
-  try{
-    const d=await getDoc(doc(db,'config','admin'));
-    if(d.exists()&&d.data().password)ADMIN_PASSWORD=d.data().password;
-    else{
-      await setDoc(doc(db,'config','admin'),{password:'admin1234'});
-      ADMIN_PASSWORD='admin1234';
-    }
-  }catch(e){ADMIN_PASSWORD='admin1234';}
-}
-
 function startApp(){
   showScreen('main');
   updateNavHeightVar();
@@ -540,7 +492,6 @@ function startApp(){
   listenSavedPoints();
   updateMyUI();
   loadMyGroups();
-  if(isAdmin){document.getElementById('adminBtn').style.display='flex';}
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   if(activeGroupId)setDoc(gDoc('locations',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   setInterval(()=>{
@@ -562,12 +513,6 @@ function updateMyUI(){
   document.getElementById('settingsAvatar').innerHTML=avatarHTML(currentUser.avatar,currentUser.photoURL);
   document.getElementById('settingsName').textContent=currentUser.name;
   document.getElementById('settingsUID').textContent='UID: '+myUID;
-  if(isAdmin){
-    document.getElementById('adminLoginBtn').style.display='none';
-    document.getElementById('adminLogoutBtn').style.display='flex';
-    document.getElementById('changePassBtn').style.display='flex';
-    document.getElementById('adminBtn').style.display='flex';
-  }
 }
 
 function toggleDarkMode(){
@@ -576,37 +521,6 @@ function toggleDarkMode(){
   document.getElementById('themeBtn').innerHTML=isDark?`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
   if(map)map.resize();
 }
-
-function checkAdminPass(){
-  const p=document.getElementById('adminPassInput').value;
-  if(p===ADMIN_PASSWORD){
-    isAdmin=true;
-    localStorage.setItem('isAdmin_'+myUID,'true');
-    closeModal('adminModal');
-    document.getElementById('adminBtn').style.display='flex';
-    document.getElementById('adminLoginBtn').style.display='none';
-    document.getElementById('adminLogoutBtn').style.display='flex';
-    document.getElementById('changePassBtn').style.display='flex';
-    showToast('✅ נכנסת כמנהל','success');
-  }else{
-    showToast('❌ סיסמה שגויה','error');
-  }
-  document.getElementById('adminPassInput').value='';
-}
-
-async function changeAdminPassword(){
-  openModal('changePassModal');
-}
-async function saveNewPassword(){
-  const newPass=document.getElementById('newPassInput').value.trim();
-  if(!newPass||newPass.length<4){showToast('סיסמה קצרה מדי','error');return;}
-  await setDoc(doc(db,'config','admin'),{password:newPass},{merge:true});
-  ADMIN_PASSWORD=newPass;
-  document.getElementById('newPassInput').value='';
-  closeModal('changePassModal');
-  showToast('סיסמה עודכנה ✓','success');
-}
-window.saveNewPassword=saveNewPassword;
 
 const AVATARS_LIST=['😀','😎','🦊','🐺','🦁','🐯','🦝','🐸','🤖','👾','🦄','🐉','🧙','🧛','👻','🎃','🚀','⚡','🔥','💎'];
 let selectedEditAvatar=null;
@@ -706,16 +620,6 @@ window.openEditProfile=openEditProfile;
 window.saveEditProfile=saveEditProfile;
 window.handleProfileImage=handleProfileImage;
 
-function logoutAdmin(){
-  isAdmin=false;
-  localStorage.removeItem('isAdmin_'+myUID);
-  document.getElementById('adminBtn').style.display='none';
-  document.getElementById('adminLoginBtn').style.display='block';
-  document.getElementById('adminLogoutBtn').style.display='none';
-  document.getElementById('changePassBtn').style.display='none';
-  closePanel('admin');
-  showToast('יצאת ממצב מנהל');
-}
 
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -1096,9 +1000,8 @@ function listenUsers(){
   unsubUsers=onSnapshot(gCol('locations'),snap=>{
     let online=0,total=0;
     const ul=document.getElementById('usersList');
-    const al=document.getElementById('adminUserList');
     const hs=document.getElementById('historyUserSelect');
-    ul.innerHTML='';al.innerHTML='';hs.innerHTML='';
+    ul.innerHTML='';hs.innerHTML='';
     // עדכן allUsersData קודם
     snap.forEach(d=>{allUsersData[d.id]=d.data();});
     const myData=allUsersData[myUID];
@@ -1133,20 +1036,8 @@ function listenUsers(){
       chip.onclick=()=>{document.querySelectorAll('.hist-chip').forEach(c=>c.classList.remove('selected'));chip.classList.add('selected');showUserHistory(d.id);};
       hs.appendChild(chip);
 
-      // admin list
-      const ad=document.createElement('div');ad.className='admin-user-item';
-      ad.innerHTML=`<div style="width:28px;height:28px;border-radius:50%;overflow:hidden;background:var(--surface);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">${avatarHTML(u.avatar,u.photoURL)}</div>
-        <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(u.name||'אנונימי')}</div>
-        <div style="font-size:10px;color:var(--text2)">${isOnline?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
-        <div style="display:flex;gap:4px;flex-shrink:0">
-          ${d.id!==myUID&&isOnline?`<button class="kick-btn" onclick="kickUser('${d.id}')">נתק</button>`:''}
-          ${d.id!==myUID&&!isOnline?`<button class="connect-btn" onclick="reconnectUser('${d.id}')">חבר</button>`:''}
-        </div>`;
-      al.appendChild(ad);
     });
     document.getElementById('onlineBadge').textContent=`● ${online} מחוברים`;
-    document.getElementById('adminOnlineCount').textContent=online;
-    document.getElementById('adminTotalCount').textContent=total;
   });
 }
 
@@ -1266,64 +1157,6 @@ async function showUserHistory(uid){
   }catch(e){trail.innerHTML='<div style="color:var(--danger);font-size:13px">שגיאה בטעינה</div>';console.error(e);}
 }
 
-async function toggleBanUser(uid, isBanned){
-  if(!activeGroupId)return;
-  await updateDoc(gDoc('locations',uid),{banned:!isBanned});
-  showToast(!isBanned?'משתמש נוטרל 🚫':'משתמש שוחרר 🔓','success');
-}
-window.toggleBanUser=toggleBanUser;
-
-async function kickUser(uid){
-  if(!activeGroupId)return;
-  await updateDoc(gDoc('locations',uid),{online:false,kickedBy:myUID,lastSeen:serverTimestamp()});
-  showToast('משתמש נותק','success');
-}
-
-async function reconnectUser(uid){
-  if(!activeGroupId)return;
-  await updateDoc(gDoc('locations',uid),{online:true,kickedBy:null});
-  showToast('משתמש חובר מחדש','success');
-}
-
-async function deleteInactiveUsers(){
-  if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
-  const batch=writeBatch(db);
-  let count=0;
-  const now=Date.now();
-  Object.keys(groupMembersCache).forEach(id=>{
-    if(id===myUID)return;
-    const loc=groupLocationsCache[id];
-    const ls=loc&&loc.lastSeen?loc.lastSeen.toMillis():0;
-    const inactive=!loc||!loc.online||(now-ls>300000);
-    if(inactive){
-      batch.delete(gDoc('members',id));
-      if(loc)batch.delete(gDoc('locations',id));
-      count++;
-    }
-  });
-  await batch.commit();
-  showToast(count+' משתמשי רפאים נמחקו','success');
-}
-
-async function broadcastMessage(){
-  if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
-  const msg=prompt('הודעה לכולם:');if(!msg)return;
-  await addDoc(gCol('groupChat'),{uid:'admin',name:'📢 מנהל',avatar:'⚙️',text:msg,ts:serverTimestamp()});
-  showToast('הודעה נשלחה ✓','success');
-}
-
-async function clearHistory(){
-  if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
-  const snap=await getDocs(gCol('history'));
-  await Promise.all(snap.docs.map(d=>deleteDoc(gDoc('history',d.id))));
-  try{
-    if(map.getLayer('history-line'))map.removeLayer('history-line');
-    if(map.getSource('history'))map.removeSource('history');
-  }catch(e){}
-  historyLayer=null;
-  showToast('היסטוריה נוקתה ✓','success');
-}
-
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
 function setActiveNav(id){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById(id)?.classList.add('active');}
@@ -1351,7 +1184,7 @@ function closePanel(name){
 }
 
 function closeAllPanels(){
-  ['chat','history','settings','admin','points','groups'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
+  ['chat','history','settings','points','groups'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
   document.getElementById('layersPanel').classList.remove('open');
   
 }
@@ -2196,15 +2029,5 @@ function setFilter(f){
   });
 }
 </script>
-<div class="modal" id="changePassModal">
-  <div class="modal-box">
-    <h3>🔑 שינוי סיסמת מנהל</h3>
-    <div class="input-wrap"><label>סיסמה חדשה</label><input type="password" id="newPassInput" placeholder="לפחות 4 תווים..."></div>
-    <div class="modal-actions">
-      <button class="btn" onclick="saveNewPassword()">שמור</button>
-      <button class="btn secondary" onclick="closeModal('changePassModal')">ביטול</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
