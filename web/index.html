@@ -1966,6 +1966,10 @@ function listenToMyJoinRequest(groupId,groupName){
           await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});
           listenUsers();
           listenGroupChat();
+          lastLat=0;lastLng=0;
+          if(smoothLat!==null&&smoothLng!==null){
+            setDoc(gDoc('locations',myUID),{lat:smoothLat,lng:smoothLng,online:true,lastSeen:serverTimestamp()},{merge:true}).catch(()=>{});
+          }
           showToast(`✅ בקשתך לקבוצה "${groupName}" אושרה!`,'success');
         }else{
           showToast(`❌ בקשתך לקבוצה "${groupName}" נדחתה`,'error');
