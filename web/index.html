@@ -984,15 +984,6 @@ function startLocationTracking(){
   },null,{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
 }
 
-function forceLocationWrite(){
-  if(!activeGroupId)return;
-  const lat=smoothLat!==null?smoothLat:lastLat;
-  const lng=smoothLng!==null?smoothLng:lastLng;
-  if(!lat&&!lng)return;
-  setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true}).catch(()=>{});
-}
-window.forceLocationWrite=forceLocationWrite;
-
 let handlingAccessLoss=false;
 async function handleGroupAccessLost(err){
   if(!err||err.code!=='permission-denied')return;
@@ -1942,7 +1933,6 @@ async function createGroup(){
     await setDoc(doc(db,'users',myUID),{activeGroupId:groupRef.id},{merge:true});
     listenUsers();
     listenGroupChat();
-    forceLocationWrite();
     showToast(`✅ הקבוצה "${name}" נוצרה והופעלה! קוד: ${code}`,'success');
   }catch(e){showToast('שגיאה ביצירת קבוצה','error');console.error(e);}
 }
@@ -1976,7 +1966,6 @@ function listenToMyJoinRequest(groupId,groupName){
           await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});
           listenUsers();
           listenGroupChat();
-          forceLocationWrite();
           showToast(`✅ בקשתך לקבוצה "${groupName}" אושרה!`,'success');
         }else{
           showToast(`❌ בקשתך לקבוצה "${groupName}" נדחתה`,'error');
@@ -2177,7 +2166,6 @@ async function selectGroup(groupId){
   renderMyGroupsList();
   listenUsers();
   listenGroupChat();
-  forceLocationWrite();
   showToast(`✅ קבוצה פעילה: ${myGroups[groupId]?.name||''}`,'success');
 }
 window.selectGroup=selectGroup;
