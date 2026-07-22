@@ -945,8 +945,7 @@ function startLocationTracking(){
   window.onBackgroundLocation=async function(lat,lng){
     if(!myUID||!currentUser)return;
     const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
-    if(dist<0.00005&&locationWrittenForCurrentGroup)return;
-    locationWrittenForCurrentGroup=true;
+    if(dist<0.00005)return;
     lastLat=lat;lastLng=lng;
     if(activeGroupId){
       await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
@@ -976,8 +975,7 @@ function startLocationTracking(){
     }
     // כתיבה ל-Firestore נשארת מוגבלת לתזוזה של 5+ מטר, לחיסכון בסוללה/רוחב פס
     const dist=Math.abs(lat-lastLat)+Math.abs(lng-lastLng);
-    if(dist<0.00005&&locationWrittenForCurrentGroup)return;
-    locationWrittenForCurrentGroup=true;
+    if(dist<0.00005)return;
     lastLat=lat;lastLng=lng;
     if(activeGroupId){
       await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
@@ -1237,7 +1235,6 @@ window.showToast=showToast;
 let trackingMode=false,compassMode=false,measureMode=false;
 let lastSpeed=0;
 let smoothLat=null,smoothLng=null;
-let locationWrittenForCurrentGroup=false;
 const TRACK_PAD_TOP_FRAC=0.45;
 function updateTrackingMarkerFixed(){
   const el=document.getElementById('trackingMarkerFixed');
@@ -1942,7 +1939,6 @@ async function createGroup(){
     await batch.commit();
     nameInput.value='';
     activeGroupId=groupRef.id;
-    locationWrittenForCurrentGroup=false;
     await setDoc(doc(db,'users',myUID),{activeGroupId:groupRef.id},{merge:true});
     listenUsers();
     listenGroupChat();
@@ -1977,7 +1973,6 @@ function listenToMyJoinRequest(groupId,groupName){
         if(m.exists()){
           await setDoc(doc(db,'userGroups',myUID,'memberOf',groupId),{joinedAt:serverTimestamp()});
           activeGroupId=groupId;
-          locationWrittenForCurrentGroup=false;
           await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});
           listenUsers();
           listenGroupChat();
@@ -2178,7 +2173,6 @@ function renderMyGroupsList(){
 
 async function selectGroup(groupId){
   activeGroupId=groupId;
-  locationWrittenForCurrentGroup=false;
   try{await setDoc(doc(db,'users',myUID),{activeGroupId:groupId},{merge:true});}catch(e){}
   renderMyGroupsList();
   listenUsers();
