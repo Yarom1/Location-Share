@@ -1020,7 +1020,8 @@ function listenUsers(){
     const hs=document.getElementById('historyUserSelect');
     ul.innerHTML='';hs.innerHTML='';
     // עדכן allUsersData קודם
-    snap.forEach(d=>{allUsersData[d.id]=d.data();});
+    const currentIds=new Set();
+    snap.forEach(d=>{allUsersData[d.id]=d.data();currentIds.add(d.id);});
     const myData=allUsersData[myUID];
     const iAmBanned=myData&&myData.banned===true;
     snap.forEach(d=>{
@@ -1054,6 +1055,13 @@ function listenUsers(){
       chip.onclick=()=>{document.querySelectorAll('.hist-chip').forEach(c=>c.classList.remove('selected'));chip.classList.add('selected');showUserHistory(d.id);};
       hs.appendChild(chip);
 
+    });
+    Object.keys(markers).forEach(uid=>{
+      if(!currentIds.has(uid)){
+        markers[uid].remove();
+        delete markers[uid];
+        delete markerCache[uid];
+      }
     });
     document.getElementById('onlineBadge').textContent=`● ${online} מחוברים`;
   },handleGroupAccessLost);
