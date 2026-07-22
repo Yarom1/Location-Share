@@ -246,6 +246,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   </div>
 
   <div id="map"></div>
+  <div id="trackingMarkerFixed" style="display:none;position:fixed;left:50%;transform:translate(-50%,-100%);z-index:150;pointer-events:none"></div>
   <div id="centerPinFixed" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-100%);z-index:700;pointer-events:none">
     <svg width="30" height="38" viewBox="0 0 22 28" style="filter:drop-shadow(0 3px 5px rgba(0,0,0,.5))">
       <path d="M11 0C4.9 0 0 4.9 0 11c0 8.25 11 17 11 17s11-8.75 11-17C22 4.9 17.1 0 11 0z" fill="#00d4aa"/>
@@ -1059,7 +1060,7 @@ function startLocationTracking(){
     }
     // עדכון חזותי מיידי בכל קריאת GPS - למעקב חלק ורציף בלי קפיצות
     if(currentUser)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
-    if(trackingMode)map.easeTo({center:[smoothLng,smoothLat],duration:400,padding:{top:window.innerHeight*0.45,bottom:0,left:0,right:0}});
+    if(trackingMode)map.easeTo({center:[smoothLng,smoothLat],duration:400,padding:{top:window.innerHeight*TRACK_PAD_TOP_FRAC,bottom:0,left:0,right:0}});
     // בזמן נסיעה בפועל - כיוון ה-GPS יציב הרבה יותר מהמצפן המגנטי שמושפע ממתכת הרכב
     if(compassMode&&heading!=null&&lastSpeed>1&&Math.abs(heading-lastHeading)>1.5){
       lastHeading=heading;
@@ -1366,6 +1367,15 @@ window.showToast=showToast;
 let trackingMode=false,compassMode=false,measureMode=false;
 let lastSpeed=0;
 let smoothLat=null,smoothLng=null;
+const TRACK_PAD_TOP_FRAC=0.45;
+function updateTrackingMarkerFixed(){
+  const el=document.getElementById('trackingMarkerFixed');
+  if(!el||!currentUser)return;
+  el.innerHTML=createMarkerHTML({...currentUser});
+  const topPx=window.innerHeight*TRACK_PAD_TOP_FRAC+(window.innerHeight-window.innerHeight*TRACK_PAD_TOP_FRAC)/2;
+  el.style.top=topPx+'px';
+}
+window.updateTrackingMarkerFixed=updateTrackingMarkerFixed;
 let measurePoints=[],measureLayers=[];
 
 function toggleTracking(){
@@ -1373,9 +1383,18 @@ function toggleTracking(){
   const btn=document.getElementById('trackBtn');
   if(btn)btn.style.border=trackingMode?'2px solid #00d4aa':'1px solid rgba(255,255,255,0.2)';
   if(trackingMode&&lastLat&&lastLng){
-    map.flyTo({center:[lastLng,lastLat],zoom:17,padding:{top:window.innerHeight*0.45,bottom:0,left:0,right:0}});
+    map.flyTo({center:[lastLng,lastLat],zoom:17,padding:{top:window.innerHeight*TRACK_PAD_TOP_FRAC,bottom:0,left:0,right:0}});
   }else if(!trackingMode){
     map.easeTo({padding:{top:0,bottom:0,left:0,right:0},duration:300});
+  }
+  const fixedEl=document.getElementById('trackingMarkerFixed');
+  if(trackingMode){
+    updateTrackingMarkerFixed();
+    if(fixedEl)fixedEl.style.display='block';
+    if(markers[myUID])markers[myUID].getElement().style.opacity='0';
+  }else{
+    if(fixedEl)fixedEl.style.display='none';
+    if(markers[myUID])markers[myUID].getElement().style.opacity='1';
   }
   showToast(trackingMode?'🎯 מצב מעקב פעיל':'מצב מעקב כבוי');
 }
@@ -1462,6 +1481,9 @@ function stopTrackingAndCompass(){
     const tbtn=document.getElementById('trackBtn');
     if(tbtn)tbtn.style.border='1px solid rgba(255,255,255,0.2)';
     map.easeTo({padding:{top:0,bottom:0,left:0,right:0},duration:300});
+    const fixedEl=document.getElementById('trackingMarkerFixed');
+    if(fixedEl)fixedEl.style.display='none';
+    if(markers[myUID])markers[myUID].getElement().style.opacity='1';
   }
   if(compassMode){
     compassMode=false;
