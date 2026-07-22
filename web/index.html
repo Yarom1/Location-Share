@@ -1120,9 +1120,9 @@ function listenUsers(){
         <div class="user-info"><div class="user-name">${escHtml(u.name||'אנונימי')}${d.id===myUID?' <span style="font-size:11px;color:var(--text2)">(אני)</span>':''}</div>
         <div class="user-time">${isOnline?'🟢 מחובר':'⚫ לא מחובר'}</div></div>
         <div class="user-actions">
-          ${d.id!==myUID?`<div class="user-act-btn" onclick="openDM('${d.id}','${escHtml(u.name||'')}','${u.avatar||'👤'}')">💌</div>`:''}
-          ${d.id!==myUID?`<div class="user-act-btn" onclick="flyToUser('${d.id}')">📍</div>`:''}
-          <div class="user-act-btn" onclick="showUserHistory('${d.id}')">🕐</div>
+          ${d.id!==myUID?`<div class="user-act-btn" onclick="openDM('${d.id}','${escHtml(u.name||'')}','${u.avatar||'👤'}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>`:''}
+          ${d.id!==myUID?`<div class="user-act-btn" onclick="flyToUser('${d.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>`:''}
+          <div class="user-act-btn" onclick="showUserHistory('${d.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         </div>`;
       ul.appendChild(li);
 
