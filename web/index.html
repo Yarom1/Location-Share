@@ -1059,7 +1059,7 @@ function startLocationTracking(){
       smoothLng+=0.35*(lng-smoothLng);
     }
     // עדכון חזותי מיידי בכל קריאת GPS - למעקב חלק ורציף בלי קפיצות
-    if(currentUser)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
+    if(currentUser&&!trackingMode)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
     if(trackingMode)map.easeTo({center:[smoothLng,smoothLat],duration:400,padding:{top:window.innerHeight*TRACK_PAD_TOP_FRAC,bottom:0,left:0,right:0}});
     // בזמן נסיעה בפועל - כיוון ה-GPS יציב הרבה יותר מהמצפן המגנטי שמושפע ממתכת הרכב
     if(compassMode&&heading!=null&&lastSpeed>1&&Math.abs(heading-lastHeading)>1.5){
@@ -1391,10 +1391,10 @@ function toggleTracking(){
   if(trackingMode){
     updateTrackingMarkerFixed();
     if(fixedEl)fixedEl.style.display='block';
-    if(markers[myUID])markers[myUID].getElement().style.opacity='0';
+    if(markers[myUID]){markers[myUID].remove();delete markers[myUID];delete markerCache[myUID];}
   }else{
     if(fixedEl)fixedEl.style.display='none';
-    if(markers[myUID])markers[myUID].getElement().style.opacity='1';
+    if(currentUser&&smoothLat&&smoothLng)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
   }
   showToast(trackingMode?'🎯 מצב מעקב פעיל':'מצב מעקב כבוי');
 }
@@ -1467,7 +1467,7 @@ function stopTrackingAndCompass(){
     map.easeTo({padding:{top:0,bottom:0,left:0,right:0},duration:300});
     const fixedEl=document.getElementById('trackingMarkerFixed');
     if(fixedEl)fixedEl.style.display='none';
-    if(markers[myUID])markers[myUID].getElement().style.opacity='1';
+    if(currentUser&&smoothLat&&smoothLng)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
   }
   if(compassMode){
     compassMode=false;
