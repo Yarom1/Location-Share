@@ -911,14 +911,14 @@ function updateMarker(uid,data){
 }
 
 function showUserPopup(uid,data){
-  currentUserPopup=new maplibregl.Popup({closeButton:true}).setLngLat(markers[uid].getLngLat()).setHTML(`
-    <div style="padding:4px;min-width:140px">
+  currentUserPopup=new maplibregl.Popup({closeButton:true,maxWidth:'220px',className:'dark-popup'}).setLngLat(markers[uid].getLngLat()).setHTML(`
+    <div style="direction:rtl;padding:2px;min-width:140px;font-family:inherit">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${avatarHTML(data.avatar,data.photoURL)}</div>
-        <strong style="font-size:14px">${data.name||''}</strong>
+        <strong style="font-size:14px;color:#fff">${escHtml(data.name||'')}</strong>
       </div>
       <div style="display:flex;gap:6px">
-        <button onclick="openDM('${uid}','${escHtml(data.name)}','${data.avatar||'👤'}')" style="flex:1;background:#00d4aa;color:#000;border:none;border-radius:8px;padding:7px 4px;font-size:12px;cursor:pointer;font-family:inherit">💌 הודעה</button>
+        <button onclick="openDM('${uid}','${escHtml(data.name)}','${data.avatar||'👤'}')" style="flex:1;background:#00d4aa;color:#000;border:none;border-radius:8px;padding:7px 4px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💌 הודעה</button>
       </div>
     </div>`).addTo(map);
 }
