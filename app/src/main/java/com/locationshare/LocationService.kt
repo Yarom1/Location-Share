@@ -10,6 +10,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.random.Random
 
 class LocationService : Service() {
 
@@ -26,6 +27,16 @@ class LocationService : Service() {
     private var lastKnownLng: Double? = null
     private val heartbeatHandler = Handler(Looper.getMainLooper())
     private val heartbeatIntervalMs = 60_000L
+    private val CHAT_CHANNEL_ID = "chat_messages_channel"
+    private var lastMessageCheckTime: String? = null
+    private val chatCheckHandler = Handler(Looper.getMainLooper())
+    private val chatCheckIntervalMs = 30_000L
+    private val chatCheckRunnable = object : Runnable {
+        override fun run() {
+            checkForNewChatMessages()
+            chatCheckHandler.postDelayed(this, chatCheckIntervalMs)
+        }
+    }
     private val heartbeatRunnable = object : Runnable {
         override fun run() {
             val lat = lastKnownLat
@@ -50,6 +61,7 @@ class LocationService : Service() {
         acquireWakeLock()
         startLocationUpdates()
         heartbeatHandler.postDelayed(heartbeatRunnable, heartbeatIntervalMs)
+        chatCheckHandler.postDelayed(chatCheckRunnable, chatCheckIntervalMs)
     }
 
     private fun acquireWakeLock() {
@@ -228,6 +240,103 @@ class LocationService : Service() {
         }.start()
     }
 
+    private fun checkForNewChatMessages() {
+        Thread {
+            try {
+                val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
+                val uid = prefs.getString("uid", null) ?: return@Thread
+                val groupId = prefs.getString("active_group_id", null)
+                if (groupId.isNullOrEmpty()) return@Thread
+                val idToken = getFreshIdToken() ?: return@Thread
+
+                val mutedUrl = URL("https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/groups/$groupId/members/$uid")
+                val mutedConn = mutedUrl.openConnection() as HttpURLConnection
+                mutedConn.requestMethod = "GET"
+                mutedConn.setRequestProperty("Authorization", "Bearer $idToken")
+                var isMuted = false
+                if (mutedConn.responseCode == 200) {
+                    val body = mutedConn.inputStream.bufferedReader().use { it.readText() }
+                    val fields = JSONObject(body).optJSONObject("fields")
+                    if (fields != null && fields.has("muted")) {
+                        isMuted = fields.getJSONObject("muted").optBoolean("booleanValue", false)
+                    }
+                }
+                mutedConn.disconnect()
+                if (isMuted) { lastMessageCheckTime = null; return@Thread }
+
+                val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+                sdf.timeZone = TimeZone.getTimeZone("UTC")
+                val checkFrom = lastMessageCheckTime ?: sdf.format(Date())
+                val nowStr = sdf.format(Date())
+
+                val queryBody = JSONObject().apply {
+                    put("structuredQuery", JSONObject().apply {
+                        put("from", org.json.JSONArray().put(JSONObject().put("collectionId", "groupChat")))
+                        put("where", JSONObject().apply {
+                            put("fieldFilter", JSONObject().apply {
+                                put("field", JSONObject().put("fieldPath", "ts"))
+                                put("op", "GREATER_THAN")
+                                put("value", JSONObject().put("timestampValue", checkFrom))
+                            })
+                        })
+                        put("orderBy", org.json.JSONArray().put(JSONObject().apply {
+                            put("field", JSONObject().put("fieldPath", "ts"))
+                            put("direction", "ASCENDING")
+                        }))
+                    })
+                }
+
+                val queryUrl = URL("https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/groups/$groupId:runQuery")
+                val conn = queryUrl.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.setRequestProperty("Authorization", "Bearer $idToken")
+                conn.doOutput = true
+                conn.outputStream.use { it.write(queryBody.toString().toByteArray()) }
+
+                if (conn.responseCode == 200) {
+                    val respText = conn.inputStream.bufferedReader().use { it.readText() }
+                    val arr = org.json.JSONArray(respText)
+                    for (i in 0 until arr.length()) {
+                        val item = arr.optJSONObject(i) ?: continue
+                        val doc = item.optJSONObject("document") ?: continue
+                        val fields = doc.optJSONObject("fields") ?: continue
+                        val senderUid = fields.optJSONObject("uid")?.optString("stringValue")
+                        if (senderUid == uid) continue
+                        val senderName = fields.optJSONObject("name")?.optString("stringValue") ?: "מישהו"
+                        val text = fields.optJSONObject("text")?.optString("stringValue") ?: ""
+                        showChatNotification(senderName, text)
+                    }
+                }
+                conn.disconnect()
+                lastMessageCheckTime = nowStr
+            } catch (e: Exception) { e.printStackTrace() }
+        }.start()
+    }
+
+    private fun showChatNotification(senderName: String, text: String) {
+        try {
+            val nm = getSystemService(NotificationManager::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(CHAT_CHANNEL_ID, "הודעות צ'אט", NotificationManager.IMPORTANCE_HIGH)
+                nm.createNotificationChannel(channel)
+            }
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            intent.putExtra("deep_link", "chat")
+            val pi = PendingIntent.getActivity(this, Random.nextInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val notification = NotificationCompat.Builder(this, CHAT_CHANNEL_ID)
+                .setContentTitle(senderName)
+                .setContentText(text)
+                .setSmallIcon(android.R.drawable.ic_dialog_email)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setContentIntent(pi)
+                .build()
+            nm.notify(Random.nextInt(), notification)
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
@@ -235,6 +344,7 @@ class LocationService : Service() {
         instance = null
         locationManager.removeUpdates {}
         heartbeatHandler.removeCallbacks(heartbeatRunnable)
+        chatCheckHandler.removeCallbacks(chatCheckRunnable)
         try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (e: Exception) { e.printStackTrace() }
     }
 }
