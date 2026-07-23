@@ -140,27 +140,42 @@ class LocationService : Service() {
                 sdf.timeZone = TimeZone.getTimeZone("UTC")
                 val timestamp = sdf.format(Date())
 
-                val bodyJson = JSONObject().apply {
-                    put("fields", JSONObject().apply {
-                        put("lat", JSONObject().put("doubleValue", lat))
-                        put("lng", JSONObject().put("doubleValue", lng))
-                        put("online", JSONObject().put("booleanValue", true))
-                        put("lastSeen", JSONObject().put("timestampValue", timestamp))
+                val docPath = "projects/$PROJECT_ID/databases/(default)/documents/groups/$groupId/locations/$uid"
+
+                val fields = JSONObject().apply {
+                    put("lat", JSONObject().put("doubleValue", lat))
+                    put("lng", JSONObject().put("doubleValue", lng))
+                    put("online", JSONObject().put("booleanValue", true))
+                    put("lastSeen", JSONObject().put("timestampValue", timestamp))
+                }
+
+                val write = JSONObject().apply {
+                    put("update", JSONObject().apply {
+                        put("name", docPath)
+                        put("fields", fields)
+                    })
+                    put("updateMask", JSONObject().apply {
+                        put("fieldPaths", org.json.JSONArray(listOf("lat", "lng", "online", "lastSeen")))
                     })
                 }
 
-                val urlStr = "https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents/groups/$groupId/locations/$uid" +
-                        "?updateMask.fieldPaths=lat&updateMask.fieldPaths=lng&updateMask.fieldPaths=online&updateMask.fieldPaths=lastSeen"
+                val bodyJson = JSONObject().apply {
+                    put("writes", org.json.JSONArray().put(write))
+                }
 
+                val urlStr = "https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/(default)/documents:commit"
                 val url = URL(urlStr)
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
-                conn.setRequestProperty("X-HTTP-Method-Override", "PATCH")
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.setRequestProperty("Authorization", "Bearer ${'$'}idToken")
                 conn.doOutput = true
                 conn.outputStream.use { it.write(bodyJson.toString().toByteArray()) }
-                conn.responseCode
+                val code = conn.responseCode
+                if (code !in 200..299) {
+                    val err = conn.errorStream?.bufferedReader()?.use { it.readText() }
+                    android.util.Log.e("LocationService", "Firestore write failed ($code): $err")
+                }
                 conn.disconnect()
             } catch (e: Exception) {
                 e.printStackTrace()
