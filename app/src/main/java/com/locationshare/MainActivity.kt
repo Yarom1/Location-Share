@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
 import android.os.PowerManager
+import android.webkit.JavascriptInterface
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -56,6 +57,8 @@ class MainActivity : AppCompatActivity() {
             setSupportZoom(true)
             builtInZoomControls = false
         }
+
+        webView.addJavascriptInterface(WebAppInterface(), "AndroidBridge")
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onGeolocationPermissionsShowPrompt(
@@ -267,4 +270,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
     override fun onPause() { super.onPause() } // לא קוראים ל-webView.onPause() בכוונה - זה משהה את מנוע ה-JS ומונע עדכוני מיקום ברקע
+
+    inner class WebAppInterface {
+        @JavascriptInterface
+        fun saveAuthCredentials(uid: String, refreshToken: String, apiKey: String, groupId: String) {
+            val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
+            prefs.edit()
+                .putString("uid", uid)
+                .putString("refresh_token", refreshToken)
+                .putString("api_key", apiKey)
+                .putString("active_group_id", groupId)
+                .apply()
+        }
+    }
 }

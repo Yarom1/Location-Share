@@ -462,6 +462,7 @@ function startApp(){
   listenGroupChat();
   updateMyUI();
   loadMyGroups();
+  setInterval(syncAuthToNative,30*60*1000);
   resumePendingJoinRequests();
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   if(activeGroupId)setDoc(gDoc('locations',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
@@ -967,6 +968,12 @@ function startLocationTracking(){
 }
 
 let groupSessionId=0;
+function syncAuthToNative(){
+  if(!window.AndroidBridge||!myUID||!auth.currentUser)return;
+  try{
+    window.AndroidBridge.saveAuthCredentials(myUID,auth.currentUser.refreshToken,firebaseConfig.apiKey,activeGroupId||'');
+  }catch(e){console.error(e);}
+}
 let handlingAccessLoss=false;
 async function handleGroupAccessLost(err){
   if(!err||err.code!=='permission-denied')return;
@@ -985,6 +992,7 @@ async function handleGroupAccessLost(err){
 
 function listenUsers(){
   const mySession=++groupSessionId;
+  syncAuthToNative();
   if(unsubUsers)unsubUsers();
   if(unsubMembers)unsubMembers();
   Object.keys(markers).forEach(id=>{markers[id].remove();delete markers[id];if(typeof markerCache!=='undefined')delete markerCache[id];});
