@@ -8,6 +8,11 @@ import android.location.LocationManager
 import android.net.Uri
 import android.os.PowerManager
 import android.webkit.JavascriptInterface
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import androidx.core.app.NotificationCompat
+import kotlin.random.Random
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -281,6 +286,33 @@ class MainActivity : AppCompatActivity() {
                 .putString("api_key", apiKey)
                 .putString("active_group_id", groupId)
                 .apply()
+        }
+
+        @JavascriptInterface
+        fun showAlertNotification(channelId: String, channelName: String, title: String, message: String) {
+            runOnUiThread {
+                try {
+                    val nm = getSystemService(NotificationManager::class.java)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+                        nm.createNotificationChannel(channel)
+                    }
+                    val intent = Intent(this@MainActivity, MainActivity::class.java)
+                    val pi = PendingIntent.getActivity(
+                        this@MainActivity, Random.nextInt(), intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    val notification = NotificationCompat.Builder(this@MainActivity, channelId)
+                        .setContentTitle(title)
+                        .setContentText(message)
+                        .setSmallIcon(android.R.drawable.ic_dialog_info)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setAutoCancel(true)
+                        .setContentIntent(pi)
+                        .build()
+                    nm.notify(Random.nextInt(), notification)
+                } catch (e: Exception) { e.printStackTrace() }
+            }
         }
     }
 }

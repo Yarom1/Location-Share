@@ -2092,11 +2092,27 @@ function loadMyGroups(){
 const ownedGroupRequestListeners={};
 const joinRequestsCache={};
 
+function notifyNewJoinRequest(groupId,reqData){
+  const groupName=(myGroups[groupId]&&myGroups[groupId].name)||'הקבוצה';
+  if(window.AndroidBridge&&window.AndroidBridge.showAlertNotification){
+    try{
+      window.AndroidBridge.showAlertNotification('group_requests','בקשות הצטרפות',`בקשת הצטרפות ל"${groupName}"`,`${reqData.name||'מישהו'} מבקש/ת להצטרף`);
+    }catch(e){console.error(e);}
+  }
+}
+
 function ensureJoinRequestsListener(groupId){
   if(ownedGroupRequestListeners[groupId])return;
   ownedGroupRequestListeners[groupId]=onSnapshot(collection(db,'groups',groupId,'joinRequests'),snap=>{
+    const isFirstLoad=!(groupId in joinRequestsCache);
+    const prevIds=new Set(Object.keys(joinRequestsCache[groupId]||{}));
     joinRequestsCache[groupId]={};
-    snap.forEach(d=>{joinRequestsCache[groupId][d.id]=d.data();});
+    snap.forEach(d=>{
+      joinRequestsCache[groupId][d.id]=d.data();
+      if(!isFirstLoad&&!prevIds.has(d.id)){
+        notifyNewJoinRequest(groupId,d.data());
+      }
+    });
     renderMyGroupsList();
   });
 }
