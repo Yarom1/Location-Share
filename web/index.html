@@ -88,21 +88,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;resize:none;max-height:80px;font-family:inherit}
 .chat-input:focus{border-color:var(--accent)}
 .send-btn{background:var(--accent);border:none;border-radius:var(--btn-radius);width:var(--btn-size);height:var(--btn-size);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0}
-.hist-point{display:flex;gap:8px;padding:5px 0;align-items:flex-start}
-.hist-dot-col{display:flex;flex-direction:column;align-items:center;gap:0}
-.hist-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--bg);flex-shrink:0;margin-top:2px}
-.hist-line{width:2px;background:var(--border);min-height:20px;flex:1}
-.hist-info{flex:1}
-.hist-time{font-size:var(--text-sub);color:var(--text2)}
-.hist-coords{font-size:var(--text-main);font-weight:500;color:var(--text)}
-.hist-show-map{font-size:var(--text-sub);color:var(--accent);cursor:pointer;margin-top:2px;display:inline-block}
-.hist-user-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.hist-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;font-size:12px;color:var(--text);transition:.2s}
-.hist-chip.selected{border-color:var(--accent);color:var(--accent)}
-.admin-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
-.admin-stat{background:var(--surface2);border-radius:var(--row-radius);padding:var(--row-pad);text-align:center;border:1px solid var(--border)}
-.admin-stat-num{font-size:16px;font-weight:700;color:var(--accent)}
-.admin-stat-label{font-size:var(--text-sub);color:var(--text2);margin-top:2px}
 .custom-marker{display:flex;flex-direction:column;align-items:center;cursor:pointer}
 .marker-name{background:rgba(13,17,23,.88);color:#fff;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-bottom:4px;white-space:nowrap;backdrop-filter:blur(4px)}
 .marker-pin{display:flex;flex-direction:column;align-items:center}
@@ -125,7 +110,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 .modal-actions{display:flex;gap:6px}
 .leaflet-popup-content-wrapper{background:var(--popup-bg)!important;border:1px solid var(--border)!important;border-radius:12px!important;box-shadow:0 4px 16px rgba(0,0,0,.4)!important;color:var(--text)!important}
 .leaflet-popup-tip{background:var(--popup-bg)!important}
-.offline-chip{opacity:.6}::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
 </head>
@@ -266,9 +251,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div class="nav-item" id="navChat" onclick="openPanel('chat')">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>צ'אט
     </div>
-    <div class="nav-item" id="navHistory" onclick="openPanel('history')">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>היסטוריה
-    </div>
     <div class="nav-item" id="navPoints" onclick="openPanel('points')">
       <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>נקודות
     </div>
@@ -306,14 +288,6 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
   </div>
 
   <!-- HISTORY PANEL -->
-  <div class="side-panel" id="historyPanel">
-    <div class="panel-handle"></div>
-    <div class="panel-header"><h3>🕐 היסטוריית מיקומים</h3></div>
-    <div class="panel-body">
-      <div class="hist-user-select" id="historyUserSelect"></div>
-      <div id="historyTrail"></div>
-    </div>
-  </div>
 
   <!-- SAVED POINTS PANEL -->
   <div class="side-panel" id="pointsPanel">
@@ -410,7 +384,7 @@ const db=getFirestore(app);
 const AVATARS=['😀','😎','🦊','🐺','🦁','🐯','🦝','🐸','🤖','👾','🦄','🐉','🧙','🧛','👻','🎃','🚀','⚡','🔥','💎'];
 let currentUser=null,myUID=null;
 let allUsersData={};
-let map,markers={},tileLayer,historyLayer=null;
+let map,markers={},tileLayer;
 let activeChatTab='group',activeDMUser=null;
 let unsubUsers=null,unsubChat=null,unsubDM=null;
 
@@ -432,12 +406,9 @@ let isDark=true;
 
 window.saveProfile=saveProfile;window.openPanel=openPanel;window.closePanel=closePanel;
 window.closeAllPanels=closeAllPanels;window.toggleLayers=toggleLayers;window.setLayer=setLayer;
-function flyToHistoryPoint(lng,lat){map.flyTo({center:[lng,lat],zoom:17});closeAllPanels();}
-window.flyToHistoryPoint=flyToHistoryPoint;
 window.locateMe=locateMe;window.showMapView=showMapView;window.switchChatTab=switchChatTab;
 window.handleChatKey=handleChatKey;window.sendMessage=sendMessage;
 window.openDM=openDM;window.flyToUser=flyToUser;
-window.showUserHistory=showUserHistory;
 window.toggleDarkMode=toggleDarkMode;window.openModal=openModal;window.closeModal=closeModal;
 window.setFilter=setFilter;
 
@@ -933,7 +904,6 @@ function showUserPopup(uid,data){
       </div>
       <div style="display:flex;gap:6px">
         <button onclick="openDM('${uid}','${escHtml(data.name)}','${data.avatar||'👤'}')" style="flex:1;background:#00d4aa;color:#000;border:none;border-radius:8px;padding:7px 4px;font-size:12px;cursor:pointer;font-family:inherit">💌 הודעה</button>
-        <button onclick="showUserHistory('${uid}')" style="flex:1;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 4px;font-size:12px;cursor:pointer;font-family:inherit">🕐 היסטוריה</button>
       </div>
     </div>`).addTo(map);
 }
@@ -948,7 +918,6 @@ function startLocationTracking(){
     lastLat=lat;lastLng=lng;
     if(activeGroupId){
       await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
-      await addDoc(gCol('history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
     }
     if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
   };
@@ -978,7 +947,6 @@ function startLocationTracking(){
     lastLat=lat;lastLng=lng;
     if(activeGroupId){
       await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
-      await addDoc(gCol('history'),{uid:myUID,lat,lng,ts:serverTimestamp()});
     }
   },null,{enableHighAccuracy:true,maximumAge:10000,timeout:15000});
 }
@@ -1020,8 +988,7 @@ function listenUsers(){
     if(mySession!==groupSessionId)return;
     let online=0,total=0;
     const ul=document.getElementById('usersList');
-    const hs=document.getElementById('historyUserSelect');
-    ul.innerHTML='';hs.innerHTML='';
+    ul.innerHTML='';
     // עדכן allUsersData קודם
     const currentIds=new Set();
     snap.forEach(d=>{allUsersData[d.id]=d.data();currentIds.add(d.id);});
@@ -1047,17 +1014,9 @@ function listenUsers(){
         <div class="user-actions">
           ${d.id!==myUID?`<div class="user-act-btn" onclick="openDM('${d.id}','${escHtml(u.name||'')}','${u.avatar||'👤'}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>`:''}
           ${d.id!==myUID?`<div class="user-act-btn" onclick="flyToUser('${d.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>`:''}
-          <div class="user-act-btn" onclick="showUserHistory('${d.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           ${(myGroups[activeGroupId]&&myGroups[activeGroupId].ownerUid===myUID&&d.id!==myUID)?`<div class="user-act-btn" onclick="removeMember('${d.id}','${escHtml(u.name||'')}')" style="color:var(--danger)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg></div>`:''}
         </div>`;
       ul.appendChild(li);
-
-      // history chips
-      const chip=document.createElement('div');chip.className='hist-chip'+(isOnline?'':' offline-chip');
-      chip.innerHTML=`<span style="display:inline-flex;width:18px;height:18px;border-radius:50%;overflow:hidden;vertical-align:middle">${avatarHTML(u.avatar,u.photoURL)}</span> ${escHtml(u.name||'אנונימי')}`;
-      chip.onclick=()=>{document.querySelectorAll('.hist-chip').forEach(c=>c.classList.remove('selected'));chip.classList.add('selected');showUserHistory(d.id);};
-      hs.appendChild(chip);
-
     });
     Object.keys(markers).forEach(uid=>{
       if(!currentIds.has(uid)){
@@ -1148,44 +1107,6 @@ function handleChatKey(e){
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
 }
 
-async function showUserHistory(uid){
-  openPanel('history');
-  const trail=document.getElementById('historyTrail');
-  trail.innerHTML='<div style="color:var(--text2);font-size:12px;padding:6px 0">טוען...</div>';
-  if(!activeGroupId){trail.innerHTML='<div style="color:var(--text2);font-size:12px">בחר קבוצה פעילה</div>';return;}
-  try{
-    const q=query(gCol('history'),where('uid','==',uid),orderBy('ts','desc'),limit(25));
-    const snap=await getDocs(q);
-    trail.innerHTML='';
-    if(snap.empty){trail.innerHTML='<div style="color:var(--text2);font-size:12px">אין היסטוריה</div>';return;}
-    const pts=[];
-    snap.forEach(d=>{const h=d.data();if(h.lat&&h.lng)pts.push([h.lat,h.lng]);});
-    try{
-      if(map.getLayer('history-line'))map.removeLayer('history-line');
-      if(map.getSource('history'))map.removeSource('history');
-    }catch(e){}
-    if(pts.length>1){
-      const bounds=pts.reduce((b,p)=>b.extend([p[1],p[0]]),new maplibregl.LngLatBounds([pts[0][1],pts[0][0]],[pts[0][1],pts[0][0]]));
-      map.fitBounds(bounds,{padding:50});
-      map.addSource('history',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:pts.map(p=>[p[1],p[0]])}}});
-      map.addLayer({id:'history-line',type:'line',source:'history',paint:{'line-color':'#00d4aa','line-width':3,'line-dasharray':[2,1]}});
-      historyLayer=true;
-    }else if(pts.length===1){
-      map.flyTo({center:[pts[0][1],pts[0][0]],zoom:15});
-    }
-    let i=0;
-    snap.forEach(d=>{
-      const h=d.data();
-      const time=h.ts?new Date(h.ts.toMillis()).toLocaleString('he',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit'}):'';
-      const el=document.createElement('div');el.className='hist-point';
-      el.innerHTML=`<div class="hist-dot-col"><div class="hist-dot" style="background:${i===0?'#00d4aa':'#30363d'}"></div>${i<snap.size-1?'<div class="hist-line"></div>':''}</div>
-        <div class="hist-info"><div class="hist-time">${time}</div>
-        <div class="hist-coords">📍 ${h.lat?.toFixed(5)}, ${h.lng?.toFixed(5)}</div>
-        <span class="hist-show-map" onclick="flyToHistoryPoint(${h.lng},${h.lat})">הצג על המפה →</span></div>`;
-      trail.appendChild(el);i++;
-    });
-  }catch(e){trail.innerHTML='<div style="color:var(--danger);font-size:13px">שגיאה בטעינה</div>';console.error(e);}
-}
 
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
@@ -1204,7 +1125,7 @@ function openPanel(name){
   }
   
   if(name==='chat'){document.getElementById('chatDot')?.classList.remove('show');setTimeout(()=>switchChatTab(activeChatTab),100);}
-  const navMap={groups:'navGroups',chat:'navChat',history:'navHistory',settings:'navSettings',points:'navPoints',admin:null};
+  const navMap={groups:'navGroups',chat:'navChat',settings:'navSettings',points:'navPoints',admin:null};
   if(navMap[name])setActiveNav(navMap[name]);
 }
 
@@ -1214,7 +1135,7 @@ function closePanel(name){
 }
 
 function closeAllPanels(){
-  ['chat','history','settings','points','groups'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
+  ['chat','settings','points','groups'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
   document.getElementById('layersPanel').classList.remove('open');
   
 }
