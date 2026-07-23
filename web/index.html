@@ -2092,11 +2092,17 @@ function loadMyGroups(){
 const ownedGroupRequestListeners={};
 const joinRequestsCache={};
 
+window.handleDeepLink=function(link){
+  if(link==='groups'){
+    openPanel('groups');
+  }
+};
+
 function notifyNewJoinRequest(groupId,reqData){
   const groupName=(myGroups[groupId]&&myGroups[groupId].name)||'הקבוצה';
   if(window.AndroidBridge&&window.AndroidBridge.showAlertNotification){
     try{
-      window.AndroidBridge.showAlertNotification('group_requests','בקשות הצטרפות',`בקשת הצטרפות ל"${groupName}"`,`${reqData.name||'מישהו'} מבקש/ת להצטרף`);
+      window.AndroidBridge.showAlertNotification('group_requests','בקשות הצטרפות',`בקשת הצטרפות ל"${groupName}"`,`${reqData.name||'מישהו'} מבקש/ת להצטרף`,'groups');
     }catch(e){console.error(e);}
   }
 }

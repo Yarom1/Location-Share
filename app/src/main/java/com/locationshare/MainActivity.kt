@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private var cameraUri: Uri? = null
     private var waitingForLocationEnable = false
+    private var pendingDeepLink: String? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,6 +116,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                pendingDeepLink?.let { link ->
+                    webView.evaluateJavascript("if(window.handleDeepLink)window.handleDeepLink('$link');", null)
+                    pendingDeepLink = null
+                }
+            }
+
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
                 val isNavLink = url.startsWith("geo:") ||
@@ -154,7 +163,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        pendingDeepLink = intent?.getStringExtra("deep_link")
         requestLocationPermissions()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val link = intent.getStringExtra("deep_link")
+        if (link != null) {
+            webView.evaluateJavascript("if(window.handleDeepLink)window.handleDeepLink('$link');", null)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -289,7 +308,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
-        fun showAlertNotification(channelId: String, channelName: String, title: String, message: String) {
+        fun showAlertNotification(channelId: String, channelName: String, title: String, message: String, deepLink: String = "") {
             runOnUiThread {
                 try {
                     val nm = getSystemService(NotificationManager::class.java)
@@ -298,6 +317,8 @@ class MainActivity : AppCompatActivity() {
                         nm.createNotificationChannel(channel)
                     }
                     val intent = Intent(this@MainActivity, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    if (deepLink.isNotEmpty()) intent.putExtra("deep_link", deepLink)
                     val pi = PendingIntent.getActivity(
                         this@MainActivity, Random.nextInt(), intent,
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
