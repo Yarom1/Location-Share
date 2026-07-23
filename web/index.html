@@ -204,14 +204,13 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div style="font-size:15px;font-weight:700;color:var(--text)">Location Share</div>
     <div style="display:flex;align-items:center;width:100%;gap:6px">
       <div class="topbar-actions" style="display:flex;align-items:center;gap:6px;flex:1">
-        <div class="icon-btn" onclick="toggleDarkMode()" id="themeBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
         <div class="icon-btn" onclick="toggleLayers(event)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
         <div class="icon-btn" onclick="togglePOILayers(event)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         </div>
       </div>
       <div class="online-badge" id="onlineBadge" style="font-size:11px;padding:2px 10px;white-space:nowrap">● 0 מחוברים</div>
-      <div class="my-avatar" id="myAvatarBtn" onclick="openPanel('groups')" style="flex-shrink:0">👤</div>
+      <div class="my-avatar" id="myAvatarBtn" onclick="openEditProfile()" style="flex-shrink:0">👤</div>
     </div>
   </div>
 
@@ -347,6 +346,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
         <input type="text" id="joinGroupCodeInput" placeholder="קוד הצטרפות..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:6px 10px;color:var(--text);font-size:12px;outline:none">
         <button onclick="joinGroupByCode()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:72px;flex-shrink:0;text-align:center">הצטרף</button>
       </div>
+      <button id="selfOnlyBtn" onclick="viewSelfOnly()" style="display:flex;align-items:center;gap:8px;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:10px;color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>תצוגה עצמית בלבד (ללא קבוצה)</button>
       <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">קבוצות שאני חבר בהן</div>
       <div id="myGroupsList"></div>
 
@@ -489,7 +489,8 @@ function updateMyUI(){
 function toggleDarkMode(){
   isDark=!isDark;
   document.body.classList.toggle('light',!isDark);
-  document.getElementById('themeBtn').innerHTML=isDark?`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+  const themeBtnEl=document.getElementById('themeBtn');
+  if(themeBtnEl)themeBtnEl.innerHTML=isDark?`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
   if(map)map.resize();
 }
 
@@ -973,7 +974,7 @@ function listenUsers(){
     if(currentUser&&lastLat&&lastLng)updateMarker(myUID,{...currentUser,lat:lastLat,lng:lastLng,online:true});
     const ul0=document.getElementById('usersList');
     if(ul0)ul0.innerHTML=`<div class="user-item" style="cursor:default"><div class="user-avatar">${avatarHTML(currentUser?.avatar,currentUser?.photoURL)}<div class="user-online-dot" style="background:#00d4aa"></div></div><div class="user-info"><div class="user-name">${escHtml(currentUser?.name||'אני')} <span style="font-size:11px;color:var(--text2)">(אני)</span></div><div class="user-time">בחר קבוצה פעילה כדי לראות אחרים</div></div></div>`;
-    const badge0=document.getElementById('onlineBadge');if(badge0)badge0.textContent='● אין קבוצה פעילה';
+    const badge0=document.getElementById('onlineBadge');if(badge0)badge0.textContent='ללא קבוצה פעילה';
     listenSavedPoints();
     return;
   }
@@ -1020,7 +1021,7 @@ function listenUsers(){
         delete markerCache[uid];
       }
     });
-    document.getElementById('onlineBadge').textContent=`● ${online} מחוברים`;
+    document.getElementById('onlineBadge').textContent=`${myGroups[activeGroupId]?.name||''} · ${online} מחוברים`;
   },handleGroupAccessLost);
   listenSavedPoints();
 }
@@ -2106,6 +2107,20 @@ async function selectGroup(groupId){
   showToast(`✅ קבוצה פעילה: ${myGroups[groupId]?.name||''}`,'success');
 }
 window.selectGroup=selectGroup;
+
+async function viewSelfOnly(){
+  const oldGroupId=activeGroupId;
+  if(oldGroupId){
+    setDoc(doc(db,'groups',oldGroupId,'locations',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true}).catch(()=>{});
+  }
+  activeGroupId=null;
+  try{await setDoc(doc(db,'users',myUID),{activeGroupId:null},{merge:true});}catch(e){}
+  renderMyGroupsList();
+  listenUsers();
+  listenGroupChat();
+  showToast('👤 תצוגה עצמית בלבד','success');
+}
+window.viewSelfOnly=viewSelfOnly;
 
 async function leaveGroup(groupId,groupName){
   const g=myGroups[groupId];
