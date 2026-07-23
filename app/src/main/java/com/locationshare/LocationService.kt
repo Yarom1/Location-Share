@@ -22,6 +22,20 @@ class LocationService : Service() {
     private var cachedIdToken: String? = null
     private var idTokenExpiryMillis: Long = 0L
     private var lastWriteTimeMillis: Long = 0L
+    private var lastKnownLat: Double? = null
+    private var lastKnownLng: Double? = null
+    private val heartbeatHandler = Handler(Looper.getMainLooper())
+    private val heartbeatIntervalMs = 60_000L
+    private val heartbeatRunnable = object : Runnable {
+        override fun run() {
+            val lat = lastKnownLat
+            val lng = lastKnownLng
+            if (lat != null && lng != null) {
+                writeLocationToFirestore(lat, lng)
+            }
+            heartbeatHandler.postDelayed(this, heartbeatIntervalMs)
+        }
+    }
 
     companion object {
         var instance: LocationService? = null
@@ -35,6 +49,7 @@ class LocationService : Service() {
         startForeground(NOTIF_ID, buildNotification())
         acquireWakeLock()
         startLocationUpdates()
+        heartbeatHandler.postDelayed(heartbeatRunnable, heartbeatIntervalMs)
     }
 
     private fun acquireWakeLock() {
@@ -81,6 +96,8 @@ class LocationService : Service() {
                 LocationManager.GPS_PROVIDER, 10000L, 5f,
                 object : LocationListener {
                     override fun onLocationChanged(loc: Location) {
+                        lastKnownLat = loc.latitude
+                        lastKnownLng = loc.longitude
                         onLocationUpdate?.invoke(loc.latitude, loc.longitude)
                         writeLocationToFirestore(loc.latitude, loc.longitude)
                     }
@@ -194,7 +211,7 @@ class LocationService : Service() {
                     updateNotificationText("⚠️ כשלון כתיבה ($code): ${err?.take(80) ?: ""}")
                 } else {
                     val nowMillis = System.currentTimeMillis()
-                    val gapText = if (lastWriteTimeMillis == 0L) "" else {
+                    val gapText = if (lastWriteTimeMillis == 0L) " | אתחול מחדש" else {
                         val gapSec = (nowMillis - lastWriteTimeMillis) / 1000
                         " | מרווח מעודכון קודם: ${gapSec}ש'"
                     }
@@ -215,6 +232,7 @@ class LocationService : Service() {
         super.onDestroy()
         instance = null
         locationManager.removeUpdates {}
+        heartbeatHandler.removeCallbacks(heartbeatRunnable)
         try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (e: Exception) { e.printStackTrace() }
     }
 }
