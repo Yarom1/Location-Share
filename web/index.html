@@ -489,7 +489,6 @@ function startApp(){
   startLocationTracking();
   listenUsers();
   listenGroupChat();
-  listenSavedPoints();
   updateMyUI();
   loadMyGroups();
   resumePendingJoinRequests();
@@ -1012,6 +1011,7 @@ function listenUsers(){
     const ul0=document.getElementById('usersList');
     if(ul0)ul0.innerHTML=`<div class="user-item" style="cursor:default"><div class="user-avatar">${avatarHTML(currentUser?.avatar,currentUser?.photoURL)}<div class="user-online-dot" style="background:#00d4aa"></div></div><div class="user-info"><div class="user-name">${escHtml(currentUser?.name||'אני')} <span style="font-size:11px;color:var(--text2)">(אני)</span></div><div class="user-time">בחר קבוצה פעילה כדי לראות אחרים</div></div></div>`;
     const badge0=document.getElementById('onlineBadge');if(badge0)badge0.textContent='● אין קבוצה פעילה';
+    listenSavedPoints();
     return;
   }
   if(currentUser)setDoc(gDoc('members',myUID),{name:currentUser.name,avatar:currentUser.avatar,photoURL:currentUser.photoURL||null,pinColor:currentUser.pinColor||'#00d4aa'},{merge:true});
@@ -1068,6 +1068,7 @@ function listenUsers(){
     });
     document.getElementById('onlineBadge').textContent=`● ${online} מחוברים`;
   },handleGroupAccessLost);
+  listenSavedPoints();
 }
 
 function listenGroupChat(){
@@ -1498,7 +1499,15 @@ let unsubPoints=null;
 
 function listenSavedPoints(){
   if(unsubPoints)unsubPoints();
-  unsubPoints=onSnapshot(collection(db,'savedPoints'),snap=>{
+  const mySession=groupSessionId;
+  if(!activeGroupId){
+    savedPoints={};
+    renderPointsList();
+    renderPointMarkers();
+    return;
+  }
+  unsubPoints=onSnapshot(gCol('savedPoints'),snap=>{
+    if(mySession!==groupSessionId)return;
     savedPoints={};
     snap.forEach(d=>{savedPoints[d.id]=d.data();});
     renderPointsList();
@@ -1608,7 +1617,7 @@ function toggleAllPoints(){
 }
 
 async function deletePoint(id){
-  await deleteDoc(doc(db,'savedPoints',id));
+  await deleteDoc(gDoc('savedPoints',id));
   showToast('נקודה נמחקה','success');
 }
 
@@ -1631,7 +1640,7 @@ async function saveEditedPoint(){
   const name=document.getElementById('editPointNameInput').value.trim();
   const desc=document.getElementById('editPointDescInput').value.trim();
   if(!name){showToast('הכנס שם','error');return;}
-  await updateDoc(doc(db,'savedPoints',editPointId),{name,desc});
+  await updateDoc(gDoc('savedPoints',editPointId),{name,desc});
   closeModal('editPointModal');
   editPointId=null;
   showToast('נקודה עודכנה ✓','success');
@@ -1666,7 +1675,7 @@ function startEditLocation(){
 
 async function saveEditedLocation(){
   if(!centerPinEditMode||!addPointCoords)return;
-  await updateDoc(doc(db,'savedPoints',centerPinEditMode),{lat:addPointCoords.lat,lng:addPointCoords.lng});
+  await updateDoc(gDoc('savedPoints',centerPinEditMode),{lat:addPointCoords.lat,lng:addPointCoords.lng});
   closeAddPointSheet();
   stopCenterPinRefine();
   document.getElementById('pointNameInput').style.display='';
@@ -1805,11 +1814,12 @@ function cancelAddPointMode(){
 }
 
 async function savePoint(){
+  if(!activeGroupId){showToast('בחר קבוצה פעילה קודם','error');return;}
   const name=document.getElementById('pointNameInput').value.trim();
   const desc=document.getElementById('pointDescInput').value.trim();
   if(!name){showToast('הכנס שם לנקודה','error');return;}
   if(!addPointCoords){showToast('בחר מיקום על המפה','error');return;}
-  await addDoc(collection(db,'savedPoints'),{
+  await addDoc(gCol('savedPoints'),{
     name,desc,
     lat:addPointCoords.lat,
     lng:addPointCoords.lng,
