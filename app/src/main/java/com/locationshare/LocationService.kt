@@ -91,6 +91,18 @@ class LocationService : Service() {
         } catch (e: SecurityException) { e.printStackTrace() }
     }
 
+    private fun updateNotificationText(text: String) {
+        try {
+            val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Location Share")
+                .setContentText(text)
+                .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+                .setOngoing(true)
+                .build()
+            getSystemService(NotificationManager::class.java).notify(NOTIF_ID, notification)
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
     private fun getFreshIdToken(): String? {
         val now = System.currentTimeMillis()
         if (cachedIdToken != null && now < idTokenExpiryMillis) return cachedIdToken
@@ -117,11 +129,13 @@ class LocationService : Service() {
                 conn.disconnect()
                 idToken
             } else {
+                val err = conn.errorStream?.bufferedReader()?.use { it.readText() }
+                updateNotificationText("⚠️ שגיאת טוקן (${conn.responseCode}): ${err ?: ""}")
                 conn.disconnect()
                 null
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            updateNotificationText("⚠️ שגיאת רננון טוקן: ${e.message}")
             null
         }
     }
@@ -130,11 +144,13 @@ class LocationService : Service() {
         Thread {
             try {
                 val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
-                val uid = prefs.getString("uid", null) ?: return@Thread
+                val uid = prefs.getString("uid", null)
+                if (uid == null) { updateNotificationText("⚠️ אין UID שמור - פתח את האפליקציה"); return@Thread }
                 val groupId = prefs.getString("active_group_id", null)
-                if (groupId.isNullOrEmpty()) return@Thread
+                if (groupId.isNullOrEmpty()) { updateNotificationText("ללא קבוצה פעילה - אין מה לעדכן"); return@Thread }
 
-                val idToken = getFreshIdToken() ?: return@Thread
+                val idToken = getFreshIdToken()
+                if (idToken == null) { return@Thread }
 
                 val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
                 sdf.timeZone = TimeZone.getTimeZone("UTC")
@@ -168,13 +184,16 @@ class LocationService : Service() {
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
-                conn.setRequestProperty("Authorization", "Bearer ${'$'}idToken")
+                conn.setRequestProperty("Authorization", "Bearer $idToken")
                 conn.doOutput = true
                 conn.outputStream.use { it.write(bodyJson.toString().toByteArray()) }
                 val code = conn.responseCode
                 if (code !in 200..299) {
                     val err = conn.errorStream?.bufferedReader()?.use { it.readText() }
-                    android.util.Log.e("LocationService", "Firestore write failed ($code): $err")
+                    updateNotificationText("⚠️ כשלון כתיבה ($code): ${err?.take(80) ?: ""}")
+                } else {
+                    val now = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
+                    updateNotificationText("משתף מיקום ברקע ✅ עודכן ב-$now")
                 }
                 conn.disconnect()
             } catch (e: Exception) {
