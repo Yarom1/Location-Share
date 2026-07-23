@@ -1031,7 +1031,7 @@ function listenUsers(){
       const u={...(groupMembersCache[d.id]||{}),...d.data()};total++;
       const isOnline=u.online===true&&(!u.lastSeen||(Date.now()-u.lastSeen.toMillis()<120000));if(isOnline)online++;
       if(iAmBanned&&d.id!==myUID)return;
-      if(isOnline&&u.lat&&u.lng){
+      if(isOnline&&u.lat&&u.lng&&!(d.id===myUID&&trackingMode)){
         updateMarker(d.id,{...u,online:isOnline});
       } else if(!isOnline&&markers[d.id]){
         markers[d.id].remove();
@@ -1244,17 +1244,17 @@ function toggleTracking(){
   trackingMode=!trackingMode;
   const btn=document.getElementById('trackBtn');
   if(btn)btn.style.border=trackingMode?'2px solid #00d4aa':'1px solid rgba(255,255,255,0.2)';
+  const fixedEl=document.getElementById('trackingMarkerFixed');
   if(trackingMode&&lastLat&&lastLng){
     map.flyTo({center:[lastLng,lastLat],zoom:17,padding:{top:window.innerHeight*TRACK_PAD_TOP_FRAC,bottom:0,left:0,right:0}});
+    map.once('moveend',()=>{
+      if(!trackingMode)return;
+      updateTrackingMarkerFixed();
+      if(fixedEl)fixedEl.style.display='block';
+      if(markers[myUID]){markers[myUID].remove();delete markers[myUID];delete markerCache[myUID];}
+    });
   }else if(!trackingMode){
     map.easeTo({padding:{top:0,bottom:0,left:0,right:0},duration:300});
-  }
-  const fixedEl=document.getElementById('trackingMarkerFixed');
-  if(trackingMode){
-    updateTrackingMarkerFixed();
-    if(fixedEl)fixedEl.style.display='block';
-    if(markers[myUID]){markers[myUID].remove();delete markers[myUID];delete markerCache[myUID];}
-  }else{
     if(fixedEl)fixedEl.style.display='none';
     if(currentUser&&smoothLat&&smoothLng)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
   }
