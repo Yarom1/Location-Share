@@ -10,6 +10,7 @@ class LocationService : Service() {
 
     private lateinit var locationManager: LocationManager
     private var webViewRef: android.webkit.WebView? = null
+    private var wakeLock: PowerManager.WakeLock? = null
     private val CHANNEL_ID = "location_channel"
     private val NOTIF_ID = 1
 
@@ -23,7 +24,21 @@ class LocationService : Service() {
         instance = this
         createNotificationChannel()
         startForeground(NOTIF_ID, buildNotification())
+        acquireWakeLock()
         startLocationUpdates()
+    }
+
+    private fun acquireWakeLock() {
+        try {
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
+            wakeLock = pm.newWakeLock(
+                PowerManager.PARTIAL_WAKE_LOCK,
+                "LocationShare::LocationWakeLock"
+            ).apply {
+                setReferenceCounted(false)
+                acquire(12 * 60 * 60 * 1000L) // safety timeout: 12h, renewed by service restarts
+            }
+        } catch (e: Exception) { e.printStackTrace() }
     }
 
     private fun createNotificationChannel() {
@@ -73,5 +88,6 @@ class LocationService : Service() {
         super.onDestroy()
         instance = null
         locationManager.removeUpdates {}
+        try { if (wakeLock?.isHeld == true) wakeLock?.release() } catch (e: Exception) { e.printStackTrace() }
     }
 }

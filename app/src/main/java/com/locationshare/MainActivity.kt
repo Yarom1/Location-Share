@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
+import android.os.PowerManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -212,6 +213,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkLocationEnabledAndProceed() {
         if (isLocationEnabled()) {
             waitingForLocationEnable = false
+            requestBatteryOptimizationExemption()
             startLocationServiceAndLoad()
         } else {
             waitingForLocationEnable = true
@@ -224,6 +226,18 @@ class MainActivity : AppCompatActivity() {
                 }
                 .show()
         }
+    }
+
+    private fun requestBatteryOptimizationExemption() {
+        try {
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+                startActivity(intent)
+            }
+        } catch (e: Exception) { e.printStackTrace() }
     }
 
     private fun startLocationServiceAndLoad() {
