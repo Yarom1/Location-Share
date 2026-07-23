@@ -210,14 +210,9 @@ class LocationService : Service() {
                     val err = conn.errorStream?.bufferedReader()?.use { it.readText() }
                     updateNotificationText("⚠️ כשלון כתיבה ($code): ${err?.take(80) ?: ""}")
                 } else {
-                    val nowMillis = System.currentTimeMillis()
-                    val gapText = if (lastWriteTimeMillis == 0L) " | אתחול מחדש" else {
-                        val gapSec = (nowMillis - lastWriteTimeMillis) / 1000
-                        " | מרווח מעודכון קודם: ${gapSec}ש'"
-                    }
-                    lastWriteTimeMillis = nowMillis
+                    lastWriteTimeMillis = System.currentTimeMillis()
                     val now = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
-                    updateNotificationText("✅ עודכן ב-$now$gapText")
+                    updateNotificationText("משתף מיקום ברקע · עודכן ב-$now")
                 }
                 conn.disconnect()
             } catch (e: Exception) {
