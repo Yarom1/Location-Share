@@ -276,7 +276,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
     <div class="panel-body" style="display:flex;flex-direction:column;gap:0;padding:8px 10px 6px">
       <div class="chat-tabs">
         <div class="chat-tab active" id="tabGroup" onclick="switchChatTab('group')">🌐 כולם</div>
-        <div class="chat-tab" id="tabDM" onclick="switchChatTab('dm')">💌 פרטי</div>
+        <div class="chat-tab" id="tabDM" onclick="clickDMTab()">💌 פרטי</div>
       </div>
       <div class="chat-messages" id="chatMessages"></div>
       <div class="chat-input-row">
@@ -1082,7 +1082,32 @@ function switchChatTab(tab){
   const msgs=document.getElementById('chatMessages');msgs.innerHTML='';
   if(tab==='group')listenGroupChat();
   else if(activeDMUser)listenDM(activeDMUser.uid);
-  else msgs.innerHTML='<div style="color:var(--text2);text-align:center;padding:24px;font-size:13px">בחר משתמש מהרשימה או מהמפה</div>';
+  else renderDMUserPicker();
+}
+
+function clickDMTab(){
+  if(activeChatTab==='dm'&&activeDMUser){
+    activeDMUser=null;
+    document.getElementById('tabDM').textContent='💌 פרטי';
+  }
+  switchChatTab('dm');
+}
+window.clickDMTab=clickDMTab;
+
+function renderDMUserPicker(){
+  const msgs=document.getElementById('chatMessages');
+  if(!activeGroupId){msgs.innerHTML='<div style="color:var(--text2);text-align:center;padding:24px;font-size:13px">בחר קבוצה פעילה קודם</div>';return;}
+  const ids=Object.keys(groupMembersCache).filter(id=>id!==myUID);
+  if(!ids.length){msgs.innerHTML='<div style="color:var(--text2);text-align:center;padding:24px;font-size:13px">אין חברים אחרים בקבוצה</div>';return;}
+  msgs.innerHTML='<div style="color:var(--text2);font-size:11px;padding:0 2px 8px">בחר איש קשר לשיחה פרטית</div>';
+  ids.forEach(id=>{
+    const u=groupMembersCache[id]||{};
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer';
+    row.innerHTML=`<div style="width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0">${avatarHTML(u.avatar,u.photoURL)}</div><div style="font-size:13px;font-weight:600">${escHtml(u.name||'אנונימי')}</div>`;
+    row.onclick=()=>openDM(id,u.name||'',u.avatar||'👤');
+    msgs.appendChild(row);
+  });
 }
 
 function openDM(uid,name,avatar){
