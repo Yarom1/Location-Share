@@ -91,21 +91,26 @@ class LocationService : Service() {
 
     private fun startLocationUpdates() {
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        val listener = object : LocationListener {
+            override fun onLocationChanged(loc: Location) {
+                lastKnownLat = loc.latitude
+                lastKnownLng = loc.longitude
+                onLocationUpdate?.invoke(loc.latitude, loc.longitude)
+                writeLocationToFirestore(loc.latitude, loc.longitude)
+            }
+            override fun onStatusChanged(p: String?, s: Int, e: Bundle?) {}
+            override fun onProviderEnabled(p: String) {}
+            override fun onProviderDisabled(p: String) {}
+        }
         try {
-            locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, 10000L, 5f,
-                object : LocationListener {
-                    override fun onLocationChanged(loc: Location) {
-                        lastKnownLat = loc.latitude
-                        lastKnownLng = loc.longitude
-                        onLocationUpdate?.invoke(loc.latitude, loc.longitude)
-                        writeLocationToFirestore(loc.latitude, loc.longitude)
-                    }
-                    override fun onStatusChanged(p: String?, s: Int, e: Bundle?) {}
-                    override fun onProviderEnabled(p: String) {}
-                    override fun onProviderDisabled(p: String) {}
-                }
-            )
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000L, 5f, listener)
+            }
+        } catch (e: SecurityException) { e.printStackTrace() }
+        try {
+            if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000L, 5f, listener)
+            }
         } catch (e: SecurityException) { e.printStackTrace() }
     }
 
