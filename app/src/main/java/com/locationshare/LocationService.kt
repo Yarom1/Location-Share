@@ -131,8 +131,10 @@ class LocationService : Service() {
         if (cachedIdToken != null && now < idTokenExpiryMillis) return cachedIdToken
 
         val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
-        val refreshToken = prefs.getString("refresh_token", null) ?: return null
-        val apiKey = prefs.getString("api_key", null) ?: return null
+        val refreshToken = prefs.getString("refresh_token", null)
+        if (refreshToken == null) { updateNotificationText("אין refresh token שמור - פתח את האפליקציה"); return null }
+        val apiKey = prefs.getString("api_key", null)
+        if (apiKey == null) { updateNotificationText("אין api key שמור - פתח את האפליקציה"); return null }
 
         return try {
             val url = URL("https://securetoken.googleapis.com/v1/token?key=$apiKey")
