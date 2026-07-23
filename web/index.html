@@ -1212,20 +1212,20 @@ function openPanel(name){
     addSwipeToClose(panelEl,name);
   }
   
-  if(name==='chat'){document.getElementById('chatDot')?.classList.remove('show');setTimeout(()=>switchChatTab(activeChatTab),100);}
+  if(name==='chat'){chatPanelOpen=true;document.getElementById('chatDot')?.classList.remove('show');setTimeout(()=>switchChatTab(activeChatTab),100);}
   const navMap={groups:'navGroups',chat:'navChat',settings:'navSettings',points:'navPoints',admin:null};
   if(navMap[name])setActiveNav(navMap[name]);
 }
 
 function closePanel(name){
   document.getElementById(name+'Panel')?.classList.remove('open');
-  
+  if(name==='chat')chatPanelOpen=false;
 }
 
 function closeAllPanels(){
   ['chat','settings','points','groups'].forEach(n=>document.getElementById(n+'Panel')?.classList.remove('open'));
   document.getElementById('layersPanel').classList.remove('open');
-  
+  chatPanelOpen=false;
 }
 
 function showToast(msg,type=''){
