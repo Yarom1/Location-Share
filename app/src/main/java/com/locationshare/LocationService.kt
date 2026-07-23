@@ -21,6 +21,7 @@ class LocationService : Service() {
     private val PROJECT_ID = "locationshare-38792"
     private var cachedIdToken: String? = null
     private var idTokenExpiryMillis: Long = 0L
+    private var lastWriteTimeMillis: Long = 0L
 
     companion object {
         var instance: LocationService? = null
@@ -192,8 +193,14 @@ class LocationService : Service() {
                     val err = conn.errorStream?.bufferedReader()?.use { it.readText() }
                     updateNotificationText("⚠️ כשלון כתיבה ($code): ${err?.take(80) ?: ""}")
                 } else {
+                    val nowMillis = System.currentTimeMillis()
+                    val gapText = if (lastWriteTimeMillis == 0L) "" else {
+                        val gapSec = (nowMillis - lastWriteTimeMillis) / 1000
+                        " | מרווח מעודכון קודם: ${gapSec}ש'"
+                    }
+                    lastWriteTimeMillis = nowMillis
                     val now = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
-                    updateNotificationText("משתף מיקום ברקע ✅ עודכן ב-$now")
+                    updateNotificationText("✅ עודכן ב-$now$gapText")
                 }
                 conn.disconnect()
             } catch (e: Exception) {
