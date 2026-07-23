@@ -30,7 +30,7 @@ class LocationService : Service() {
     private val CHAT_CHANNEL_ID = "chat_messages_channel"
     private var lastMessageCheckTime: String? = null
     private val chatCheckHandler = Handler(Looper.getMainLooper())
-    private val chatCheckIntervalMs = 30_000L
+    private val chatCheckIntervalMs = 15_000L
     private val chatCheckRunnable = object : Runnable {
         override fun run() {
             checkForNewChatMessages()
@@ -244,6 +244,11 @@ class LocationService : Service() {
         Thread {
             try {
                 val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
+                val lastJsActive = prefs.getLong("last_js_active_time", 0L)
+                if (System.currentTimeMillis() - lastJsActive < 10_000L) {
+                    // JS is alive and already handling notifications itself - avoid duplicates
+                    return@Thread
+                }
                 val uid = prefs.getString("uid", null) ?: return@Thread
                 val groupId = prefs.getString("active_group_id", null)
                 if (groupId.isNullOrEmpty()) return@Thread

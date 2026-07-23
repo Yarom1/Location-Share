@@ -308,6 +308,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun reportJsAlive() {
+            val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
+            prefs.edit().putLong("last_js_active_time", System.currentTimeMillis()).apply()
+        }
+
+        @JavascriptInterface
         fun showAlertNotification(channelId: String, channelName: String, title: String, message: String, deepLink: String = "") {
             runOnUiThread {
                 try {

@@ -464,6 +464,8 @@ function startApp(){
   updateMyUI();
   loadMyGroups();
   setInterval(syncAuthToNative,30*60*1000);
+  reportJsAlive();
+  setInterval(reportJsAlive,5000);
   resumePendingJoinRequests();
   setDoc(doc(db,'users',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
   if(activeGroupId)setDoc(gDoc('locations',myUID),{online:true,lastSeen:serverTimestamp()},{merge:true});
@@ -969,6 +971,12 @@ function startLocationTracking(){
 }
 
 let groupSessionId=0;
+function reportJsAlive(){
+  if(window.AndroidBridge&&window.AndroidBridge.reportJsAlive){
+    try{window.AndroidBridge.reportJsAlive();}catch(e){}
+  }
+}
+
 function syncAuthToNative(){
   if(!window.AndroidBridge||!myUID||!auth.currentUser)return;
   try{
