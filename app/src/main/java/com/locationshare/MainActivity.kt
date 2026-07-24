@@ -383,6 +383,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun shutdownApp() {
+            runOnUiThread {
+                try {
+                    stopService(Intent(this@MainActivity, LocationService::class.java))
+                } catch (e: Exception) { e.printStackTrace() }
+                try {
+                    val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
+                    prefs.edit().clear().apply()
+                } catch (e: Exception) { e.printStackTrace() }
+                finishAffinity()
+                android.os.Process.killProcess(android.os.Process.myPid())
+            }
+        }
+
+        @JavascriptInterface
         fun reportJsAlive() {
             val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
             prefs.edit().putLong("last_js_active_time", System.currentTimeMillis()).apply()

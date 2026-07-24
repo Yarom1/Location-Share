@@ -330,7 +330,7 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
       </div>
       <button onclick="openEditProfile()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;display:flex;align-items:center;justify-content:flex-start;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>עריכת פרופיל</button>
       <button onclick="toggleDarkMode()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;display:flex;align-items:center;justify-content:flex-start;gap:10px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>החלף מצב תצוגה</button>
-      <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px">Location Share v1.0</div>
+      <button onclick="shutdownApp()" style="background:var(--surface2);color:#ff453a;border:1px solid #ff453a55;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;display:flex;align-items:center;justify-content:flex-start;gap:10px;margin-top:4px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>כיבוי אפליקציה</button><div style="font-size:10px;color:var(--text2);text-align:center;margin-top:6px">Location Share v1.0</div>
     </div>
   </div>
 
@@ -482,6 +482,18 @@ function startApp(){
   });
   // הוסר מכוון: visibilitychange כבר לא מסמן לא-מחובר, כי מעקב ברקע אמור להמשיך לשתף מיקום
 }
+
+function shutdownApp(){
+if(!confirm('לסגור את האפליקציה ולעצור שיתוף מיקום ברקע?'))return;
+try{
+setDoc(doc(db,'users',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
+if(activeGroupId)setDoc(gDoc('locations',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
+}catch(e){}
+if(window.AndroidBridge&&AndroidBridge.shutdownApp){
+AndroidBridge.shutdownApp();
+}
+}
+window.shutdownApp=shutdownApp;
 
 function updateMyUI(){
   if(!currentUser)return;
