@@ -2094,7 +2094,9 @@ async function removeMember(uid,name){
 window.removeMember=removeMember;
 
 function shareGroupInvite(name,code){
-  if(navigator.share){
+  if(window.AndroidBridge&&AndroidBridge.shareText){
+  AndroidBridge.shareText(code);
+  }else if(navigator.share){
     navigator.share({text:code}).catch(()=>{});
   }else{
     navigator.clipboard?.writeText(code).then(()=>showToast('הועתק ללוח','success'));
