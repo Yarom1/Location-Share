@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     private var cameraUri: Uri? = null
     private var waitingForLocationEnable = false
     private var pendingDeepLink: String? = null
+    private var waitingForBatteryExemption = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -240,8 +241,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkLocationEnabledAndProceed() {
         if (isLocationEnabled()) {
             waitingForLocationEnable = false
-            requestBatteryOptimizationExemption()
-            startLocationServiceAndLoad()
+            checkBatteryOptimizationAndProceed()
         } else {
             waitingForLocationEnable = true
             AlertDialog.Builder(this)
@@ -255,16 +255,60 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun requestBatteryOptimizationExemption() {
-        try {
-            val pm = getSystemService(POWER_SERVICE) as PowerManager
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:$packageName")
+    private fun checkBatteryOptimizationAndProceed() {
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            waitingForBatteryExemption = true
+            AlertDialog.Builder(this)
+                .setTitle("נדרש אישור פעילות ברקע")
+                .setMessage("כדי ששיתוף המיקום ימשיך לעבוד גם כשהאפליקציה סגורה, יש לאשר \"ללא הגבלה\" במסך שייפתח.")
+                .setCancelable(false)
+                .setPositiveButton("פתח הגדרות") { _, _ ->
+                    try {
+                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                            data = Uri.parse("package:$packageName")
+                        }
+                        startActivity(intent)
+                    } catch (e: Exception) { e.printStackTrace() }
                 }
-                startActivity(intent)
-            }
-        } catch (e: Exception) { e.printStackTrace() }
+                .show()
+        } else {
+            waitingForBatteryExemption = false
+            checkAutostartPromptAndProceed()
+        }
+    }
+
+    private fun checkAutostartPromptAndProceed() {
+        val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
+        val manufacturer = Build.MANUFACTURER.lowercase()
+        val isXiaomi = manufacturer.contains("xiaomi") || manufacturer.contains("redmi") || manufacturer.contains("poco")
+        val alreadyShown = prefs.getBoolean("shown_autostart_prompt", false)
+        if (isXiaomi && !alreadyShown) {
+            prefs.edit().putBoolean("shown_autostart_prompt", true).apply()
+            AlertDialog.Builder(this)
+                .setTitle("הגדרה נוספת למכשירי שיאומי")
+                .setMessage("כדי שהאפליקציה תמשיך לפעול ברקע, מומלץ להפעיל עבורה \"הפעלה אוטומטית\" (Autostart) בהגדרות המכשיר.")
+                .setPositiveButton("פתח הגדרות") { _, _ ->
+                    try {
+                        val intent = Intent().apply {
+                            component = android.content.ComponentName(
+                                "com.miui.securitycenter",
+                                "com.miui.permcenter.autostart.AutoStartManagementActivity"
+                            )
+                        }
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        Toast.makeText(this, "לא נמצאה ההגדרה - חפש \"הפעלה אוטומטית\" בהגדרות האפליקציה", Toast.LENGTH_LONG).show()
+                    }
+                    startLocationServiceAndLoad()
+                }
+                .setNegativeButton("דלג") { _, _ ->
+                    startLocationServiceAndLoad()
+                }
+                .show()
+        } else {
+            startLocationServiceAndLoad()
+        }
     }
 
     private fun startLocationServiceAndLoad() {
@@ -290,7 +334,9 @@ class MainActivity : AppCompatActivity() {
         webView.onResume()
         if (waitingForLocationEnable && isLocationEnabled()) {
             waitingForLocationEnable = false
-            startLocationServiceAndLoad()
+            checkBatteryOptimizationAndProceed()
+        } else if (waitingForBatteryExemption) {
+            checkBatteryOptimizationAndProceed()
         }
     }
     override fun onPause() { super.onPause() } // לא קוראים ל-webView.onPause() בכוונה - זה משהה את מנוע ה-JS ומונע עדכוני מיקום ברקע
