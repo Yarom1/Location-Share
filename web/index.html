@@ -2094,11 +2094,10 @@ async function removeMember(uid,name){
 window.removeMember=removeMember;
 
 function shareGroupInvite(name,code){
-  const text=`הצטרף/י לקבוצה "${name}" שלי ב-Location Share! קוד הצטרפות: ${code}`;
   if(navigator.share){
-    navigator.share({title:'הזמנה לקבוצה',text}).catch(()=>{});
+    navigator.share({text:code}).catch(()=>{});
   }else{
-    navigator.clipboard?.writeText(text).then(()=>showToast('הועתק ללוח','success'));
+    navigator.clipboard?.writeText(code).then(()=>showToast('הועתק ללוח','success'));
   }
 }
 window.shareGroupInvite=shareGroupInvite;
