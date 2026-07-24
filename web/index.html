@@ -951,7 +951,7 @@ function startLocationTracking(){
     if(activeGroupId){
       await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
     }
-    if(currentUser)updateMarker(myUID,{...currentUser,lat,lng});
+    if(currentUser&&!trackingMode)updateMarker(myUID,{...currentUser,lat,lng});
   };
 
   navigator.geolocation.watchPosition(async pos=>{
