@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var waitingForLocationEnable = false
     private var pendingDeepLink: String? = null
     private var waitingForBatteryExemption = false
+    private var batteryPromptShown = false
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -257,7 +258,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkBatteryOptimizationAndProceed() {
         val pm = getSystemService(POWER_SERVICE) as PowerManager
-        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+        if (pm.isIgnoringBatteryOptimizations(packageName)) {
+            waitingForBatteryExemption = false
+            checkAutostartPromptAndProceed()
+            return
+        }
+        if (!batteryPromptShown) {
+            batteryPromptShown = true
             waitingForBatteryExemption = true
             AlertDialog.Builder(this)
                 .setTitle("נדרש אישור פעילות ברקע")
@@ -268,18 +275,21 @@ class MainActivity : AppCompatActivity() {
                         val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                             data = Uri.parse("package:$packageName")
                         }
-                        val canResolve = intent.resolveActivity(packageManager) != null
-                        Toast.makeText(this, "מנסה לפתוח... resolve=$canResolve pkg=$packageName", Toast.LENGTH_LONG).show()
                         startActivity(intent)
-                    } catch (e: Exception) {
-                        Toast.makeText(this, "שגיאה: ${e.javaClass.simpleName} - ${e.message}", Toast.LENGTH_LONG).show()
-                        e.printStackTrace()
-                    }
+                    } catch (e: Exception) { e.printStackTrace() }
                 }
                 .show()
         } else {
+            // Already asked once - on some devices (e.g. OnePlus) the standard Android check
+            // doesn't reliably reflect the OEM's own battery screen, so don't loop forever.
             waitingForBatteryExemption = false
-            checkAutostartPromptAndProceed()
+            AlertDialog.Builder(this)
+                .setTitle("ודא הגדרת סוללה")
+                .setMessage("במכשירים מסוימים (כמו OnePlus) יש מסך נוסף להגדרת הסוללה. אם שיתוף המיקום ברקע לא יעבוד כראוי, בדוק ב\"הגדרות מכשיר\" > \"סוללה\" > Location Share, וודא שנבחר \"הרשאת פעילות רקע\" (ללא הגבלות).")
+                .setPositiveButton("הבנתי") { _, _ ->
+                    checkAutostartPromptAndProceed()
+                }
+                .show()
         }
     }
 
