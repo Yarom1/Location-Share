@@ -285,7 +285,7 @@ class MainActivity : AppCompatActivity() {
             waitingForBatteryExemption = false
             AlertDialog.Builder(this)
                 .setTitle("ודא הגדרת סוללה")
-                .setMessage("במכשירים מסוימים (כמו OnePlus) יש מסך נוסף להגדרת הסוללה. אם שיתוף המיקום ברקע לא יעבוד כראוי, בדוק ב\"הגדרות מכשיר\" > \"סוללה\" > Location Share, וודא שנבחר \"הרשאת פעילות רקע\" (ללא הגבלות).")
+                .setMessage("במכשירים מסוימים יש מסך נוסף להגדרת הסוללה. אם שיתוף המיקום ברקע לא יעבוד כראוי, בדוק ב\"הגדרות מכשיר\" > \"סוללה\" > Location Share, וודא שנבחר \"הרשאת פעילות רקע\" (ללא הגבלות).")
                 .setPositiveButton("הבנתי") { _, _ ->
                     checkAutostartPromptAndProceed()
                 }
