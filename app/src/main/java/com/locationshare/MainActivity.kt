@@ -268,8 +268,13 @@ class MainActivity : AppCompatActivity() {
                         val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                             data = Uri.parse("package:$packageName")
                         }
+                        val canResolve = intent.resolveActivity(packageManager) != null
+                        Toast.makeText(this, "מנסה לפתוח... resolve=$canResolve pkg=$packageName", Toast.LENGTH_LONG).show()
                         startActivity(intent)
-                    } catch (e: Exception) { e.printStackTrace() }
+                    } catch (e: Exception) {
+                        Toast.makeText(this, "שגיאה: ${e.javaClass.simpleName} - ${e.message}", Toast.LENGTH_LONG).show()
+                        e.printStackTrace()
+                    }
                 }
                 .show()
         } else {
