@@ -101,27 +101,46 @@ class LocationService : Service() {
             .build()
     }
 
+    private var isFastLocationMode = false
+    private var locationListener: LocationListener? = null
+
     private fun startLocationUpdates() {
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        val listener = object : LocationListener {
+        locationListener = object : LocationListener {
             override fun onLocationChanged(loc: Location) {
                 lastKnownLat = loc.latitude
                 lastKnownLng = loc.longitude
                 onLocationUpdate?.invoke(loc.latitude, loc.longitude)
                 writeLocationToFirestore(loc.latitude, loc.longitude)
+                val speedKmh = loc.speed * 3.6f
+                if (speedKmh >= 3.5f && !isFastLocationMode) {
+                    isFastLocationMode = true
+                    registerLocationUpdates(2000L, 3f)
+                } else if (speedKmh < 3.5f && isFastLocationMode) {
+                    isFastLocationMode = false
+                    registerLocationUpdates(10000L, 5f)
+                }
             }
             override fun onStatusChanged(p: String?, s: Int, e: Bundle?) {}
             override fun onProviderEnabled(p: String) {}
             override fun onProviderDisabled(p: String) {}
         }
+        registerLocationUpdates(10000L, 5f)
+    }
+
+    private fun registerLocationUpdates(minTimeMs: Long, minDistM: Float) {
+        val listener = locationListener ?: return
+        try {
+            locationManager.removeUpdates(listener)
+        } catch (e: Exception) { e.printStackTrace() }
         try {
             if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000L, 5f, listener)
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minTimeMs, minDistM, listener)
             }
         } catch (e: SecurityException) { e.printStackTrace() }
         try {
             if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000L, 5f, listener)
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, minTimeMs, minDistM, listener)
             }
         } catch (e: SecurityException) { e.printStackTrace() }
     }
