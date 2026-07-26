@@ -848,6 +848,17 @@ async function loadPOILayer(type){
   const bounds=map.getBounds();
   const south=bounds.getSouth(),west=bounds.getWest(),north=bounds.getNorth(),east=bounds.getEast();
 
+  const MAX_POI_SPAN_DEG=0.5;
+  if((north-south)>MAX_POI_SPAN_DEG||(east-west)>MAX_POI_SPAN_DEG){
+    const cachedNear=await poiCacheGetByType(type);
+    const inViewNear=cachedNear.filter(p=>p.lat>=south&&p.lat<=north&&p.lon>=west&&p.lon<=east);
+    inViewNear.forEach(p=>renderPoiMarker(type,p));
+    if(inViewNear.length===0){
+      showToast('התקרב יותר במפה כדי לטעון שכבה זו 🔍','error');
+      document.getElementById('poi'+type.charAt(0).toUpperCase()+type.slice(1)).checked=false;
+    }
+    return;
+  }
   const cached=await poiCacheGetByType(type);
   const inView=cached.filter(p=>p.lat>=south&&p.lat<=north&&p.lon>=west&&p.lon<=east);
   inView.forEach(p=>renderPoiMarker(type,p));
@@ -888,7 +899,7 @@ async function loadPOILayer(type){
     }
   }catch(e){
     if(inView.length===0){
-      showToast('שגיאה: '+(e&&e.message?e.message:e),'error');
+      showToast('לא ניתן לטעון '+cfg.icon+' כרגע','error');
       document.getElementById('poi'+type.charAt(0).toUpperCase()+type.slice(1)).checked=false;
     }
   }
