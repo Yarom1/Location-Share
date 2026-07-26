@@ -902,7 +902,7 @@ async function loadPOILayer(type){
     }
   }catch(e){
     if(inView.length===0){
-      showToast('שגיאה: '+(e&&e.errors?e.errors.map(x=>x&&x.message).join(' | '):(e&&e.message?e.message:JSON.stringify(e))),'error');
+      showToast('לא ניתן לטעון '+cfg.icon+' כרגע','error');
       document.getElementById('poi'+type.charAt(0).toUpperCase()+type.slice(1)).checked=false;
     }
   }
