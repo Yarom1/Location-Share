@@ -877,7 +877,7 @@ async function loadPOILayer(type){
     const attemptFetch=(url)=>new Promise((resolve,reject)=>{
       const controller=new AbortController();
       const timer=setTimeout(()=>controller.abort(),12000);
-      fetch(url,{method:'POST',body:query,signal:controller.signal})
+      fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:query,signal:controller.signal})
         .then(res=>{
           clearTimeout(timer);
           if(!res.ok){reject(new Error('HTTP '+res.status));return;}
