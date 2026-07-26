@@ -1136,7 +1136,11 @@ function startLocationTracking(){
     }
     // עדכון חזותי מיידי בכל קריאת GPS - למעקב חלק ורציף בלי קפיצות
     if(currentUser&&!trackingMode)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
-    if(trackingMode)map.easeTo({center:[smoothLng,smoothLat],duration:400,padding:{top:window.innerHeight*TRACK_PAD_TOP_FRAC,bottom:0,left:0,right:0}});
+    if(trackingMode){
+      navModeActive=compassMode&&lastSpeed>=NAV_SPEED_MS;
+      map.easeTo({center:[smoothLng,smoothLat],duration:400,padding:{top:window.innerHeight*TRACK_PAD_TOP_FRAC,bottom:0,left:0,right:0},pitch:navModeActive?map.getMaxPitch():0});
+      updateTrackingMarkerFixed();
+    }
     // בזמן נסיעה בפועל - כיוון ה-GPS יציב הרבה יותר מהמצפן המגנטי שמושפע ממתכת הרכב
     if(compassMode&&heading!=null&&lastSpeed>1&&Math.abs(heading-lastHeading)>1.5){
       lastHeading=heading;
@@ -1434,12 +1438,21 @@ window.showToast=showToast;
 
 let trackingMode=false,compassMode=false,measureMode=false;
 let lastSpeed=0;
+let navModeActive=false;
+const NAV_SPEED_MS=3.5/3.6;
 let smoothLat=null,smoothLng=null;
 const TRACK_PAD_TOP_FRAC=0.45;
+function createNavMarkerHTML(){
+  return '<div style="position:relative;width:64px;height:64px;display:flex;align-items:center;justify-content:center">'
+    +'<div style="position:absolute;width:64px;height:64px;border-radius:50%;background:rgba(0,212,170,0.22);box-shadow:0 0 16px 4px rgba(0,212,170,0.35)"></div>'
+    +'<div style="width:34px;height:34px;filter:drop-shadow(0 2px 5px rgba(0,0,0,.5))">'
+    +'<svg width="34" height="34" viewBox="0 0 24 24"><path d="M12 1.5 L21 21 L12 16.5 L3 21 Z" fill="#00d4aa" stroke="#ffffff" stroke-width="1.3" stroke-linejoin="round"/></svg>'
+    +'</div></div>';
+}
 function updateTrackingMarkerFixed(){
   const el=document.getElementById('trackingMarkerFixed');
   if(!el||!currentUser)return;
-  el.innerHTML=createMarkerHTML({...currentUser});
+  el.innerHTML=navModeActive?createNavMarkerHTML():createMarkerHTML({...currentUser});
   const topPx=window.innerHeight*TRACK_PAD_TOP_FRAC+(window.innerHeight-window.innerHeight*TRACK_PAD_TOP_FRAC)/2;
   el.style.top=topPx+'px';
 }
@@ -1448,6 +1461,7 @@ let measurePoints=[],measureLayers=[];
 
 function toggleTracking(){
   trackingMode=!trackingMode;
+  navModeActive=false;
   const btn=document.getElementById('trackBtn');
   if(btn)btn.style.border=trackingMode?'2px solid #00d4aa':'1px solid rgba(255,255,255,0.2)';
   const fixedEl=document.getElementById('trackingMarkerFixed');
@@ -1460,7 +1474,7 @@ function toggleTracking(){
       if(markers[myUID]){markers[myUID].remove();delete markers[myUID];delete markerCache[myUID];}
     });
   }else if(!trackingMode){
-    map.easeTo({padding:{top:0,bottom:0,left:0,right:0},duration:300});
+    map.easeTo({padding:{top:0,bottom:0,left:0,right:0},pitch:0,duration:300});
     if(fixedEl)fixedEl.style.display='none';
     if(currentUser&&smoothLat&&smoothLng)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
   }
@@ -1469,6 +1483,10 @@ function toggleTracking(){
 
 function toggleCompass(){
   compassMode=!compassMode;
+  if(!compassMode){
+    navModeActive=false;
+    if(trackingMode)map.easeTo({pitch:0,duration:300});
+  }
   const cbtn=document.getElementById("compassBtn");
   cbtn.classList.toggle("active",compassMode);
   cbtn.style.border=compassMode?'2px solid #00d4aa':'1px solid rgba(255,255,255,0.2)';
