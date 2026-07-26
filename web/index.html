@@ -116,6 +116,20 @@ body{background:var(--bg);color:var(--text);height:100dvh;overflow:hidden;direct
 </head>
 <body>
 <div class="toast-wrap" id="toastWrap"></div>
+<div class="modal" id="cropModal">
+  <div class="modal-box">
+    <h3>✂️ חיתוך תמונה</h3>
+    <div id="cropViewport" style="width:260px;height:260px;margin:12px auto;position:relative;overflow:hidden;border-radius:50%;background:#000;touch-action:none;cursor:grab">
+      <img id="cropImg" draggable="false" style="position:absolute;left:0;top:0;transform-origin:0 0;user-select:none;-webkit-user-drag:none">
+    </div>
+    <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" style="width:100%" oninput="onCropZoomChange()">
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn secondary" style="flex:1" onclick="closeModal('cropModal')">ביטול</button>
+      <button class="btn" style="flex:1" onclick="confirmCrop()">אישור</button>
+    </div>
+  </div>
+</div>
+
 
 <div class="modal" id="editProfileModal">
   <div class="modal-box">
@@ -569,20 +583,7 @@ function handleProfileImage(e){
   if(!file)return;
   const reader=new FileReader();
   reader.onload=ev=>{
-    // כווץ תמונה לפני שמירה
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement('canvas');
-      const maxSize=200;
-      let w=img.width,h=img.height;
-      if(w>h){if(w>maxSize){h=h*maxSize/w;w=maxSize;}}
-      else{if(h>maxSize){w=w*maxSize/h;h=maxSize;}}
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      profileImageData=canvas.toDataURL('image/jpeg',0.7);
-      updateEditPinPreview();
-    };
-    img.src=ev.target.result;
+    openCropModal(ev.target.result);
   };
   reader.readAsDataURL(file);
 }
@@ -609,6 +610,89 @@ window.openEditProfile=openEditProfile;
 window.saveEditProfile=saveEditProfile;
 window.handleProfileImage=handleProfileImage;
 
+
+let cropImgEl=null,cropNaturalW=0,cropNaturalH=0,cropBaseScale=1,cropZoomVal=1,cropOffX=0,cropOffY=0,cropDragging=false,cropDragStartX=0,cropDragStartY=0,cropStartOffX=0,cropStartOffY=0;
+const CROP_SIZE=260;
+
+function applyCropTransform(){
+  const scale=cropBaseScale*cropZoomVal;
+  cropImgEl.style.width=(cropNaturalW*scale)+'px';
+  cropImgEl.style.height=(cropNaturalH*scale)+'px';
+  cropImgEl.style.transform='translate('+cropOffX+'px,'+cropOffY+'px)';
+}
+function clampCropOffset(){
+  const scale=cropBaseScale*cropZoomVal;
+  const dispW=cropNaturalW*scale,dispH=cropNaturalH*scale;
+  cropOffX=Math.min(0,Math.max(CROP_SIZE-dispW,cropOffX));
+  cropOffY=Math.min(0,Math.max(CROP_SIZE-dispH,cropOffY));
+}
+function openCropModal(dataUrl){
+  const img=document.getElementById('cropImg');
+  cropImgEl=img;
+  img.onload=()=>{
+    cropNaturalW=img.naturalWidth;
+    cropNaturalH=img.naturalHeight;
+    cropBaseScale=CROP_SIZE/Math.min(cropNaturalW,cropNaturalH);
+    cropZoomVal=1;
+    document.getElementById('cropZoom').value=1;
+    const dispW=cropNaturalW*cropBaseScale,dispH=cropNaturalH*cropBaseScale;
+    cropOffX=(CROP_SIZE-dispW)/2;
+    cropOffY=(CROP_SIZE-dispH)/2;
+    applyCropTransform();
+  };
+  img.src=dataUrl;
+  openModal('cropModal');
+}
+function onCropZoomChange(){
+  const newZoom=parseFloat(document.getElementById('cropZoom').value);
+  const scaleBefore=cropBaseScale*cropZoomVal;
+  const scaleAfter=cropBaseScale*newZoom;
+  const cx=CROP_SIZE/2,cy=CROP_SIZE/2;
+  const imgCx=(cx-cropOffX)/scaleBefore;
+  const imgCy=(cy-cropOffY)/scaleBefore;
+  cropZoomVal=newZoom;
+  cropOffX=cx-imgCx*scaleAfter;
+  cropOffY=cy-imgCy*scaleAfter;
+  clampCropOffset();
+  applyCropTransform();
+}
+function confirmCrop(){
+  const scale=cropBaseScale*cropZoomVal;
+  const srcX=(0-cropOffX)/scale;
+  const srcY=(0-cropOffY)/scale;
+  const srcSize=CROP_SIZE/scale;
+  const OUT=400;
+  const canvas=document.createElement('canvas');
+  canvas.width=OUT;canvas.height=OUT;
+  canvas.getContext('2d').drawImage(cropImgEl,srcX,srcY,srcSize,srcSize,0,0,OUT,OUT);
+  profileImageData=canvas.toDataURL('image/jpeg',0.85);
+  updateEditPinPreview();
+  closeModal('cropModal');
+  const fi=document.getElementById('profileImageInput');
+  if(fi)fi.value='';
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const vp=document.getElementById('cropViewport');
+  if(!vp)return;
+  vp.addEventListener('pointerdown',e=>{
+    cropDragging=true;
+    cropDragStartX=e.clientX;cropDragStartY=e.clientY;
+    cropStartOffX=cropOffX;cropStartOffY=cropOffY;
+    vp.setPointerCapture(e.pointerId);
+  });
+  vp.addEventListener('pointermove',e=>{
+    if(!cropDragging)return;
+    cropOffX=cropStartOffX+(e.clientX-cropDragStartX);
+    cropOffY=cropStartOffY+(e.clientY-cropDragStartY);
+    clampCropOffset();
+    applyCropTransform();
+  });
+  const endDrag=()=>{cropDragging=false;};
+  vp.addEventListener('pointerup',endDrag);
+  vp.addEventListener('pointercancel',endDrag);
+});
+window.onCropZoomChange=onCropZoomChange;
+window.confirmCrop=confirmCrop;
 
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
