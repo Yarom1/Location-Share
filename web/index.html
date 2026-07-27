@@ -494,7 +494,12 @@ function startApp(){
     setDoc(doc(db,'users',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
     if(activeGroupId)setDoc(gDoc('locations',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
   });
-  // הוסר מכוון: visibilitychange כבר לא מסמן לא-מחובר, כי מעקב ברקע אמור להמשיך לשתף מיקום
+  document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    smoothLat=null;smoothLng=null;
+  }
+});
+// הוסר מכוון: visibilitychange כבר לא מסמן לא-מחובר, כי מעקב ברקע אמור להמשיך לשתף מיקום
 }
 
 function shutdownApp(){
@@ -1133,8 +1138,9 @@ function startLocationTracking(){
     const{latitude:lat,longitude:lng,heading,speed}=pos.coords;
     lastSpeed=speed||0;
     // החלקת קואורדינטות (ממוצע נע) לתצוגה חלקה - לא משפיע על מה שנשמר ב-Firestore/היסטוריה
-    if(smoothLat===null){smoothLat=lat;smoothLng=lng;}
-    else{
+    if(smoothLat===null||Math.abs(lat-smoothLat)+Math.abs(lng-smoothLng)>0.05){
+      smoothLat=lat;smoothLng=lng;
+    }else{
       smoothLat+=0.35*(lat-smoothLat);
       smoothLng+=0.35*(lng-smoothLng);
     }
