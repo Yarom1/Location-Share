@@ -1225,7 +1225,7 @@ function listenUsers(){
     ul.innerHTML='';
     // עדכן allUsersData קודם
     const currentIds=new Set();
-    snap.forEach(d=>{allUsersData[d.id]=d.data();currentIds.add(d.id);});
+    snap.forEach(d=>{allUsersData[d.id]=d.data();currentIds.add(d.id);if(d.id!==myUID&&window.AndroidBridge&&AndroidBridge.registerDmPeer){try{AndroidBridge.registerDmPeer(d.id);}catch(e){}}});
     const myData=allUsersData[myUID];
     const iAmBanned=myData&&myData.banned===true;
     snap.forEach(d=>{
@@ -1377,13 +1377,37 @@ function openDM(uid,name,avatar){
   document.getElementById('tabDM').textContent=`💌 ${name}`;
   openPanel('chat');switchChatTab('dm');
   if(currentUserPopup){currentUserPopup.remove();currentUserPopup=null;}
+  if(window.AndroidBridge&&AndroidBridge.registerDmPeer){
+    try{AndroidBridge.registerDmPeer(uid);}catch(e){}
+  }
+}
+
+function notifyDMMessage(m,otherUid){
+  if(window.AndroidBridge&&window.AndroidBridge.showAlertNotification){
+    try{
+      window.AndroidBridge.showAlertNotification('dm_chat','הודעות פרטיות',`${m.name||'מישהו'} · הודעה פרטית`,m.text||'','dm:'+encodeURIComponent(otherUid)+':'+encodeURIComponent(m.name||'')+':'+encodeURIComponent(m.avatar||'👤'));
+    }catch(e){console.error(e);}
+  }
 }
 
 function listenDM(uid){
   if(unsubDM)unsubDM();
+  let isFirstLoad=true;
   const dmId=[myUID,uid].sort().join('_');
   const q=query(collection(db,'dms',dmId,'messages'),orderBy('ts','asc'),limit(100));
   unsubDM=onSnapshot(q,snap=>{
+    const chatOpenOnThisDM=document.getElementById('chatPanel').classList.contains('open')&&activeChatTab==='dm'&&activeDMUser&&activeDMUser.uid===uid;
+    if(!isFirstLoad){
+      snap.docChanges().forEach(change=>{
+        if(change.type==='added'){
+          const m=change.doc.data();
+          if(m.uid!==myUID&&!chatOpenOnThisDM){
+            notifyDMMessage(m,uid);
+          }
+        }
+      });
+    }
+    isFirstLoad=false;
     const msgs=document.getElementById('chatMessages');msgs.innerHTML='';
     snap.forEach(d=>appendMsg(d.data()));msgs.scrollTop=msgs.scrollHeight;
   });
@@ -2374,6 +2398,12 @@ window.handleDeepLink=function(link){
   } else if(link==='chat'){
     openPanel('chat');
     switchChatTab('group');
+  } else if(link.indexOf('dm:')===0){
+    const parts=link.slice(3).split(':');
+    const uid=decodeURIComponent(parts[0]||'');
+    const name=decodeURIComponent(parts[1]||'');
+    const avatar=decodeURIComponent(parts[2]||'👤');
+    if(uid)openDM(uid,name,avatar);
   }
 };
 

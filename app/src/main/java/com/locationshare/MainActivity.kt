@@ -401,6 +401,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun registerDmPeer(uid: String) {
+            try {
+                val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
+                val current = prefs.getStringSet("dm_peer_uids", emptySet()) ?: emptySet()
+                if (!current.contains(uid)) {
+                    val updated = HashSet(current)
+                    updated.add(uid)
+                    prefs.edit().putStringSet("dm_peer_uids", updated).apply()
+                }
+            } catch (e: Exception) { e.printStackTrace() }
+        }
+
+        @JavascriptInterface
         fun reportJsAlive() {
             val prefs = getSharedPreferences("location_share_prefs", MODE_PRIVATE)
             prefs.edit().putLong("last_js_active_time", System.currentTimeMillis()).apply()
