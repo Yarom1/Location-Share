@@ -494,7 +494,11 @@ function startApp(){
     setDoc(doc(db,'users',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
     if(activeGroupId)setDoc(gDoc('locations',myUID),{online:false,lastSeen:serverTimestamp()},{merge:true});
   });
-  document.addEventListener('visibilitychange',()=>{
+  function resetLocationSmoothing(){
+  smoothLat=null;smoothLng=null;
+}
+window.resetLocationSmoothing=resetLocationSmoothing;
+document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
     smoothLat=null;smoothLng=null;
   }

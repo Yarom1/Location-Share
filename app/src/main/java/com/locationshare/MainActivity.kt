@@ -349,6 +349,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         webView.onResume()
+        webView.evaluateJavascript("if(window.resetLocationSmoothing)window.resetLocationSmoothing();", null)
         if (waitingForLocationEnable && isLocationEnabled()) {
             waitingForLocationEnable = false
             checkBatteryOptimizationAndProceed()
