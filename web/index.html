@@ -1135,7 +1135,8 @@ function startLocationTracking(){
     if(activeGroupId){
       await setDoc(gDoc('locations',myUID),{lat,lng,online:true,lastSeen:serverTimestamp()},{merge:true});
     }
-    if(currentUser&&!trackingMode)updateMarker(myUID,{...currentUser,lat,lng});
+    // הוסר מכוון: אין כאן עדכון סמן מקומי - watchPosition של ה-JS כבר אחראי בלעדית על זה
+    // (שני מסלולים שמעדכנים את אותו סמן במקביל גרמו לקפיצות אחורה/קדימה בחזרה מרקע)
   };
 
   navigator.geolocation.watchPosition(async pos=>{
