@@ -1022,7 +1022,6 @@ function toggleLayers(e){
 }
 function showMapView(){closeAllPanels();setTimeout(()=>map&&map.resize(),350);setActiveNav('navMap');}
 let locating=false;let lastLat=0,lastLng=0;function locateMe(){
-  stopTrackingAndCompass();
   if(lastLat&&lastLng){map.flyTo({center:[lastLng,lastLat],zoom:17});return;}
   if(locating)return;locating=true;
   const btn=document.getElementById('locateBtn');
@@ -1153,7 +1152,7 @@ function startLocationTracking(){
     if(currentUser&&!trackingMode)updateMarker(myUID,{...currentUser,lat:smoothLat,lng:smoothLng});
     if(trackingMode){
       navModeActive=compassMode&&lastSpeed>=NAV_SPEED_MS;
-      map.easeTo({center:[smoothLng,smoothLat],duration:400,padding:{top:window.innerHeight*TRACK_PAD_TOP_FRAC,bottom:0,left:0,right:0},pitch:navModeActive?map.getMaxPitch():0});
+      map.easeTo({center:[smoothLng,smoothLat],zoom:17,duration:400,padding:{top:window.innerHeight*TRACK_PAD_TOP_FRAC,bottom:0,left:0,right:0},pitch:navModeActive?map.getMaxPitch():0});
       updateTrackingMarkerFixed();
     }
     // בזמן נסיעה בפועל - כיוון ה-GPS יציב הרבה יותר מהמצפן המגנטי שמושפע ממתכת הרכב
