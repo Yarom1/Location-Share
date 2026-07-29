@@ -2087,7 +2087,7 @@ async function savePoint(){
   const desc=document.getElementById('pointDescInput').value.trim();
   if(!name){showToast('הכנס שם לנקודה','error');return;}
   if(!addPointCoords){showToast('בחר מיקום על המפה','error');return;}
-  await addDoc(gCol('savedPoints'),{
+  const newPointRef=await addDoc(gCol('savedPoints'),{
     name,desc,
     lat:addPointCoords.lat,
     lng:addPointCoords.lng,
@@ -2095,6 +2095,9 @@ async function savePoint(){
     creatorName:currentUser?currentUser.name:'',
     createdAt:serverTimestamp()
   });
+  visiblePoints[newPointRef.id]=true;
+  renderPointsList();
+  renderPointMarkers();
   closeAddPointSheet();
   stopCenterPinRefine();
   if(pinPreviewMarker){pinPreviewMarker.remove();pinPreviewMarker=null;}
