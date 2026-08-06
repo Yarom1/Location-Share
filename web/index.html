@@ -1961,7 +1961,7 @@ function copyUserCoordinates(uid){
   const u=allUsersData[uid];
   if(!u||!u.lat||!u.lng){showToast('אין מיקום זמין','error');return;}
   const text=u.lat.toFixed(6)+','+u.lng.toFixed(6);
-  const done=()=>showToast('נ.צ. הועתק: '+text,'success');
+  const done=()=>showToast('נ.צ. הועתק: \u202A'+text+'\u202C','success');
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(done).catch(()=>{
       const el=document.createElement('textarea');
@@ -2096,7 +2096,7 @@ function onCenterPinMove(){
 function updateCenterPinCoordsDisplay(){
   if(!addPointCoords)return;
   const el=document.getElementById('pointCoordsDisplay');
-  if(el)el.textContent='📍 '+addPointCoords.lat.toFixed(6)+', '+addPointCoords.lng.toFixed(6)+' — הזז את המפה לדיוק';
+  if(el)el.textContent='📍 \u202A'+addPointCoords.lat.toFixed(6)+', '+addPointCoords.lng.toFixed(6)+'\u202C — הזז את המפה לדיוק';
 }
 
 function stopCenterPinRefine(){
@@ -2254,7 +2254,7 @@ async function copyCoordinates(){
     lat=lastLat;lng=lastLng;
   }
   const text=lat.toFixed(6)+','+lng.toFixed(6);
-  const done=()=>showToast('נ.צ. הועתק: '+text,'success');
+  const done=()=>showToast('נ.צ. הועתק: \u202A'+text+'\u202C','success');
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(done).catch(()=>{
       const el=document.createElement('textarea');
