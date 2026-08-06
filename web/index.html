@@ -2040,7 +2040,7 @@ window.closeAddPointSheet=closeAddPointSheet;
 let centerPinActive=false;
 
 function startCenterPinRefine(lat,lng){
-  map.flyTo({center:[lng,lat],zoom:17});
+  map.flyTo({center:[lng,lat],zoom:17,padding:{top:0,bottom:0,left:0,right:0}});
   document.getElementById('centerPinFixed').style.display='block';
   centerPinActive=true;
   addPointCoords={lat,lng};
