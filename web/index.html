@@ -2096,7 +2096,7 @@ function onCenterPinMove(){
 function updateCenterPinCoordsDisplay(){
   if(!addPointCoords)return;
   const el=document.getElementById('pointCoordsDisplay');
-  if(el)el.textContent='📍 '+addPointCoords.lat.toFixed(5)+', '+addPointCoords.lng.toFixed(5)+' — הזז את המפה לדיוק';
+  if(el)el.textContent='📍 '+addPointCoords.lat.toFixed(6)+', '+addPointCoords.lng.toFixed(6)+' — הזז את המפה לדיוק';
 }
 
 function stopCenterPinRefine(){
