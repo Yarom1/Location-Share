@@ -1120,6 +1120,7 @@ function showUserPopup(uid,data){
       <div style="display:flex;gap:6px">
         <button onclick="openDM('${uid}','${escHtml(data.name)}','${data.avatar||'👤'}')" style="flex:1;background:#00d4aa;color:#000;border:none;border-radius:8px;padding:7px 4px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💌 הודעה</button>
         <button onclick="navigateToUser('${uid}')" style="flex:1;background:var(--surface2);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:7px 4px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🧭 ניווט</button>
+        <button onclick="copyUserCoordinates('${uid}')" style="flex:1;background:var(--surface2);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:7px 4px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📋 העתק נ.צ.</button>
       </div>
     </div>`).addTo(map);
 }
@@ -1250,6 +1251,7 @@ function listenUsers(){
           ${d.id!==myUID?`<div class="user-act-btn" onclick="openDM('${d.id}','${escHtml(u.name||'')}','${u.avatar||'👤'}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>`:''}
           ${d.id!==myUID?`<div class="user-act-btn" onclick="flyToUser('${d.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>`:''}
           ${d.id!==myUID?`<div class="user-act-btn" onclick="navigateToUser('${d.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div>`:''}
+          ${d.id!==myUID?`<div class="user-act-btn" onclick="copyUserCoordinates('${d.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>`:''}
           ${(myGroups[activeGroupId]&&myGroups[activeGroupId].ownerUid===myUID&&d.id!==myUID)?`<div class="user-act-btn" onclick="removeMember('${d.id}','${escHtml(u.name||'')}')" style="color:var(--danger)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="18" y1="8" x2="23" y2="13"/><line x1="23" y1="8" x2="18" y2="13"/></svg></div>`:''}
         </div>`;
       ul.appendChild(li);
@@ -1954,6 +1956,27 @@ async function saveEditedLocation(){
 
 window.startEditLocation=startEditLocation;
 window.saveEditedLocation=saveEditedLocation;
+
+function copyUserCoordinates(uid){
+  const u=allUsersData[uid];
+  if(!u||!u.lat||!u.lng){showToast('אין מיקום זמין','error');return;}
+  const text=u.lat.toFixed(6)+','+u.lng.toFixed(6);
+  const done=()=>showToast('נ.צ. הועתק: '+text,'success');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{
+      const el=document.createElement('textarea');
+      el.value=text;document.body.appendChild(el);el.select();
+      document.execCommand('copy');document.body.removeChild(el);
+      done();
+    });
+  }else{
+    const el=document.createElement('textarea');
+    el.value=text;document.body.appendChild(el);el.select();
+    document.execCommand('copy');document.body.removeChild(el);
+    done();
+  }
+}
+window.copyUserCoordinates=copyUserCoordinates;
 
 function navigateToUser(uid){
   const u=allUsersData[uid];
