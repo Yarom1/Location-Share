@@ -1916,11 +1916,13 @@ function startEditLocation(){
   const p=savedPoints[editPointId];
   if(!p)return;
   centerPinEditMode=editPointId;
-  map.flyTo({center:[p.lng,p.lat],zoom:17});
+  map.flyTo({center:[p.lng,p.lat],zoom:17,padding:{top:0,bottom:0,left:0,right:0}});
   document.getElementById('centerPinFixed').style.display='block';
+  positionCenterPinFixed();
   centerPinActive=true;
   addPointCoords={lat:p.lat,lng:p.lng};
   map.on('move',onCenterPinMove);
+  map.on('moveend',onCenterPinMove);
   closePanel('points');
   showMapView();
   // הצג widget קטן עם כפתור שמור
@@ -2039,19 +2041,29 @@ window.closeAddPointSheet=closeAddPointSheet;
 
 let centerPinActive=false;
 
+function positionCenterPinFixed(){
+  const el=document.getElementById('centerPinFixed');
+  if(!el)return;
+  const rect=map.getContainer().getBoundingClientRect();
+  el.style.left=(rect.left+rect.width/2)+'px';
+  el.style.top=(rect.top+rect.height/2)+'px';
+}
 function startCenterPinRefine(lat,lng){
   map.flyTo({center:[lng,lat],zoom:17,padding:{top:0,bottom:0,left:0,right:0}});
   document.getElementById('centerPinFixed').style.display='block';
+  positionCenterPinFixed();
   centerPinActive=true;
   addPointCoords={lat,lng};
   updateCenterPinCoordsDisplay();
   map.on('move',onCenterPinMove);
+  map.on('moveend',onCenterPinMove);
   openAddPointSheet();
   showToast('הזז את המפה כדי לדייק את המיקום 📍');
 }
 
 function onCenterPinMove(){
   if(!centerPinActive)return;
+  positionCenterPinFixed();
   const c=map.getCenter();
   addPointCoords={lat:c.lat,lng:c.lng};
   updateCenterPinCoordsDisplay();
@@ -2067,6 +2079,7 @@ function stopCenterPinRefine(){
   centerPinActive=false;
   document.getElementById('centerPinFixed').style.display='none';
   map.off('move',onCenterPinMove);
+  map.off('moveend',onCenterPinMove);
 }
 
 window.startCenterPinRefine=startCenterPinRefine;
