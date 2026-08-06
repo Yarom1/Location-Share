@@ -2050,12 +2050,6 @@ function positionCenterPinFixed(){
   el.style.top=(rect.top+rect.height/2)+'px';
 }
 function startCenterPinRefine(lat,lng){
-  map.once('moveend',()=>{
-    const c=map.getCenter();
-    const dLat=(lat-c.lat).toFixed(6);
-    const dLng=(lng-c.lng).toFixed(6);
-    showToast('Δlat:'+dLat+' Δlng:'+dLng+' z:'+map.getZoom().toFixed(1)+' p:'+map.getPitch().toFixed(1)+' b:'+map.getBearing().toFixed(1),'error');
-  });
   map.jumpTo({center:[lng,lat],zoom:17,pitch:0,bearing:0,padding:{top:0,bottom:0,left:0,right:0}});
   document.getElementById('centerPinFixed').style.display='block';
   positionCenterPinFixed();
