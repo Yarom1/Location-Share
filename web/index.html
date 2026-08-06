@@ -1729,7 +1729,6 @@ async function doSearch(){
 }
 
 function goToSearchResult(lat,lng,name){
-  map.flyTo({center:[lng,lat],zoom:16});
   closeModal('searchModal');
   document.getElementById('searchInput').value='';
   document.getElementById('searchResults').innerHTML='';
@@ -1739,6 +1738,8 @@ function goToSearchResult(lat,lng,name){
     startCenterPinRefine(lat,lng);
     return;
   }
+
+  map.flyTo({center:[lng,lat],zoom:16});
 
   if(searchMarker)searchMarker.remove();
   const el=document.createElement('div');
